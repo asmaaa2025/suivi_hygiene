@@ -1,0 +1,468 @@
+import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
+import '../database_helper.dart';
+
+class RapportsPage extends StatefulWidget {
+  const RapportsPage({super.key});
+
+  @override
+  State<RapportsPage> createState() => _RapportsPageState();
+}
+
+class _RapportsPageState extends State<RapportsPage> {
+  DateTime _dateDebut = DateTime.now().subtract(const Duration(days: 7));
+  DateTime _dateFin = DateTime.now();
+  String _typeRapport = 'Toutes les données';
+  
+  final List<String> _typesRapport = [
+    'Toutes les données',
+    'Températures uniquement',
+    'Nettoyages uniquement',
+    'Réceptions uniquement',
+    'Produits uniquement',
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          'Rapports',
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+        ),
+        backgroundColor: Colors.blue.shade600,
+        foregroundColor: Colors.white,
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            // Configuration du rapport
+            Card(
+              elevation: 4,
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Configuration du rapport',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Type de rapport
+                    DropdownButtonFormField<String>(
+                      value: _typeRapport,
+                      decoration: const InputDecoration(
+                        labelText: 'Type de rapport',
+                        border: OutlineInputBorder(),
+                      ),
+                      items: _typesRapport.map((String type) {
+                        return DropdownMenuItem<String>(
+                          value: type,
+                          child: Text(type),
+                        );
+                      }).toList(),
+                      onChanged: (String? newValue) {
+                        setState(() {
+                          _typeRapport = newValue!;
+                        });
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Date de début
+                    InkWell(
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _dateDebut,
+                          firstDate: DateTime(2020),
+                          lastDate: DateTime.now(),
+                        );
+                        if (date != null) {
+                          setState(() {
+                            _dateDebut = date;
+                          });
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Date de début',
+                          border: OutlineInputBorder(),
+                        ),
+                        child: Text(DateFormat('dd/MM/yyyy').format(_dateDebut)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    
+                    // Date de fin
+                    InkWell(
+                      onTap: () async {
+                        final date = await showDatePicker(
+                          context: context,
+                          initialDate: _dateFin,
+                          firstDate: _dateDebut,
+                          lastDate: DateTime.now(),
+                        );
+                        if (date != null) {
+                          setState(() {
+                            _dateFin = date;
+                          });
+                        }
+                      },
+                      child: InputDecorator(
+                        decoration: const InputDecoration(
+                          labelText: 'Date de fin',
+                          border: OutlineInputBorder(),
+                        ),
+                        child: Text(DateFormat('dd/MM/yyyy').format(_dateFin)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Boutons d'action
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _genererRapportPDF,
+                    icon: const Icon(Icons.picture_as_pdf),
+                    label: const Text('Générer PDF'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: ElevatedButton.icon(
+                    onPressed: _genererRapportCSV,
+                    icon: const Icon(Icons.table_chart),
+                    label: const Text('Exporter CSV'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green.shade600,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // Statistiques rapides
+            Expanded(
+              child: Card(
+                elevation: 4,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Statistiques rapides',
+                        style: GoogleFonts.montserrat(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      
+                      Expanded(
+                        child: FutureBuilder<Map<String, int>>(
+                          future: _getStatistiques(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const Center(child: CircularProgressIndicator());
+                            }
+                            
+                            if (snapshot.hasError) {
+                              return Center(
+                                child: Text(
+                                  'Erreur: ${snapshot.error}',
+                                  style: GoogleFonts.montserrat(color: Colors.red),
+                                ),
+                              );
+                            }
+                            
+                            final stats = snapshot.data ?? {};
+                            
+                            return ListView(
+                              children: [
+                                _buildStatCard('Températures', stats['temperatures'] ?? 0, Icons.thermostat, Colors.blue),
+                                _buildStatCard('Nettoyages', stats['nettoyages'] ?? 0, Icons.cleaning_services, Colors.green),
+                                _buildStatCard('Réceptions', stats['receptions'] ?? 0, Icons.local_shipping, Colors.orange),
+                                _buildStatCard('Produits', stats['produits'] ?? 0, Icons.category, Colors.purple),
+                              ],
+                            );
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatCard(String title, int count, IconData icon, Color color) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        leading: Icon(icon, color: color),
+        title: Text(title, style: GoogleFonts.montserrat(fontWeight: FontWeight.w600)),
+        trailing: Text(
+          count.toString(),
+          style: GoogleFonts.montserrat(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<Map<String, int>> _getStatistiques() async {
+    final temperatures = await DatabaseHelper.instance.getReleves();
+    final nettoyages = await DatabaseHelper.instance.getNettoyages();
+    final receptions = await DatabaseHelper.instance.getReceptions();
+    final produits = await DatabaseHelper.instance.getProduits();
+    
+    return {
+      'temperatures': temperatures.length,
+      'nettoyages': nettoyages.length,
+      'receptions': receptions.length,
+      'produits': produits.length,
+    };
+  }
+
+  }
+
+  // === Méthodes PDF ===
+  Future<List<pw.Widget>> _buildTemperaturesSection() async {      pw.Text('Températures', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+      pw.SizedBox(height: 10),
+      pw.Table(
+        border: pw.TableBorder.all(),
+        children: [
+          pw.TableRow(
+            children: [
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Date')),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Appareil')),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Température')),
+            ],
+          ),
+          ...temperatures.map((t) => pw.TableRow(
+            children: [
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(DateFormat('dd/MM/yyyy HH:mm').format(t.date))),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(t.appareil)),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('${t.temperature}°C')),
+            ],
+          )),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+    ];
+  }
+
+  Future<List<pw.Widget>> _buildNettoyagesSection() async {
+    final nettoyages = await DatabaseHelper.instance.getNettoyages();
+    return [
+      pw.Text('Nettoyages', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+      pw.SizedBox(height: 10),
+      pw.Table(
+        border: pw.TableBorder.all(),
+        children: [
+          pw.TableRow(
+            children: [
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Date')),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Action')),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Statut')),
+            ],
+          ),
+          ...nettoyages.map((n) => pw.TableRow(
+            children: [
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(n['date'])))),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(n['action'])),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(n['statut'])),
+            ],
+          )),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+    ];
+  }
+
+  Future<List<pw.Widget>> _buildReceptionsSection() async {
+    final receptions = await DatabaseHelper.instance.getReceptions();
+    return [
+      pw.Text('Réceptions', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+      pw.SizedBox(height: 10),
+      pw.Table(
+        border: pw.TableBorder.all(),
+        children: [
+          pw.TableRow(
+            children: [
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Date')),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Produit')),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Fournisseur')),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Statut')),
+            ],
+          ),
+          ...receptions.map((r) => pw.TableRow(
+            children: [
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(r['date'])))),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(r['produit'])),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(r['fournisseur'])),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(r['statut'])),
+            ],
+          )),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+    ];
+  }
+
+  Future<List<pw.Widget>> _buildProduitsSection() async {
+    final produits = await DatabaseHelper.instance.getProduits();
+    return [
+      pw.Text('Produits', style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
+      pw.SizedBox(height: 10),
+      pw.Table(
+        border: pw.TableBorder.all(),
+        children: [
+          pw.TableRow(
+            children: [
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Nom')),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('Type')),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('DLC (jours)')),
+            ],
+          ),
+          ...produits.map((p) => pw.TableRow(
+            children: [
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(p['nom'])),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text(p['type'])),
+              pw.Padding(padding: pw.EdgeInsets.all(8), child: pw.Text('${p['dlc_jours']} jours')),
+            ],
+          )),
+        ],
+      ),
+      pw.SizedBox(height: 20),
+    ];
+  }
+
+  Future<void> _genererRapportCSV() async {
+    try {
+      final output = await getTemporaryDirectory();
+      final file = File('${output.path}/rapport_hygiene_${DateFormat('yyyyMMdd').format(DateTime.now())}.csv');
+      
+      String csvContent = 'Type,Date,Données\n';
+      
+      if (_typeRapport == 'Toutes les données' || _typeRapport == 'Températures uniquement') {
+        final temperatures = await DatabaseHelper.instance.getReleves();
+        for (final t in temperatures) {
+          csvContent += 'Température,${DateFormat('dd/MM/yyyy HH:mm').format(t.date)},${t.appareil} - ${t.temperature}°C\n';
+        }
+      }
+      
+      if (_typeRapport == 'Toutes les données' || _typeRapport == 'Nettoyages uniquement') {
+        final nettoyages = await DatabaseHelper.instance.getNettoyages();
+        for (final n in nettoyages) {
+          csvContent += 'Nettoyage,${DateFormat('dd/MM/yyyy HH:mm').format(DateTime.parse(n['date']))},${n['action']} - ${n['statut']}\n';
+        }
+      }
+      
+      await file.writeAsString(csvContent);
+      await Share.shareXFiles([XFile(file.path)], text: 'Rapport de suivi d\'hygiène (CSV)');
+      
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la génération du CSV: $e')),
+      );
+    }
+  }
+}
+
+  Future<void> _genererRapportPDF() async {
+    try {
+      final pdf = pw.Document();
+
+      // Préparer les sections AVANT d'ajouter la page
+      List<pw.Widget> sections = [];
+
+      if (_typeRapport == 'Toutes les données' || _typeRapport == 'Températures uniquement') {
+        sections.addAll(await _buildTemperaturesSection());
+      }
+      if (_typeRapport == 'Toutes les données' || _typeRapport == 'Nettoyages uniquement') {
+        sections.addAll(await _buildNettoyagesSection());
+      }
+      if (_typeRapport == 'Toutes les données' || _typeRapport == 'Réceptions uniquement') {
+        sections.addAll(await _buildReceptionsSection());
+      }
+      if (_typeRapport == 'Toutes les données' || _typeRapport == 'Produits uniquement') {
+        sections.addAll(await _buildProduitsSection());
+      }
+
+      // Ensuite tu construis ta page PDF avec ces widgets déjà prêts
+      pdf.addPage(
+        pw.Page(
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: pw.CrossAxisAlignment.start,
+              children: [
+                pw.Text(
+                  'Rapport de Suivi d\'Hygiène',
+                  style: pw.TextStyle(fontSize: 24, fontWeight: pw.FontWeight.bold),
+                ),
+                pw.SizedBox(height: 20),
+                pw.Text('Période: ${DateFormat('dd/MM/yyyy').format(_dateDebut)} - ${DateFormat('dd/MM/yyyy').format(_dateFin)}'),
+                pw.Text('Type: $_typeRapport'),
+                pw.SizedBox(height: 20),
+                pw.Divider(),
+                pw.SizedBox(height: 20),
+
+                // Insertion des sections préparées
+                ...sections,
+              ],
+            );
+          },
+        ),
+      );
+
+      // Sauvegarder et partager
+      final output = await getTemporaryDirectory();
+      final file = File('${output.path}/rapport_hygiene_${DateFormat('yyyyMMdd').format(DateTime.now())}.pdf');
+      await file.writeAsBytes(await pdf.save());
+
+      await Share.shareXFiles([XFile(file.path)], text: 'Rapport de suivi d\'hygiène');
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erreur lors de la génération du PDF: $e')),
+      );
+    }
+  }
+}
