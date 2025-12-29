@@ -12,20 +12,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.2.3'
-          channel: 'stable'
+          channel: stable
           cache: true
-      
+
       - name: Install dependencies
         run: flutter pub get
-      
+
       - name: Verify formatting
-        run: dart format --output=none --set-exit-if-changed .
-      
+        run: flutter format --set-exit-if-changed .
+
       - name: Analyze code
         run: flutter analyze
 
@@ -35,45 +34,47 @@ jobs:
     if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.2.3'
-          channel: 'stable'
+          channel: stable
           cache: true
-      
+
       - name: Install dependencies
         run: flutter pub get
-      
-      - name: Run tests
-        run: flutter test
-        continue-on-error: true  # Don't fail if no tests exist yet
+
+      - name: Run tests (only if any)
+        run: |
+          if [ -d "test" ] && [ "$(ls -A test)" ]; then
+            flutter test
+          else
+            echo "No tests found, skipping"
+          fi
 
   build:
-    name: Build
+    name: Build APK (non-blocking)
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main'
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.2.3'
-          channel: 'stable'
+          channel: stable
           cache: true
-      
+
       - name: Install dependencies
         run: flutter pub get
-      
+
       - name: Build APK
         run: flutter build apk --release
-        continue-on-error: true  # Don't fail if build requires signing keys
-      
-      - name: Upload APK
+
+      - name: Upload APK (if built)
         uses: actions/upload-artifact@v4
-        if: success()
+        if: always()
         with:
           name: app-release
           path: build/app/outputs/flutter-apk/app-release.apk
