@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:go_router/go_router.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -177,7 +178,15 @@ class _LoginPageState extends State<LoginPage> {
       if (response.session != null && response.user != null) {
         debugPrint('[AUTH] ✅ Login successful');
         _showSuccess('Connexion réussie !');
-        // AuthGate will automatically redirect
+        
+        // Attendre un court délai pour afficher le message de succès
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        // Rediriger vers la page d'accueil
+        if (mounted) {
+          debugPrint('[AUTH] Redirecting to /home');
+          context.go('/home');
+        }
       } else {
         debugPrint('[AUTH] ❌ Login failed: session or user is null');
         _showError('Échec de la connexion. Vérifiez vos identifiants.');

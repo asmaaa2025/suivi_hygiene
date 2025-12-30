@@ -24,6 +24,7 @@ class AppTheme {
   // TODO: Add proper status colors (critical, warning, ok, info) matching HACCP standards
   // TODO: Add proper text colors (primary, secondary, tertiary)
   // TODO: Add proper background colors
+  static Color get primary => Colors.blue;
   static Color get primaryBlue => Colors.blue;
   static Color get statusCritical => Colors.red;
   static Color get statusCriticalBg => Colors.red.shade50;
@@ -33,5 +34,6 @@ class AppTheme {
   static Color get textTertiary => Colors.grey;
   static Color get textSecondary => Colors.grey.shade700;
   static Color get backgroundNeutral => Colors.grey.shade100;
+  static Color get backgroundSecondary => Colors.grey.shade100;
   static BorderSide get cardBorder => BorderSide(color: Colors.grey.shade300);
 }

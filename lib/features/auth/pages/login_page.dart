@@ -56,9 +56,9 @@ class _LoginPageState extends State<LoginPage> {
       }
 
       if (mounted) {
-        debugPrint('[Login] Navigating to /app/dashboard');
-        // Use pushReplacement to ensure we can't go back to login
-        context.go('/app/dashboard');
+        debugPrint('[Login] Navigating to /home');
+        // Redirect to home page after successful login
+        context.go('/home');
         debugPrint('[Login] Navigation called');
       }
     } on AuthException catch (e) {

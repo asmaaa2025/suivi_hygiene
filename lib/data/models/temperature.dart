@@ -19,8 +19,8 @@ class Temperature {
   });
 
   factory Temperature.fromJson(Map<String, dynamic> json) {
-    // Handle appareil_id - can be null or empty
-    final appareilIdValue = json['appareil_id'];
+    // Handle appareil_id (UUID) or appareil (TEXT legacy) - can be null or empty
+    final appareilIdValue = json['appareil_id'] ?? json['appareil'];
     final appareilId = appareilIdValue != null
         ? (appareilIdValue is String
             ? appareilIdValue
@@ -32,10 +32,15 @@ class Temperature {
       appareilId: appareilId,
       temperature: (json['temperature'] as num?)?.toDouble() ?? 0.0,
       remarque: json['remarque'] as String?,
-      photoUrl: json['photo_url'] as String?,
+      photoUrl: json['photo_url'] ?? json['photo_path'],
       createdAt: json['created_at'] != null
-          ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now())
-          : DateTime.now(),
+          ? (DateTime.tryParse(json['created_at'].toString()) ?? 
+             (json['date'] != null 
+               ? (DateTime.tryParse(json['date'].toString()) ?? DateTime.now())
+               : DateTime.now()))
+          : (json['date'] != null 
+              ? (DateTime.tryParse(json['date'].toString()) ?? DateTime.now())
+              : DateTime.now()),
       createdBy: json['created_by'] as String?,
     );
   }

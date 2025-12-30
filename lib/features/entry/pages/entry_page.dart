@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/section_card.dart';
-import '../../temperatures/pages/temperature_form_page.dart';
-import '../../receptions/pages/reception_form_page.dart';
-import '../../cleaning/pages/cleaning_page.dart';
-import '../../oil/pages/oil_change_form_page.dart';
 
 /// Quick entry page with action buttons
 class EntryPage extends StatelessWidget {
@@ -20,10 +17,7 @@ class EntryPage extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         children: [
           SectionCard(
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const TemperatureFormPage())),
+            onTap: () => context.push('/temperatures/new'),
             child: Row(
               children: [
                 Container(
@@ -57,10 +51,7 @@ class EntryPage extends StatelessWidget {
             ),
           ),
           SectionCard(
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const ReceptionFormPage())),
+            onTap: () => context.push('/receptions/new'),
             child: Row(
               children: [
                 Container(
@@ -94,8 +85,7 @@ class EntryPage extends StatelessWidget {
             ),
           ),
           SectionCard(
-            onTap: () => Navigator.push(context,
-                MaterialPageRoute(builder: (context) => const CleaningPage())),
+            onTap: () => context.push('/cleaning'),
             child: Row(
               children: [
                 Container(
@@ -129,10 +119,7 @@ class EntryPage extends StatelessWidget {
             ),
           ),
           SectionCard(
-            onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (context) => const OilChangeFormPage())),
+            onTap: () => context.push('/oil-changes/new'),
             child: Row(
               children: [
                 Container(

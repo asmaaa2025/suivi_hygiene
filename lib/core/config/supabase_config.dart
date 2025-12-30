@@ -1,48 +1,31 @@
-import 'package:flutter/foundation.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart' show dotenv;
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-/// Supabase configuration
-/// Loads values from environment variables (.env file)
-/// See .env.example for required variables
 class SupabaseConfig {
   static String get supabaseUrl {
-    if (kDebugMode) {
-      // In debug mode, try to load from .env file
-      return dotenv.env['SUPABASE_URL'] ??
-          'https://your-project.supabase.co'; // Fallback for development
+    final v = dotenv.maybeGet('SUPABASE_URL') ?? const String.fromEnvironment('SUPABASE_URL');
+    if (v.isEmpty) {
+      throw StateError('Missing SUPABASE_URL. Add it to .env or pass --dart-define=SUPABASE_URL=...');
     }
-    // In release mode, use environment variable or build-time config
-    return const String.fromEnvironment(
-      'SUPABASE_URL',
-      defaultValue: 'https://your-project.supabase.co',
-    );
+    return v;
   }
 
   static String get supabaseAnonKey {
-    if (kDebugMode) {
-      return dotenv.env['SUPABASE_ANON_KEY'] ??
-          'your-anon-key-here'; // Fallback for development
+    final v = dotenv.maybeGet('SUPABASE_ANON_KEY') ?? const String.fromEnvironment('SUPABASE_ANON_KEY');
+    if (v.isEmpty) {
+      throw StateError('Missing SUPABASE_ANON_KEY. Add it to .env or pass --dart-define=SUPABASE_ANON_KEY=...');
     }
-    return const String.fromEnvironment(
-      'SUPABASE_ANON_KEY',
-      defaultValue: 'your-anon-key-here',
-    );
+    return v;
   }
 
-  // Storage bucket names for photos
   static String get photosBucket {
-    try {
-      return dotenv.env['SUPABASE_PHOTOS_BUCKET'] ?? 'haccp-photos';
-    } catch (e) {
-      return 'haccp-photos';
-    }
+    final v = dotenv.maybeGet('SUPABASE_PHOTOS_BUCKET') ??
+        const String.fromEnvironment('SUPABASE_PHOTOS_BUCKET', defaultValue: 'haccp-photos');
+    return v.isEmpty ? 'haccp-photos' : v;
   }
 
   static String get relevesBucket {
-    try {
-      return dotenv.env['SUPABASE_RELEVES_BUCKET'] ?? 'releves';
-    } catch (e) {
-      return 'releves';
-    }
+    final v = dotenv.maybeGet('SUPABASE_RELEVES_BUCKET') ??
+        const String.fromEnvironment('SUPABASE_RELEVES_BUCKET', defaultValue: 'releves');
+    return v.isEmpty ? 'releves' : v;
   }
 }
