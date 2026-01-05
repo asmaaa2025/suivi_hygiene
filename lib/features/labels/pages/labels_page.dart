@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../screens/etiquette_page.dart';
+import 'etiquette_page.dart';
 
 /// Labels page - redirects to existing EtiquettePage
 class LabelsPage extends StatelessWidget {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../screens/login_page.dart';
+import '../features/auth/pages/login_page.dart';
 
 /// AuthGate: Redirects to login if no session, otherwise shows app
 /// Uses Supabase auth.onAuthStateChange to automatically rebuild when auth state changes

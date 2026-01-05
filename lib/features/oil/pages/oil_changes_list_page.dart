@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../screens/suivi_huile_page.dart';
+import 'suivi_huile_page.dart';
 
 /// Oil changes list page - redirects to existing SuiviHuilePage
 class OilChangesListPage extends StatelessWidget {

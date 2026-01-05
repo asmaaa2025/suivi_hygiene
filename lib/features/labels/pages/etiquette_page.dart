@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
-import '../repositories/products_repository.dart';
-import '../repositories/labels_repository.dart';
-import '../models/produit.dart';
-import '../services/text_sanitizer_service.dart';
-import '../services/bluetooth_service.dart';
-import '../services/logo_service.dart';
-import '../services/network_service.dart';
-import '../services/cache_service.dart';
-import '../exceptions/app_exceptions.dart';
-import '../utils/text_input_formatters.dart';
+import '../../../../repositories/products_repository.dart';
+import '../../../../repositories/labels_repository.dart';
+import '../../../../models/produit.dart';
+import '../../../../services/text_sanitizer_service.dart';
+import '../../../../services/bluetooth_service.dart';
+import '../../../../services/logo_service.dart';
+import '../../../../services/network_service.dart';
+import '../../../../services/cache_service.dart';
+import '../../../../exceptions/app_exceptions.dart';
+import '../../../../utils/text_input_formatters.dart';
 import 'package:intl/intl.dart';
 
 class EtiquettePage extends StatefulWidget {
@@ -444,6 +444,8 @@ $formattedContent
   /// Retourne le texte du type de produit pour l'étiquette
   String _getTypeProduitText(TypeProduit typeProduit) {
     switch (typeProduit) {
+      case TypeProduit.recu:
+        return 'PRODUIT RECU';
       case TypeProduit.fini:
         return 'PRODUIT FINI';
       case TypeProduit.prepare:
@@ -458,6 +460,8 @@ $formattedContent
   /// Retourne le label de date approprié selon le type de produit
   String _getDateLabel(TypeProduit typeProduit) {
     switch (typeProduit) {
+      case TypeProduit.recu:
+        return 'Date reception';
       case TypeProduit.fini:
         return 'Date fabrication';
       case TypeProduit.prepare:
@@ -475,6 +479,8 @@ $formattedContent
     }
 
     switch (typeProduit) {
+      case TypeProduit.recu:
+        return '+4 degres';
       case TypeProduit.fini:
         return '+4 degres';
       case TypeProduit.prepare:
@@ -740,13 +746,15 @@ $formattedContent
                   ),
                   SizedBox(height: 8),
                   Text(
-                    localSelectedType == TypeProduit.fini
-                        ? 'Produit vendu directement aux clients'
-                        : localSelectedType == TypeProduit.prepare
-                            ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
-                            : localSelectedType == TypeProduit.ouverture
-                                ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
-                                : 'Produit décongelé pour utilisation',
+                    localSelectedType == TypeProduit.recu
+                        ? 'Produit reçu d\'un fournisseur'
+                        : localSelectedType == TypeProduit.fini
+                            ? 'Produit vendu directement aux clients'
+                            : localSelectedType == TypeProduit.prepare
+                                ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
+                                : localSelectedType == TypeProduit.ouverture
+                                    ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
+                                    : 'Produit décongelé pour utilisation',
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey.shade600,
@@ -762,13 +770,15 @@ $formattedContent
                     childAspectRatio: 2.5,
                     children: TypeProduit.values.map((type) {
                       final isSelected = localSelectedType == type;
-                      final color = type == TypeProduit.fini
-                          ? Colors.green
-                          : type == TypeProduit.prepare
-                              ? Colors.orange
-                              : type == TypeProduit.ouverture
-                                  ? Colors.red
-                                  : Colors.blue;
+                      final color = type == TypeProduit.recu
+                          ? Colors.purple
+                          : type == TypeProduit.fini
+                              ? Colors.green
+                              : type == TypeProduit.prepare
+                                  ? Colors.orange
+                                  : type == TypeProduit.ouverture
+                                      ? Colors.red
+                                      : Colors.blue;
 
                       return InkWell(
                         onTap: () {
@@ -782,18 +792,34 @@ $formattedContent
                         borderRadius: BorderRadius.circular(16),
                         splashColor: color.shade200.withOpacity(0.3),
                         highlightColor: color.shade100.withOpacity(0.2),
-                        child: Container(
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 200),
                           decoration: BoxDecoration(
                             color: isSelected
-                                ? color.shade50
-                                : Colors.grey.shade50,
+                                ? color.shade100
+                                : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isSelected
-                                  ? color.shade300
+                                  ? color.shade600
                                   : Colors.grey.shade300,
-                              width: isSelected ? 2 : 1,
+                              width: isSelected ? 3 : 2,
                             ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: color.shade200.withOpacity(0.5),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ]
+                                : [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
                           ),
                           child: Padding(
                             padding: EdgeInsets.all(16),
@@ -808,13 +834,15 @@ $formattedContent
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: Icon(
-                                    type == TypeProduit.fini
-                                        ? Icons.shopping_cart
-                                        : type == TypeProduit.prepare
-                                            ? Icons.build
-                                            : type == TypeProduit.ouverture
-                                                ? Icons.open_in_new
-                                                : Icons.ac_unit,
+                                    type == TypeProduit.recu
+                                        ? Icons.local_shipping
+                                        : type == TypeProduit.fini
+                                            ? Icons.shopping_cart
+                                            : type == TypeProduit.prepare
+                                                ? Icons.build
+                                                : type == TypeProduit.ouverture
+                                                    ? Icons.open_in_new
+                                                    : Icons.ac_unit,
                                     color: color.shade700,
                                     size: 24,
                                   ),
@@ -827,13 +855,15 @@ $formattedContent
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
                                       Text(
-                                        type == TypeProduit.fini
-                                            ? 'Produit fini'
-                                            : type == TypeProduit.prepare
-                                                ? 'Produit préparé'
-                                                : type == TypeProduit.ouverture
-                                                    ? 'Ouverture'
-                                                    : 'Décongélation',
+                                        type == TypeProduit.recu
+                                            ? 'Produit reçu'
+                                            : type == TypeProduit.fini
+                                                ? 'Produit fini'
+                                                : type == TypeProduit.prepare
+                                                    ? 'Produit préparé'
+                                                    : type == TypeProduit.ouverture
+                                                        ? 'Ouverture'
+                                                        : 'Décongélation',
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
@@ -983,10 +1013,13 @@ $formattedContent
       }
 
       try {
+        final typeProduit = result['typeProduit'] as TypeProduit? ?? TypeProduit.fini;
         await _productsRepo.createProduct(
-          nom: result['nom'],
-          typeProduit: result['typeProduit']?.toString(),
+          nom: result['nom']?.toString() ?? '',
+          typeProduit: typeProduit.name,
           dlcJours: result['dlcJours'] as int?,
+          dateFabrication: DateTime.now(),
+          surgelagable: false,
           dlcSurgelationJours: result['dlcSurgelationJours'] as int?,
           ingredients: result['ingredients']?.toString(),
           quantite: result['quantite']?.toString(),
@@ -1118,13 +1151,6 @@ $formattedContent
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text('Fermer'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _addProduit();
-            },
-            child: Text('Ajouter un produit'),
           ),
         ],
       ),
@@ -1546,23 +1572,6 @@ $formattedContent
                       ),
                     ),
                     const SizedBox(height: 12),
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton.icon(
-                        onPressed: _addProduit,
-                        icon: const Icon(Icons.add),
-                        label: Text('Ajouter un produit',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.purple.shade600,
-                          foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
-                          elevation: 4,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 8),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton.icon(

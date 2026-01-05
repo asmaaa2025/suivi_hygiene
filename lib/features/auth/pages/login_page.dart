@@ -58,7 +58,7 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         debugPrint('[Login] Navigating to /home');
         // Redirect to home page after successful login
-        context.go('/home');
+        context.go('/home'); // Redirect to original dashboard
         debugPrint('[Login] Navigation called');
       }
     } on AuthException catch (e) {

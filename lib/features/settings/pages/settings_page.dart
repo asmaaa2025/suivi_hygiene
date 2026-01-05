@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../screens/parametres_page.dart';
+import 'parametres_page.dart';
 
 /// Settings page - redirects to existing ParametresPage
 class SettingsPage extends StatelessWidget {

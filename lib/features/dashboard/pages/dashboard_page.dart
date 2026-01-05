@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/section_card.dart';
+import '../../../../services/employee_session_service.dart';
 import '../../entry/pages/entry_page.dart';
 import '../../cleaning/pages/cleaning_page.dart';
 import '../../temperatures/pages/temperatures_list_page.dart';
@@ -13,14 +14,57 @@ import '../../products/pages/products_list_page.dart';
 import '../../settings/pages/settings_page.dart';
 
 /// Dashboard page - Main entry point after login
-class DashboardPage extends StatelessWidget {
+class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
+
+  @override
+  State<DashboardPage> createState() => _DashboardPageState();
+}
+
+class _DashboardPageState extends State<DashboardPage> {
+  final _sessionService = EmployeeSessionService();
+  String? _greeting;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGreeting();
+  }
+
+  void _loadGreeting() {
+    _sessionService.initialize().then((_) {
+      if (mounted) {
+        setState(() {
+          final employee = _sessionService.currentEmployee;
+          _greeting = employee != null 
+              ? 'Bonjour, ${employee.firstName}'
+              : 'Bonjour';
+        });
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Suivi HACCP'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (_greeting != null)
+              Text(
+                _greeting!,
+                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              )
+            else
+              const Text('Suivi HACCP'),
+            if (_greeting != null)
+              const Text(
+                'Suivi HACCP',
+                style: TextStyle(fontSize: 12, fontWeight: FontWeight.normal),
+              ),
+          ],
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.settings),
@@ -143,6 +187,28 @@ class DashboardPage extends StatelessWidget {
               'Historique unifié',
               'Voir toutes les activités en un seul endroit',
               Colors.grey.shade700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SectionCard(
+            onTap: () => context.push('/suppliers'),
+            child: _buildMenuItem(
+              context,
+              Icons.local_shipping,
+              'Fournisseurs',
+              'Gérer les fournisseurs et leurs produits',
+              AppTheme.primaryBlue,
+            ),
+          ),
+          const SizedBox(height: 8),
+          SectionCard(
+            onTap: () => context.push('/employees'),
+            child: _buildMenuItem(
+              context,
+              Icons.people,
+              'Employés',
+              'Gérer les employés et leurs rôles',
+              Colors.teal,
             ),
           ),
           const SizedBox(height: 8),

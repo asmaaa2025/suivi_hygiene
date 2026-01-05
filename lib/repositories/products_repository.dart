@@ -63,7 +63,7 @@ class ProductsRepository {
         'date_fabrication': dateFabrication?.toIso8601String() ??
             DateTime.now().toIso8601String(),
         'date_modification': DateTime.now().toIso8601String(),
-        'surgelagable': surgelagable == true,
+        'surgelagable': (surgelagable ?? false) ? 1 : 0,
         'actif': true,
       };
 
@@ -121,7 +121,7 @@ class ProductsRepository {
       if (dateFabrication != null) {
         updates['date_fabrication'] = dateFabrication.toIso8601String();
       }
-      if (surgelagable != null) updates['surgelagable'] = surgelagable;
+      if (surgelagable != null) updates['surgelagable'] = surgelagable ? 1 : 0;
 
       final result = await client
           .from(tableName)

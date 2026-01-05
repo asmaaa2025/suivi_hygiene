@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../services/network_service.dart';
-import '../data/repositories/tache_nettoyage_repository.dart';
+import '../../../../services/network_service.dart';
+import '../../../../data/repositories/tache_nettoyage_repository.dart';
 
 class NettoyagePage extends StatefulWidget {
   const NettoyagePage({super.key});

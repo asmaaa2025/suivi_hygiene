@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../services/cache_service.dart';
+import '../../../../services/cache_service.dart';
+import '../../../../services/employee_session_service.dart';
 
 class ParametresPage extends StatefulWidget {
   const ParametresPage({super.key});
@@ -83,6 +85,46 @@ class _ParametresPageState extends State<ParametresPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Toutes les données ont été supprimées')),
       );
+    }
+  }
+
+  Future<void> _changeEmployee() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Changer d\'employé'),
+        content: const Text(
+            'Voulez-vous changer de compte employé ? Vous serez redirigé vers la page de sélection.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(true),
+            child: const Text('Changer', style: TextStyle(color: Colors.blue)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      try {
+        // Clear current employee session
+        final sessionService = EmployeeSessionService();
+        await sessionService.clear();
+
+        // Redirect to employee selection page
+        if (mounted) {
+          context.go('/employee-selection');
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Erreur: $e')),
+          );
+        }
+      }
     }
   }
 
@@ -253,6 +295,43 @@ class _ParametresPageState extends State<ParametresPage> {
 
           const SizedBox(height: 16),
 
+          // Section Gestion
+          Card(
+            elevation: 4,
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Gestion',
+                    style: GoogleFonts.montserrat(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  ListTile(
+                    leading: const Icon(Icons.people, color: Colors.blue),
+                    title: const Text('Employés'),
+                    subtitle: const Text('Gérer les employés et leurs rôles'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/employees'),
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.local_shipping, color: Colors.green),
+                    title: const Text('Fournisseurs'),
+                    subtitle: const Text('Gérer les fournisseurs'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () => context.push('/suppliers'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
           // Section Actions
           Card(
             elevation: 4,
@@ -327,6 +406,12 @@ class _ParametresPageState extends State<ParametresPage> {
                         ),
                       );
                     },
+                  ),
+                  ListTile(
+                    leading: const Icon(Icons.swap_horiz, color: Colors.blue),
+                    title: const Text('Changer d\'employé'),
+                    subtitle: const Text('Sélectionner un autre compte employé'),
+                    onTap: _changeEmployee,
                   ),
                   ListTile(
                     leading:

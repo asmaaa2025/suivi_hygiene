@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../repositories/products_repository.dart';
-import '../services/network_service.dart';
-import '../exceptions/app_exceptions.dart';
-import '../models/produit.dart';
-import '../utils/text_input_formatters.dart';
+import '../../../../repositories/products_repository.dart';
+import '../../../../services/network_service.dart';
+import '../../../../exceptions/app_exceptions.dart';
+import '../../../../models/produit.dart';
+import '../../../../utils/text_input_formatters.dart';
 
 class GestionProduitsPage extends StatefulWidget {
   const GestionProduitsPage({super.key});
@@ -116,85 +116,70 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
       builder: (context) => StatefulBuilder(
         builder: (context, setDialogState) {
           return AlertDialog(
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            title: Row(
-              children: [
-                Container(
-                  padding: EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.purple.shade100,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child:
-                      Icon(Icons.add, color: Colors.purple.shade600, size: 28),
-                ),
-                SizedBox(width: 16),
-                Text('Nouveau produit',
-                    style: GoogleFonts.montserrat(
-                        fontSize: 20, fontWeight: FontWeight.bold)),
-              ],
-            ),
+            title: Text('Nouveau produit'),
             content: SizedBox(
               width: double.maxFinite,
-              height: 600, // Augmenté de 500 à 600
+              height: 500,
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildFormField(
+                    TextField(
                       controller: _nomController,
-                      label: 'Nom du produit *',
-                      helperText:
-                          'Caractères spéciaux automatiquement corrigés',
-                      icon: Icons.inventory,
-                      formatter: ProductNameInputFormatter(),
+                      decoration: InputDecoration(
+                        labelText: 'Nom du produit *',
+                        border: OutlineInputBorder(),
+                        helperText:
+                            'Caractères spéciaux automatiquement corrigés',
+                      ),
+                      inputFormatters: [ProductNameInputFormatter()],
                     ),
-                    SizedBox(height: 24), // Augmenté de 16 à 24
+                    const SizedBox(height: 16),
 
                     // Sélecteur de type de produit
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Type de produit *',
-                          style: GoogleFonts.montserrat(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: Colors.purple.shade700,
-                          ),
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          localSelectedType == TypeProduit.fini
+                    Text(
+                      'Type de produit *',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.purple.shade700,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      localSelectedType == TypeProduit.recu
+                          ? 'Produit reçu d\'un fournisseur'
+                          : localSelectedType == TypeProduit.fini
                               ? 'Produit vendu directement aux clients'
                               : localSelectedType == TypeProduit.prepare
                                   ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
                                   : localSelectedType == TypeProduit.ouverture
                                       ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
                                       : 'Produit décongelé pour utilisation',
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: Colors.grey.shade600,
-                          ),
-                        ),
-                        SizedBox(height: 16),
-                        GridView.count(
-                          shrinkWrap: true,
-                          physics: NeverScrollableScrollPhysics(),
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: 2.5,
-                          children: TypeProduit.values.map((type) {
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.grey.shade600,
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 2.5,
+                      children: TypeProduit.values.map((type) {
                             final isSelected = localSelectedType == type;
-                            final color = type == TypeProduit.fini
-                                ? Colors.green
-                                : type == TypeProduit.prepare
-                                    ? Colors.orange
-                                    : type == TypeProduit.ouverture
-                                        ? Colors.red
-                                        : Colors.blue;
+                            final color = type == TypeProduit.recu
+                                ? Colors.purple
+                                : type == TypeProduit.fini
+                                    ? Colors.green
+                                    : type == TypeProduit.prepare
+                                        ? Colors.orange
+                                        : type == TypeProduit.ouverture
+                                            ? Colors.red
+                                            : Colors.blue;
 
                             return InkWell(
                               onTap: () {
@@ -253,14 +238,16 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                                               BorderRadius.circular(12),
                                         ),
                                         child: Icon(
-                                          type == TypeProduit.fini
-                                              ? Icons.shopping_cart
-                                              : type == TypeProduit.prepare
-                                                  ? Icons.build
-                                                  : type ==
-                                                          TypeProduit.ouverture
-                                                      ? Icons.open_in_new
-                                                      : Icons.ac_unit,
+                                          type == TypeProduit.recu
+                                              ? Icons.local_shipping
+                                              : type == TypeProduit.fini
+                                                  ? Icons.shopping_cart
+                                                  : type == TypeProduit.prepare
+                                                      ? Icons.build
+                                                      : type ==
+                                                              TypeProduit.ouverture
+                                                          ? Icons.open_in_new
+                                                          : Icons.ac_unit,
                                           color: color.shade700,
                                           size: 24,
                                         ),
@@ -274,16 +261,18 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                                               MainAxisAlignment.center,
                                           children: [
                                             Text(
-                                              type == TypeProduit.fini
-                                                  ? 'Produit fini'
-                                                  : type == TypeProduit.prepare
-                                                      ? 'Produit préparé'
-                                                      : type ==
-                                                              TypeProduit
-                                                                  .ouverture
-                                                          ? 'Ouverture'
-                                                          : 'Décongélation',
-                                              style: GoogleFonts.montserrat(
+                                              type == TypeProduit.recu
+                                                  ? 'Produit reçu'
+                                                  : type == TypeProduit.fini
+                                                      ? 'Produit fini'
+                                                      : type == TypeProduit.prepare
+                                                          ? 'Produit préparé'
+                                                          : type ==
+                                                                  TypeProduit
+                                                                      .ouverture
+                                                              ? 'Ouverture'
+                                                              : 'Décongélation',
+                                              style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w600,
                                                 color: isSelected
@@ -294,7 +283,7 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                                             SizedBox(height: 4),
                                             Text(
                                               type.dlcDescription,
-                                              style: GoogleFonts.poppins(
+                                              style: TextStyle(
                                                 fontSize: 11,
                                                 color: isSelected
                                                     ? color.shade600
@@ -324,77 +313,74 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                               ),
                             );
                           }).toList(),
-                        ),
-                      ],
                     ),
-                    SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildFormField(
-                            controller: _dlcJoursController,
-                            label: 'DLC en jours',
-                            helperText:
-                                'Modifiable - DLC recommandée : ${localSelectedType.dlcDescription}',
-                            icon: Icons.schedule,
-                            keyboardType: TextInputType.number,
-                            formatter: IntegerInputFormatter(maxValue: 365),
-                          ),
-                        ),
-                        SizedBox(width: 16), // Augmenté de 12 à 16
-                        Expanded(
-                          child: _buildFormField(
-                            controller: _dlcSurgelationController,
-                            label: 'DLC surgélation',
-                            helperText: 'Jours après surgélation (optionnel)',
-                            icon: Icons.ac_unit,
-                            keyboardType: TextInputType.number,
-                            formatter: IntegerInputFormatter(maxValue: 365),
-                          ),
-                        ),
-                      ],
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _dlcJoursController,
+                    decoration: InputDecoration(
+                      labelText: 'DLC en jours (optionnel)',
+                      border: OutlineInputBorder(),
+                      helperText: 'Nombre de jours après fabrication',
                     ),
-                    SizedBox(height: 24), // Augmenté de 16 à 24
-                    _buildFormField(
-                      controller: _ingredientsController,
-                      label: 'Ingrédients',
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [IntegerInputFormatter(maxValue: 365)],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _dlcSurgelationController,
+                    decoration: InputDecoration(
+                      labelText: 'DLC de surgélation (optionnel)',
+                      border: OutlineInputBorder(),
+                      helperText: 'Nombre de jours après surgélation',
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [IntegerInputFormatter(maxValue: 365)],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _ingredientsController,
+                    decoration: InputDecoration(
+                      labelText: 'Ingrédients (optionnel)',
+                      border: OutlineInputBorder(),
                       helperText: 'Liste des ingrédients principaux',
-                      icon: Icons.list,
-                      maxLines: 4, // Augmenté de 3 à 4
-                      formatter: DescriptionInputFormatter(maxLength: 200),
                     ),
-                    SizedBox(height: 24), // Augmenté de 16 à 24
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildFormField(
-                            controller: _quantiteController,
-                            label: 'Quantité par unité',
-                            helperText: 'Ex: 50 pièces, 1kg',
-                            icon: Icons.scale,
-                            formatter: ZplSafeTextInputFormatter(),
-                          ),
-                        ),
-                        SizedBox(width: 16), // Augmenté de 12 à 16
-                        Expanded(
-                          child: _buildFormField(
-                            controller: _origineViandeController,
-                            label: 'Origine viande',
-                            helperText: 'Ex: France, UE',
-                            icon: Icons.location_on,
-                            formatter: ZplSafeTextInputFormatter(),
-                          ),
-                        ),
-                      ],
+                    maxLines: 2,
+                    inputFormatters: [
+                      DescriptionInputFormatter(maxLength: 200)
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _quantiteController,
+                    decoration: InputDecoration(
+                      labelText: 'Quantité par unité (optionnel)',
+                      border: OutlineInputBorder(),
+                      helperText: 'Ex: 50 pièces, 1kg, etc.',
                     ),
-                    SizedBox(height: 24), // Augmenté de 16 à 24
-                    _buildFormField(
-                      controller: _allergenesController,
-                      label: 'Allergènes',
-                      helperText: 'Ex: gluten, lait, œufs',
-                      icon: Icons.warning,
-                      formatter: DescriptionInputFormatter(maxLength: 100),
+                    inputFormatters: [ZplSafeTextInputFormatter()],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _origineViandeController,
+                    decoration: InputDecoration(
+                      labelText: 'Origine viande (optionnel)',
+                      border: OutlineInputBorder(),
+                      helperText: 'Ex: France, UE, etc.',
                     ),
+                    inputFormatters: [ZplSafeTextInputFormatter()],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _allergenesController,
+                    decoration: InputDecoration(
+                      labelText: 'Allergènes (optionnel)',
+                      border: OutlineInputBorder(),
+                      helperText: 'Ex: gluten, lait, œufs, etc.',
+                    ),
+                    inputFormatters: [
+                      DescriptionInputFormatter(maxLength: 100)
+                    ],
+                  ),
                   ],
                 ),
               ),
@@ -402,9 +388,7 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context),
-                child: Text('Annuler',
-                    style: GoogleFonts.montserrat(
-                        fontSize: 16, fontWeight: FontWeight.w600)),
+                child: Text('Annuler'),
               ),
               ElevatedButton(
                 onPressed: () {
@@ -412,17 +396,15 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                     final dlcJours =
                         int.tryParse(_dlcJoursController.text.trim()) ?? 0;
                     final dlcSurgelation =
-                        int.tryParse(_dlcSurgelationController.text.trim()) ??
-                            0;
+                        int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
                     Navigator.pop(context, {
                       'nom': _nomController.text.trim(),
                       'typeProduit': localSelectedType,
                       'dlcJours': dlcJours,
                       'dlcSurgelationJours': dlcSurgelation,
-                      'ingredients':
-                          _ingredientsController.text.trim().isNotEmpty
-                              ? _ingredientsController.text.trim()
-                              : null,
+                      'ingredients': _ingredientsController.text.trim().isNotEmpty
+                          ? _ingredientsController.text.trim()
+                          : null,
                       'quantite': _quantiteController.text.trim().isNotEmpty
                           ? _quantiteController.text.trim()
                           : null,
@@ -436,17 +418,7 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                     });
                   }
                 },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple.shade600,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16)),
-                  padding: EdgeInsets.symmetric(
-                      horizontal: 24, vertical: 12), // Ajouté du padding
-                ),
-                child: Text('Ajouter',
-                    style: GoogleFonts.montserrat(
-                        fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text('Ajouter'),
               ),
             ],
           );
@@ -638,13 +610,15 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                         ),
                         SizedBox(height: 8),
                         Text(
-                          localSelectedType == TypeProduit.fini
-                              ? 'Produit vendu directement aux clients'
-                              : localSelectedType == TypeProduit.prepare
-                                  ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
-                                  : localSelectedType == TypeProduit.ouverture
-                                      ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
-                                      : 'Produit décongelé pour utilisation',
+                          localSelectedType == TypeProduit.recu
+                              ? 'Produit reçu d\'un fournisseur'
+                              : localSelectedType == TypeProduit.fini
+                                  ? 'Produit vendu directement aux clients'
+                                  : localSelectedType == TypeProduit.prepare
+                                      ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
+                                      : localSelectedType == TypeProduit.ouverture
+                                          ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
+                                          : 'Produit décongelé pour utilisation',
                           style: GoogleFonts.poppins(
                             fontSize: 13,
                             color: Colors.grey.shade600,
@@ -660,13 +634,15 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                           childAspectRatio: 2.5,
                           children: TypeProduit.values.map((type) {
                             final isSelected = localSelectedType == type;
-                            final color = type == TypeProduit.fini
-                                ? Colors.green
-                                : type == TypeProduit.prepare
-                                    ? Colors.orange
-                                    : type == TypeProduit.ouverture
-                                        ? Colors.red
-                                        : Colors.blue;
+                            final color = type == TypeProduit.recu
+                                ? Colors.purple
+                                : type == TypeProduit.fini
+                                    ? Colors.green
+                                    : type == TypeProduit.prepare
+                                        ? Colors.orange
+                                        : type == TypeProduit.ouverture
+                                            ? Colors.red
+                                            : Colors.blue;
 
                             return InkWell(
                               onTap: () {
@@ -722,14 +698,16 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                                               BorderRadius.circular(12),
                                         ),
                                         child: Icon(
-                                          type == TypeProduit.fini
-                                              ? Icons.shopping_cart
-                                              : type == TypeProduit.prepare
-                                                  ? Icons.build
-                                                  : type ==
-                                                          TypeProduit.ouverture
-                                                      ? Icons.open_in_new
-                                                      : Icons.ac_unit,
+                                          type == TypeProduit.recu
+                                              ? Icons.local_shipping
+                                              : type == TypeProduit.fini
+                                                  ? Icons.shopping_cart
+                                                  : type == TypeProduit.prepare
+                                                      ? Icons.build
+                                                      : type ==
+                                                              TypeProduit.ouverture
+                                                          ? Icons.open_in_new
+                                                          : Icons.ac_unit,
                                           color: color.shade700,
                                           size: 24,
                                         ),
@@ -743,16 +721,18 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                                               MainAxisAlignment.center,
                                           children: [
                                             Text(
-                                              type == TypeProduit.fini
-                                                  ? 'Produit fini'
-                                                  : type == TypeProduit.prepare
-                                                      ? 'Produit préparé'
-                                                      : type ==
-                                                              TypeProduit
-                                                                  .ouverture
-                                                          ? 'Ouverture'
-                                                          : 'Décongélation',
-                                              style: GoogleFonts.montserrat(
+                                              type == TypeProduit.recu
+                                                  ? 'Produit reçu'
+                                                  : type == TypeProduit.fini
+                                                      ? 'Produit fini'
+                                                      : type == TypeProduit.prepare
+                                                          ? 'Produit préparé'
+                                                          : type ==
+                                                                  TypeProduit
+                                                                      .ouverture
+                                                              ? 'Ouverture'
+                                                              : 'Décongélation',
+                                              style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w600,
                                                 color: isSelected
@@ -763,7 +743,7 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                                             SizedBox(height: 4),
                                             Text(
                                               type.dlcDescription,
-                                              style: GoogleFonts.poppins(
+                                              style: TextStyle(
                                                 fontSize: 11,
                                                 color: isSelected
                                                     ? color.shade600
@@ -1387,15 +1367,18 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                                           horizontal: 8, vertical: 4),
                                       decoration: BoxDecoration(
                                         color: produit.typeProduit ==
-                                                TypeProduit.fini
-                                            ? Colors.green.shade100
+                                                TypeProduit.recu
+                                            ? Colors.purple.shade100
                                             : produit.typeProduit ==
-                                                    TypeProduit.prepare
-                                                ? Colors.orange.shade100
+                                                    TypeProduit.fini
+                                                ? Colors.green.shade100
                                                 : produit.typeProduit ==
-                                                        TypeProduit.ouverture
-                                                    ? Colors.red.shade100
-                                                    : Colors.blue.shade100,
+                                                        TypeProduit.prepare
+                                                    ? Colors.orange.shade100
+                                                    : produit.typeProduit ==
+                                                            TypeProduit.ouverture
+                                                        ? Colors.red.shade100
+                                                        : Colors.blue.shade100,
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Row(
@@ -1403,55 +1386,67 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
                                         children: [
                                           Icon(
                                             produit.typeProduit ==
-                                                    TypeProduit.fini
-                                                ? Icons.shopping_cart
+                                                    TypeProduit.recu
+                                                ? Icons.local_shipping
                                                 : produit.typeProduit ==
-                                                        TypeProduit.prepare
-                                                    ? Icons.build
+                                                        TypeProduit.fini
+                                                    ? Icons.shopping_cart
                                                     : produit.typeProduit ==
-                                                            TypeProduit
-                                                                .ouverture
-                                                        ? Icons.open_in_new
-                                                        : Icons.ac_unit,
+                                                            TypeProduit.prepare
+                                                        ? Icons.build
+                                                        : produit.typeProduit ==
+                                                                TypeProduit
+                                                                    .ouverture
+                                                            ? Icons.open_in_new
+                                                            : Icons.ac_unit,
                                             color: produit.typeProduit ==
-                                                    TypeProduit.fini
-                                                ? Colors.green.shade700
+                                                    TypeProduit.recu
+                                                ? Colors.purple.shade700
                                                 : produit.typeProduit ==
-                                                        TypeProduit.prepare
-                                                    ? Colors.orange.shade700
+                                                        TypeProduit.fini
+                                                    ? Colors.green.shade700
                                                     : produit.typeProduit ==
-                                                            TypeProduit
-                                                                .ouverture
-                                                        ? Colors.red.shade700
-                                                        : Colors.blue.shade700,
+                                                            TypeProduit.prepare
+                                                        ? Colors.orange.shade700
+                                                        : produit.typeProduit ==
+                                                                TypeProduit
+                                                                    .ouverture
+                                                            ? Colors.red.shade700
+                                                            : Colors.blue.shade700,
                                             size: 14,
                                           ),
                                           SizedBox(width: 4),
                                           Text(
                                             produit.typeProduit ==
-                                                    TypeProduit.fini
-                                                ? 'Produit fini'
+                                                    TypeProduit.recu
+                                                ? 'Produit reçu'
                                                 : produit.typeProduit ==
-                                                        TypeProduit.prepare
-                                                    ? 'Produit préparé'
+                                                        TypeProduit.fini
+                                                    ? 'Produit fini'
                                                     : produit.typeProduit ==
-                                                            TypeProduit
-                                                                .ouverture
-                                                        ? 'Ouverture'
-                                                        : 'Décongélation',
+                                                            TypeProduit.prepare
+                                                        ? 'Produit préparé'
+                                                        : produit.typeProduit ==
+                                                                TypeProduit
+                                                                    .ouverture
+                                                            ? 'Ouverture'
+                                                            : 'Décongélation',
                                             style: TextStyle(
                                               color: produit.typeProduit ==
-                                                      TypeProduit.fini
-                                                  ? Colors.green.shade700
+                                                      TypeProduit.recu
+                                                  ? Colors.purple.shade700
                                                   : produit.typeProduit ==
-                                                          TypeProduit.prepare
-                                                      ? Colors.orange.shade700
+                                                          TypeProduit.fini
+                                                      ? Colors.green.shade700
                                                       : produit.typeProduit ==
-                                                              TypeProduit
-                                                                  .ouverture
-                                                          ? Colors.red.shade700
-                                                          : Colors
-                                                              .blue.shade700,
+                                                              TypeProduit.prepare
+                                                          ? Colors.orange.shade700
+                                                          : produit.typeProduit ==
+                                                                  TypeProduit
+                                                                      .ouverture
+                                                              ? Colors.red.shade700
+                                                              : Colors
+                                                                  .blue.shade700,
                                               fontWeight: FontWeight.w500,
                                               fontSize: 12,
                                             ),

@@ -7,10 +7,10 @@ import 'package:uuid/uuid.dart';
 import 'package:path/path.dart' as path;
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_document_scanner/flutter_document_scanner.dart';
-import '../repositories/documents_repository.dart';
-import '../services/network_service.dart';
-import '../services/cache_service.dart';
-import '../exceptions/app_exceptions.dart';
+import '../../../../repositories/documents_repository.dart';
+import '../../../../services/network_service.dart';
+import '../../../../services/cache_service.dart';
+import '../../../../exceptions/app_exceptions.dart';
 
 class DocumentsPage extends StatefulWidget {
   const DocumentsPage({super.key});

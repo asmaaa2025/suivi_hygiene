@@ -4,12 +4,19 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../repositories/products_repository.dart';
-import '../services/network_service.dart';
-import '../services/cache_service.dart';
-import '../exceptions/app_exceptions.dart';
-import '../models/produit.dart';
-import '../widgets/quick_preparation_form.dart';
+import '../../../../repositories/products_repository.dart';
+import '../../../../services/network_service.dart';
+import '../../../../services/cache_service.dart';
+import '../../../../exceptions/app_exceptions.dart';
+import '../../../../models/produit.dart';
+import '../../../../widgets/quick_preparation_form.dart';
+import '../../../../utils/text_input_formatters.dart';
+import 'product_form_page.dart';
+import '../../../../data/repositories/supplier_repository.dart';
+import '../../../../data/repositories/supplier_product_repository.dart';
+import '../../../../data/models/supplier.dart';
+import '../../../../data/repositories/audit_log_repository.dart';
+import '../../../../data/repositories/organization_repository.dart';
 
 class ProduitsPage extends StatefulWidget {
   const ProduitsPage({super.key});
@@ -23,12 +30,19 @@ class _ProduitsPageState extends State<ProduitsPage>
   final _formKey = GlobalKey<FormState>();
   final _productsRepo = ProductsRepository();
   final _networkService = NetworkService();
+  final _auditLogRepo = AuditLogRepository();
   final _nomController = TextEditingController();
+  final _newProduitController = TextEditingController();
   final _dlcJoursController = TextEditingController();
   final _dlcSurgelationController = TextEditingController();
+  final _ingredientsController = TextEditingController();
+  final _quantiteController = TextEditingController();
+  final _origineViandeController = TextEditingController();
+  final _allergenesController = TextEditingController();
 
   bool _utiliseDlcJours = true;
   bool _surgelagable = false;
+  final TypeProduit _selectedTypeProduit = TypeProduit.fini;
 
   List<Produit> _produits = [];
   bool _isLoading = true;
@@ -53,28 +67,70 @@ class _ProduitsPageState extends State<ProduitsPage>
     }
   }
 
-  Future<void> _loadProduits() async {
+  /// Retourne le texte du type de produit pour l'affichage
+  String _getTypeProduitText(TypeProduit typeProduit) {
+    switch (typeProduit) {
+      case TypeProduit.recu:
+        return 'Produit reçu';
+      case TypeProduit.fini:
+        return 'Produit fini';
+      case TypeProduit.prepare:
+        return 'Produit préparé';
+      case TypeProduit.ouverture:
+        return 'Produit ouvert';
+      case TypeProduit.decongelation:
+        return 'Produit décongelé';
+    }
+  }
+
+  Future<void> _loadProduits({bool forceRefresh = false}) async {
     setState(() => _isLoading = true);
     try {
-      // Try cache first
-      final cached = CacheService().get('produits_all');
-      if (cached != null) {
-        final produits = (cached as List)
-            .map((map) => Produit.fromMap(Map<String, dynamic>.from(map)))
-            .toList();
-        setState(() {
-          _produits = produits;
-        });
+      // Clear cache if force refresh
+      if (forceRefresh) {
+        await CacheService().clearKey('produits_all');
+      } else {
+        // Try cache first
+        final cached = CacheService().get('produits_all');
+        if (cached != null) {
+          final produits = (cached as List)
+              .map((map) => Produit.fromMap(Map<String, dynamic>.from(map)))
+              .toList();
+          setState(() {
+            _produits = produits;
+          });
+        }
       }
 
       // Load from Supabase
       final produitsMaps = await _productsRepo.getAll();
-      final produits = produitsMaps.map((map) => Produit.fromMap(map)).toList();
-      setState(() {
-        _produits = produits;
-        _isLoading = false;
-      });
-    } catch (e) {
+      debugPrint('[ProduitsPage] Got ${produitsMaps.length} products from repository');
+      
+      final produits = <Produit>[];
+      for (final map in produitsMaps) {
+        try {
+          final produit = Produit.fromMap(map);
+          produits.add(produit);
+        } catch (e, stackTrace) {
+          debugPrint('[ProduitsPage] Error parsing product: $e');
+          debugPrint('[ProduitsPage] Stack trace: $stackTrace');
+          debugPrint('[ProduitsPage] Product map: $map');
+        }
+      }
+      
+      debugPrint('[ProduitsPage] Loaded ${produits.length} products from Supabase (parsed successfully)');
+      if (mounted) {
+        setState(() {
+          _produits = produits;
+          _isLoading = false;
+        });
+        debugPrint('[ProduitsPage] Updated _produits list with ${_produits.length} items');
+      } else {
+        debugPrint('[ProduitsPage] Widget not mounted, skipping setState');
+      }
+    } catch (e, stackTrace) {
+      debugPrint('[ProduitsPage] Error in _loadProduits: $e');
+      debugPrint('[ProduitsPage] Stack trace: $stackTrace');
       setState(() => _isLoading = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -119,11 +175,15 @@ class _ProduitsPageState extends State<ProduitsPage>
         _nomController.clear();
         _dlcJoursController.clear();
         _dlcSurgelationController.clear();
+        _ingredientsController.clear();
+        _quantiteController.clear();
+        _origineViandeController.clear();
+        _allergenesController.clear();
         setState(() {
           _utiliseDlcJours = true;
           _surgelagable = false;
         });
-        _loadProduits();
+        _loadProduits(forceRefresh: true);
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -171,9 +231,34 @@ class _ProduitsPageState extends State<ProduitsPage>
       }
 
       try {
+        // Get product name before deletion for audit log
+        final produit = _produits.firstWhere((p) => p.id == id, orElse: () => _produits.first);
+        final productName = produit.nom;
+        
         await _productsRepo.deleteProduct(id);
+        
+        // Create audit log entry
+        try {
+          final orgRepo = OrganizationRepository();
+          final orgId = await orgRepo.getOrCreateOrganization();
+          
+          await _auditLogRepo.create(
+            organizationId: orgId,
+            operationType: 'product',
+            operationId: id,
+            action: 'delete',
+            description: 'Suppression du produit "$productName"',
+            metadata: {
+              'product_name': productName,
+            },
+          );
+        } catch (e) {
+          debugPrint('[ProduitsPage] Error creating audit log: $e');
+          // Don't fail the deletion if audit log fails
+        }
+        
         if (mounted) {
-          _loadProduits();
+          _loadProduits(forceRefresh: true);
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
               content: Text('Produit supprimé avec succès !'),
@@ -739,6 +824,11 @@ class _ProduitsPageState extends State<ProduitsPage>
                             fontSize: 14, fontWeight: FontWeight.bold)),
                   ),
                   DataColumn(
+                    label: Text('Type',
+                        style: GoogleFonts.montserrat(
+                            fontSize: 14, fontWeight: FontWeight.bold)),
+                  ),
+                  DataColumn(
                     label: Text('DLC',
                         style: GoogleFonts.montserrat(
                             fontSize: 14, fontWeight: FontWeight.bold)),
@@ -767,6 +857,38 @@ class _ProduitsPageState extends State<ProduitsPage>
                           produit.nom,
                           style: GoogleFonts.montserrat(
                               fontSize: 14, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                      DataCell(
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Color(int.parse(
+                                    (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex).substring(1),
+                                    radix: 16) +
+                                0xFF000000)
+                                .withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                            border: Border.all(
+                              color: Color(int.parse(
+                                      (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex).substring(1),
+                                      radix: 16) +
+                                  0xFF000000),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Text(
+                            _getTypeProduitText(produit.typeProduit ?? TypeProduit.fini),
+                            style: GoogleFonts.montserrat(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Color(int.parse(
+                                      (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex).substring(1),
+                                      radix: 16) +
+                                  0xFF000000),
+                            ),
+                          ),
                         ),
                       ),
                       DataCell(
@@ -876,6 +998,7 @@ class _ProduitsPageState extends State<ProduitsPage>
 
   @override
   Widget build(BuildContext context) {
+    debugPrint('[ProduitsPage] build() called - _produits.length = ${_produits.length}, _isLoading = $_isLoading');
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -885,12 +1008,14 @@ class _ProduitsPageState extends State<ProduitsPage>
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => _showAddProductDialog(),
+            onPressed: () => _addProduit(),
             tooltip: 'Ajouter un produit',
           ),
         ],
       ),
-      body: _produits.isEmpty
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _produits.isEmpty
           ? Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -915,7 +1040,7 @@ class _ProduitsPageState extends State<ProduitsPage>
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
-                    onPressed: () => _showAddProductDialog(),
+                    onPressed: () => _addProduit(),
                     icon: const Icon(Icons.add),
                     label: const Text('Ajouter un produit'),
                     style: ElevatedButton.styleFrom(
@@ -946,7 +1071,45 @@ class _ProduitsPageState extends State<ProduitsPage>
                     subtitle: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('DLC: +${produit.dlcJours ?? 0} jours'),
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: Color(int.parse(
+                                        (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex)
+                                            .substring(1),
+                                        radix: 16) +
+                                    0xFF000000)
+                                    .withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(6),
+                                border: Border.all(
+                                  color: Color(int.parse(
+                                          (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex)
+                                              .substring(1),
+                                          radix: 16) +
+                                      0xFF000000),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Text(
+                                _getTypeProduitText(produit.typeProduit ?? TypeProduit.fini),
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(int.parse(
+                                          (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex)
+                                              .substring(1),
+                                          radix: 16) +
+                                      0xFF000000),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Text('DLC: +${produit.dlcJours ?? 0} jours'),
+                          ],
+                        ),
                         if (produit.ingredients != null &&
                             produit.ingredients!.isNotEmpty)
                           Text('Ingrédients: ${produit.ingredients}'),
@@ -981,142 +1144,321 @@ class _ProduitsPageState extends State<ProduitsPage>
   void dispose() {
     _tabController.dispose();
     _nomController.dispose();
+    _newProduitController.dispose();
     _dlcJoursController.dispose();
     _dlcSurgelationController.dispose();
+    _ingredientsController.dispose();
+    _quantiteController.dispose();
+    _origineViandeController.dispose();
+    _allergenesController.dispose();
     super.dispose();
   }
 
-  Future<void> _showAddProductDialog() async {
-    final nomController = TextEditingController();
-    final dlcJoursController = TextEditingController();
-    final ingredientsController = TextEditingController();
-    final quantiteController = TextEditingController();
-    final origineViandeController = TextEditingController();
-    final allergenesController = TextEditingController();
-    bool surgelagable = false;
-    final dlcSurgelationController = TextEditingController();
+  Future<void> _addProduit() async {
+    TypeProduit localSelectedType = _selectedTypeProduit;
+    String? localSelectedSupplierId;
+    List<Supplier> localSuppliers = [];
+    final supplierRepo = SupplierRepository();
+    final supplierProductRepo = SupplierProductRepository();
+    
+    // Load suppliers
+    try {
+      localSuppliers = await supplierRepo.getAll(includeOccasional: null);
+    } catch (e) {
+      debugPrint('[ProduitsPage] Error loading suppliers: $e');
+    }
 
     final result = await showDialog<Map<String, dynamic>>(
       context: context,
       builder: (context) => StatefulBuilder(
-        builder: (context, setState) => AlertDialog(
-          title: Row(
-            children: [
-              Icon(Icons.add_circle, color: Colors.purple.shade600),
-              const SizedBox(width: 8),
-              const Text('Nouveau Produit'),
-            ],
-          ),
+        builder: (context, setDialogState) => AlertDialog(
+          title: Text('Nouveau produit'),
           content: SizedBox(
             width: double.maxFinite,
-            height: MediaQuery.of(context).size.height * 0.7,
+            height: 650,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Nom du produit
                   TextField(
-                    controller: nomController,
-                    decoration: const InputDecoration(
+                    controller: _newProduitController,
+                    decoration: InputDecoration(
                       labelText: 'Nom du produit *',
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.inventory),
+                      helperText:
+                          'Caractères spéciaux automatiquement corrigés',
                     ),
+                    inputFormatters: [ProductNameInputFormatter()],
                   ),
                   const SizedBox(height: 16),
 
-                  // DLC en jours
+                  // Sélecteur de type de produit
+                  Text(
+                    'Type de produit *',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.purple.shade700,
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    localSelectedType == TypeProduit.recu
+                        ? 'Produit reçu d\'un fournisseur'
+                        : localSelectedType == TypeProduit.fini
+                            ? 'Produit vendu directement aux clients'
+                            : localSelectedType == TypeProduit.prepare
+                                ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
+                                : localSelectedType == TypeProduit.ouverture
+                                    ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
+                                    : 'Produit décongelé pour utilisation',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey.shade600,
+                    ),
+                  ),
+                  SizedBox(height: 16),
+                  GridView.count(
+                    shrinkWrap: true,
+                    physics: NeverScrollableScrollPhysics(),
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 2.5,
+                    children: TypeProduit.values.map((type) {
+                      final isSelected = localSelectedType == type;
+                      final color = type == TypeProduit.recu
+                          ? Colors.purple
+                          : type == TypeProduit.fini
+                              ? Colors.green
+                              : type == TypeProduit.prepare
+                                  ? Colors.orange
+                                  : type == TypeProduit.ouverture
+                                      ? Colors.red
+                                      : Colors.blue;
+
+                      return InkWell(
+                        onTap: () {
+                          setDialogState(() {
+                            localSelectedType = type;
+                            // Remplir automatiquement la DLC selon le type
+                            _dlcJoursController.text =
+                                type.dlcParDefaut.toString();
+                            // Clear supplier if not "reçu"
+                            if (type != TypeProduit.recu) {
+                              localSelectedSupplierId = null;
+                            }
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(16),
+                        splashColor: color.shade200.withOpacity(0.3),
+                        highlightColor: color.shade100.withOpacity(0.2),
+                        child: AnimatedContainer(
+                          duration: Duration(milliseconds: 200),
+                          decoration: BoxDecoration(
+                            color: isSelected
+                                ? color.shade100
+                                : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected
+                                  ? color.shade600
+                                  : Colors.grey.shade300,
+                              width: isSelected ? 3 : 2,
+                            ),
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                      color: color.shade200.withOpacity(0.5),
+                                      blurRadius: 8,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ]
+                                : [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.05),
+                                      blurRadius: 4,
+                                      offset: Offset(0, 2),
+                                    ),
+                                  ],
+                          ),
+                          child: Padding(
+                            padding: EdgeInsets.all(16),
+                            child: Row(
+                              children: [
+                                Container(
+                                  padding: EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: isSelected
+                                        ? color.shade200
+                                        : color.shade50,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Icon(
+                                    type == TypeProduit.recu
+                                        ? Icons.local_shipping
+                                        : type == TypeProduit.fini
+                                            ? Icons.shopping_cart
+                                            : type == TypeProduit.prepare
+                                                ? Icons.build
+                                                : type == TypeProduit.ouverture
+                                                    ? Icons.open_in_new
+                                                    : Icons.ac_unit,
+                                    color: color.shade700,
+                                    size: 24,
+                                  ),
+                                ),
+                                SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        type == TypeProduit.recu
+                                            ? 'Produit reçu'
+                                            : type == TypeProduit.fini
+                                                ? 'Produit fini'
+                                                : type == TypeProduit.prepare
+                                                    ? 'Produit préparé'
+                                                    : type == TypeProduit.ouverture
+                                                        ? 'Ouverture'
+                                                        : 'Décongélation',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: isSelected
+                                              ? color.shade800
+                                              : Colors.grey.shade800,
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        type.dlcDescription,
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: isSelected
+                                              ? color.shade600
+                                              : Colors.grey.shade600,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  // Fournisseur selection (only for "reçu" products)
+                  if (localSelectedType == TypeProduit.recu) ...[
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: localSelectedSupplierId,
+                      decoration: const InputDecoration(
+                        labelText: 'Fournisseur *',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.local_shipping),
+                        helperText: 'Sélectionnez le fournisseur de ce produit',
+                      ),
+                      items: localSuppliers.map((supplier) {
+                        return DropdownMenuItem(
+                          value: supplier.id,
+                          child: Row(
+                            children: [
+                              Text(supplier.name),
+                              if (supplier.isOccasional) ...[
+                                const SizedBox(width: 8),
+                                Text(
+                                  '(Occasionnel)',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: Colors.grey,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        setDialogState(() {
+                          localSelectedSupplierId = value;
+                        });
+                      },
+                    ),
+                  ],
+                  const SizedBox(height: 16),
                   TextField(
-                    controller: dlcJoursController,
-                    decoration: const InputDecoration(
+                    controller: _dlcJoursController,
+                    decoration: InputDecoration(
                       labelText: 'DLC en jours (optionnel)',
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.schedule),
                       helperText: 'Nombre de jours après fabrication',
                     ),
                     keyboardType: TextInputType.number,
+                    inputFormatters: [IntegerInputFormatter(maxValue: 365)],
                   ),
                   const SizedBox(height: 16),
-
-                  // Produit surgelagable
-                  SwitchListTile(
-                    title: const Text('Produit surgelagable'),
-                    subtitle: const Text('Peut être conservé au congélateur'),
-                    value: surgelagable,
-                    onChanged: (value) {
-                      setState(() {
-                        surgelagable = value;
-                      });
-                    },
-                    secondary: Icon(
-                      surgelagable ? Icons.ac_unit : Icons.ac_unit_outlined,
-                      color: surgelagable ? Colors.blue : Colors.grey,
-                    ),
-                  ),
-
-                  // DLC surgélation (visible seulement si surgelagable)
-                  if (surgelagable) ...[
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: dlcSurgelationController,
-                      decoration: const InputDecoration(
-                        labelText: 'DLC surgélation en jours',
-                        border: OutlineInputBorder(),
-                        prefixIcon: Icon(Icons.ac_unit),
-                        helperText: 'DLC spécifique pour la surgélation',
-                      ),
-                      keyboardType: TextInputType.number,
-                    ),
-                  ],
-
-                  const SizedBox(height: 16),
-
-                  // Ingrédients
                   TextField(
-                    controller: ingredientsController,
-                    decoration: const InputDecoration(
+                    controller: _dlcSurgelationController,
+                    decoration: InputDecoration(
+                      labelText: 'DLC de surgélation (optionnel)',
+                      border: OutlineInputBorder(),
+                      helperText: 'Nombre de jours après surgélation',
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [IntegerInputFormatter(maxValue: 365)],
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: _ingredientsController,
+                    decoration: InputDecoration(
                       labelText: 'Ingrédients (optionnel)',
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.list),
                       helperText: 'Liste des ingrédients principaux',
                     ),
-                    maxLines: 3,
+                    maxLines: 2,
+                    inputFormatters: [
+                      DescriptionInputFormatter(maxLength: 200)
+                    ],
                   ),
                   const SizedBox(height: 16),
-
-                  // Quantité
                   TextField(
-                    controller: quantiteController,
-                    decoration: const InputDecoration(
+                    controller: _quantiteController,
+                    decoration: InputDecoration(
                       labelText: 'Quantité par unité (optionnel)',
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.scale),
                       helperText: 'Ex: 50 pièces, 1kg, etc.',
                     ),
+                    inputFormatters: [ZplSafeTextInputFormatter()],
                   ),
                   const SizedBox(height: 16),
-
-                  // Origine viande
                   TextField(
-                    controller: origineViandeController,
-                    decoration: const InputDecoration(
+                    controller: _origineViandeController,
+                    decoration: InputDecoration(
                       labelText: 'Origine viande (optionnel)',
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.location_on),
                       helperText: 'Ex: France, UE, etc.',
                     ),
+                    inputFormatters: [ZplSafeTextInputFormatter()],
                   ),
                   const SizedBox(height: 16),
-
-                  // Allergènes
                   TextField(
-                    controller: allergenesController,
-                    decoration: const InputDecoration(
+                    controller: _allergenesController,
+                    decoration: InputDecoration(
                       labelText: 'Allergènes (optionnel)',
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.warning),
                       helperText: 'Ex: gluten, lait, œufs, etc.',
                     ),
+                    inputFormatters: [
+                      DescriptionInputFormatter(maxLength: 100)
+                    ],
                   ),
                 ],
               ),
@@ -1124,52 +1466,50 @@ class _ProduitsPageState extends State<ProduitsPage>
           ),
           actions: [
             TextButton(
-              onPressed: () {
-                nomController.dispose();
-                dlcJoursController.dispose();
-                ingredientsController.dispose();
-                quantiteController.dispose();
-                origineViandeController.dispose();
-                allergenesController.dispose();
-                dlcSurgelationController.dispose();
-                Navigator.pop(context);
-              },
-              child: const Text('Annuler'),
+              onPressed: () => Navigator.pop(context),
+              child: Text('Annuler'),
             ),
             ElevatedButton(
               onPressed: () {
-                if (nomController.text.trim().isNotEmpty) {
+                if (_newProduitController.text.trim().isNotEmpty) {
                   final dlcJours =
-                      int.tryParse(dlcJoursController.text.trim()) ?? 0;
+                      int.tryParse(_dlcJoursController.text.trim()) ?? 0;
                   final dlcSurgelation =
-                      int.tryParse(dlcSurgelationController.text.trim());
-
+                      int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
+                  // Validate supplier for "reçu" products
+                  if (localSelectedType == TypeProduit.recu && localSelectedSupplierId == null) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Veuillez sélectionner un fournisseur pour un produit reçu'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    return;
+                  }
+                  
                   Navigator.pop(context, {
-                    'nom': nomController.text.trim(),
+                    'nom': _newProduitController.text.trim(),
+                    'typeProduit': localSelectedType,
+                    'supplierId': localSelectedSupplierId,
                     'dlcJours': dlcJours,
-                    'surgelagable': surgelagable,
                     'dlcSurgelationJours': dlcSurgelation,
-                    'ingredients': ingredientsController.text.trim().isNotEmpty
-                        ? ingredientsController.text.trim()
+                    'ingredients': _ingredientsController.text.trim().isNotEmpty
+                        ? _ingredientsController.text.trim()
                         : null,
-                    'quantite': quantiteController.text.trim().isNotEmpty
-                        ? quantiteController.text.trim()
+                    'quantite': _quantiteController.text.trim().isNotEmpty
+                        ? _quantiteController.text.trim()
                         : null,
                     'origineViande':
-                        origineViandeController.text.trim().isNotEmpty
-                            ? origineViandeController.text.trim()
+                        _origineViandeController.text.trim().isNotEmpty
+                            ? _origineViandeController.text.trim()
                             : null,
-                    'allergenes': allergenesController.text.trim().isNotEmpty
-                        ? allergenesController.text.trim()
+                    'allergenes': _allergenesController.text.trim().isNotEmpty
+                        ? _allergenesController.text.trim()
                         : null,
                   });
                 }
               },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purple.shade600,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('Ajouter'),
+              child: Text('Ajouter'),
             ),
           ],
         ),
@@ -1185,12 +1525,15 @@ class _ProduitsPageState extends State<ProduitsPage>
       }
 
       try {
-        await _productsRepo.createProduct(
+        final typeProduit = result['typeProduit'] as TypeProduit? ?? TypeProduit.fini;
+        final supplierId = result['supplierId'] as String?;
+        
+        final productData = await _productsRepo.createProduct(
           nom: result['nom']?.toString() ?? '',
-          typeProduit: TypeProduit.fini.name,
+          typeProduit: typeProduit.name,
           dlcJours: result['dlcJours'] as int?,
           dateFabrication: DateTime.now(),
-          surgelagable: result['surgelagable'] as bool?,
+          surgelagable: false,
           dlcSurgelationJours: result['dlcSurgelationJours'] as int?,
           ingredients: result['ingredients']?.toString(),
           quantite: result['quantite']?.toString(),
@@ -1198,7 +1541,57 @@ class _ProduitsPageState extends State<ProduitsPage>
           allergenes: result['allergenes']?.toString(),
         );
 
-        await _loadProduits();
+        // Link product to supplier if type is "reçu" and supplier is selected
+        if (typeProduit == TypeProduit.recu && supplierId != null) {
+          try {
+            final supplierProductRepo = SupplierProductRepository();
+            await supplierProductRepo.linkProductToSupplier(
+              supplierId: supplierId,
+              productId: productData['id'] as String,
+            );
+            debugPrint('[ProduitsPage] Linked product to supplier: $supplierId');
+          } catch (e) {
+            debugPrint('[ProduitsPage] Error linking to supplier: $e');
+            // Don't fail the creation if linking fails
+          }
+        }
+
+        // Create audit log entry
+        try {
+          final orgRepo = OrganizationRepository();
+          final orgId = await orgRepo.getOrCreateOrganization();
+          
+          await _auditLogRepo.create(
+            organizationId: orgId,
+            operationType: 'product',
+            operationId: productData['id'] as String,
+            action: 'create',
+            description: 'Création du produit "${result['nom']}"',
+            metadata: {
+              'product_name': result['nom']?.toString(),
+              'product_type': typeProduit.name,
+              'supplier_id': supplierId,
+            },
+          );
+        } catch (e) {
+          debugPrint('[ProduitsPage] Error creating audit log: $e');
+          // Don't fail the creation if audit log fails
+        }
+
+        // Wait a bit to ensure Supabase has processed the insert
+        await Future.delayed(const Duration(milliseconds: 500));
+        
+        await _loadProduits(forceRefresh: true);
+        
+        debugPrint('[ProduitsPage] After product creation, _produits.length = ${_produits.length}');
+
+        _newProduitController.clear();
+        _dlcJoursController.clear();
+        _dlcSurgelationController.clear();
+        _ingredientsController.clear();
+        _quantiteController.clear();
+        _origineViandeController.clear();
+        _allergenesController.clear();
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -1209,14 +1602,12 @@ class _ProduitsPageState extends State<ProduitsPage>
           );
         }
       } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Erreur lors de l\'ajout du produit: $e'),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors de l\'ajout du produit: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }

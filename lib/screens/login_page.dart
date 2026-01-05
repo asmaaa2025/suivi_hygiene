@@ -185,7 +185,7 @@ class _LoginPageState extends State<LoginPage> {
         // Rediriger vers la page d'accueil
         if (mounted) {
           debugPrint('[AUTH] Redirecting to /home');
-          context.go('/home');
+          context.go('/home'); // Redirect to original dashboard
         }
       } else {
         debugPrint('[AUTH] ❌ Login failed: session or user is null');

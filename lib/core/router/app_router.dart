@@ -1,11 +1,12 @@
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../../screens/home_screen.dart';
-import '../../screens/login_page.dart';
+import '../../features/dashboard/pages/home_screen.dart';
+import '../../features/auth/pages/login_page.dart';
 import '../../features/entry/pages/entry_page.dart';
 import '../../features/cleaning/pages/cleaning_page.dart';
 import '../../features/cleaning/pages/tache_form_page.dart';
 import '../../features/dashboard/pages/dashboard_page.dart';
+import '../../features/actions/pages/actions_dashboard_page.dart';
 import '../../features/temperatures/pages/temperatures_list_page.dart';
 import '../../features/temperatures/pages/temperature_form_page.dart';
 import '../../features/temperatures/pages/appareils_management_page.dart';
@@ -15,26 +16,59 @@ import '../../features/oil/pages/oil_changes_list_page.dart';
 import '../../features/oil/pages/oil_change_form_page.dart';
 import '../../features/history/pages/history_page.dart';
 import '../../features/labels/pages/labels_page.dart';
+import '../../features/labels/pages/etiquette_page.dart';
 import '../../features/products/pages/products_list_page.dart';
 import '../../features/settings/pages/settings_page.dart';
+import '../../features/suppliers/pages/suppliers_list_page.dart';
+import '../../features/suppliers/pages/supplier_form_page.dart';
+import '../../features/employees/pages/employees_list_page.dart';
+import '../../features/employees/pages/employee_form_page.dart';
+import '../../features/auth/pages/employee_selection_page.dart';
+import '../../features/auth/pages/admin_code_page.dart';
+import '../../services/employee_session_service.dart';
 
 /// Application router configuration
 final appRouter = GoRouter(
   initialLocation: '/login',
-  redirect: (context, state) {
+  redirect: (context, state) async {
     final client = Supabase.instance.client;
     final session = client.auth.currentSession;
     final isLoggedIn = session != null;
     final isLoginRoute = state.matchedLocation == '/login';
+    final isEmployeeSelectionRoute = state.matchedLocation == '/employee-selection';
+    final isAdminCodeRoute = state.matchedLocation == '/admin-code';
+    final isEmployeesRoute = state.matchedLocation.startsWith('/employees');
 
     // If not logged in and not on login page, redirect to login
     if (!isLoggedIn && !isLoginRoute) {
       return '/login';
     }
 
-    // If logged in and on login page, redirect to home
-    if (isLoggedIn && isLoginRoute) {
-      return '/home';
+    // If logged in, check if employee is selected
+    if (isLoggedIn) {
+      // Initialize employee session service
+      final employeeSessionService = EmployeeSessionService();
+      await employeeSessionService.initialize();
+      
+      // If on login page, check if employee is selected
+      if (isLoginRoute) {
+        if (employeeSessionService.hasEmployee) {
+          return '/home';
+        } else {
+          return '/employee-selection';
+        }
+      }
+      
+      // Allow access to employees routes even without employee selected
+      // (needed to create the first employee)
+      if (isEmployeesRoute) {
+        return null; // Allow access
+      }
+      
+      // If not on employee selection or admin code, and no employee selected, redirect
+      if (!isEmployeeSelectionRoute && !isAdminCodeRoute && !employeeSessionService.hasEmployee) {
+        return '/employee-selection';
+      }
     }
 
     return null; // No redirect needed
@@ -45,8 +79,20 @@ final appRouter = GoRouter(
       builder: (context, state) => const LoginPage(),
     ),
     GoRoute(
+      path: '/employee-selection',
+      builder: (context, state) => const EmployeeSelectionPage(),
+    ),
+    GoRoute(
+      path: '/admin-code',
+      builder: (context, state) => const AdminCodePage(),
+    ),
+    GoRoute(
       path: '/home',
       builder: (context, state) => const DashboardPage(),
+    ),
+    GoRoute(
+      path: '/actions',
+      builder: (context, state) => const ActionsDashboardPage(),
     ),
     GoRoute(
       path: '/entry',
@@ -113,6 +159,38 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/appareils',
       builder: (context, state) => const AppareilsManagementPage(),
+    ),
+    // Suppliers routes
+    GoRoute(
+      path: '/suppliers',
+      builder: (context, state) => const SuppliersListPage(),
+    ),
+    GoRoute(
+      path: '/suppliers/new',
+      builder: (context, state) => const SupplierFormPage(),
+    ),
+    GoRoute(
+      path: '/suppliers/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return SupplierFormPage(supplierId: id);
+      },
+    ),
+    // Employees routes
+    GoRoute(
+      path: '/employees',
+      builder: (context, state) => const EmployeesListPage(),
+    ),
+    GoRoute(
+      path: '/employees/new',
+      builder: (context, state) => const EmployeeFormPage(),
+    ),
+    GoRoute(
+      path: '/employees/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return EmployeeFormPage(employeeId: id);
+      },
     ),
   ],
 );

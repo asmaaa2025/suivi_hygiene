@@ -236,83 +236,99 @@ class _TemperaturesListPageState extends State<TemperaturesListPage> {
                           )
                         : RefreshIndicator(
                             onRefresh: _loadData,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _temperatures.length,
-                              itemBuilder: (context, index) {
-                                final temp = _temperatures[index];
-                                final appareil = _appareils.firstWhere(
-                                  (a) => a.id == temp.appareilId,
-                                  orElse: () => Appareil(
-                                    id: temp.appareilId,
-                                    nom: 'Appareil inconnu',
-                                    createdAt: DateTime.now(),
-                                  ),
-                                );
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: SingleChildScrollView(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(16),
+                                  child: DataTable(
+                                    columnSpacing: 24,
+                                    columns: const [
+                                      DataColumn(
+                                        label: Text(
+                                          'Date',
+                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'Appareil',
+                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'Température',
+                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                      DataColumn(
+                                        label: Text(
+                                          'Remarque',
+                                          style: TextStyle(fontWeight: FontWeight.bold),
+                                        ),
+                                      ),
+                                    ],
+                                    rows: _temperatures.map((temp) {
+                                      final appareil = _appareils.firstWhere(
+                                        (a) => a.id == temp.appareilId,
+                                        orElse: () => Appareil(
+                                          id: temp.appareilId,
+                                          nom: 'Appareil inconnu',
+                                          createdAt: DateTime.now(),
+                                        ),
+                                      );
+                                      
+                                      final tempColor = _getTemperatureColor(
+                                        temp.temperature,
+                                        appareil.tempMin,
+                                        appareil.tempMax,
+                                      );
 
-                                return SectionCard(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  appareil.nom,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .titleMedium
-                                                      ?.copyWith(
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  '${temp.temperature}°C',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .headlineSmall
-                                                      ?.copyWith(
-                                                        color: _getTemperatureColor(
-                                                          temp.temperature,
-                                                          appareil.tempMin,
-                                                          appareil.tempMax,
-                                                        ),
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                      ),
-                                                ),
-                                              ],
+                                      return DataRow(
+                                        cells: [
+                                          DataCell(
+                                            Text(
+                                              DateFormat('dd/MM/yyyy HH:mm')
+                                                  .format(temp.createdAt),
                                             ),
                                           ),
-                                          Text(
-                                            DateFormat('dd/MM/yyyy HH:mm')
-                                                .format(temp.createdAt),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall,
+                                          DataCell(
+                                            Text(
+                                              appareil.nom,
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Text(
+                                              '${temp.temperature}°C',
+                                              style: TextStyle(
+                                                color: tempColor,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                          DataCell(
+                                            Text(
+                                              temp.remarque ?? '-',
+                                              style: TextStyle(
+                                                fontStyle: temp.remarque == null || temp.remarque!.isEmpty
+                                                    ? FontStyle.italic
+                                                    : FontStyle.normal,
+                                                color: temp.remarque == null || temp.remarque!.isEmpty
+                                                    ? Colors.grey
+                                                    : null,
+                                              ),
+                                            ),
                                           ),
                                         ],
-                                      ),
-                                      if (temp.remarque != null &&
-                                          temp.remarque!.isNotEmpty) ...[
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          temp.remarque!,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodyMedium,
-                                        ),
-                                      ],
-                                    ],
+                                      );
+                                    }).toList(),
                                   ),
-                                );
-                              },
+                                ),
+                              ),
                             ),
                           ),
           ),

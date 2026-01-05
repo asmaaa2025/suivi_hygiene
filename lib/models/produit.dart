@@ -1,4 +1,5 @@
 enum TypeProduit {
+  recu, // Produit reçu d'un fournisseur
   fini, // Produit fini vendu aux clients
   prepare, // Produit préparé (farce, etc.) pour créer d'autres produits
   ouverture, // Produit ouvert (bouteille de lait, conserve, etc.)
@@ -9,6 +10,8 @@ extension TypeProduitExtension on TypeProduit {
   /// Retourne la DLC par défaut en jours selon le type de produit
   int get dlcParDefaut {
     switch (this) {
+      case TypeProduit.recu:
+        return 5; // 5 jours pour les produits reçus (à ajuster selon besoin)
       case TypeProduit.fini:
         return 7; // 7 jours pour les produits finis
       case TypeProduit.prepare:
@@ -23,6 +26,8 @@ extension TypeProduitExtension on TypeProduit {
   /// Retourne la description de la DLC par défaut
   String get dlcDescription {
     switch (this) {
+      case TypeProduit.recu:
+        return '5 jours (produit reçu)';
       case TypeProduit.fini:
         return '7 jours (produit fini)';
       case TypeProduit.prepare:
@@ -37,6 +42,8 @@ extension TypeProduitExtension on TypeProduit {
   /// Retourne la couleur associée au type
   String get couleurHex {
     switch (this) {
+      case TypeProduit.recu:
+        return '#9C27B0'; // Violet
       case TypeProduit.fini:
         return '#4CAF50'; // Vert
       case TypeProduit.prepare:
@@ -94,14 +101,49 @@ class Produit {
     this.allergenes,
   });
 
+  /// Convertit une valeur de type_produit de la base de données vers l'enum
+  static TypeProduit _parseTypeProduit(String? typeProduitStr) {
+    if (typeProduitStr == null || typeProduitStr.isEmpty) {
+      return TypeProduit.fini;
+    }
+    
+    // Mapping des valeurs de la base de données vers l'enum
+    switch (typeProduitStr.toLowerCase()) {
+      case 'reçu':
+      case 'recu':
+      case 'produit reçu':
+        return TypeProduit.recu;
+      case 'fini':
+      case 'produit fini':
+        return TypeProduit.fini;
+      case 'prepare':
+      case 'préparé':
+      case 'preparé':
+      case 'transformé':
+      case 'transforme':
+        return TypeProduit.prepare;
+      case 'ouverture':
+      case 'ouvert':
+        return TypeProduit.ouverture;
+      case 'decongelation':
+      case 'décongelation':
+      case 'décongelé':
+      case 'decongele':
+        return TypeProduit.decongelation;
+      default:
+        // Par défaut, essayer de matcher avec le nom de l'enum
+        return TypeProduit.values.firstWhere(
+          (e) => e.name == typeProduitStr.toLowerCase(),
+          orElse: () => TypeProduit.fini,
+        );
+    }
+  }
+
   factory Produit.fromMap(Map<String, dynamic> map) {
     return Produit(
       id: map['id'],
       nom: map['nom'],
-      typeProduit: TypeProduit.values.firstWhere(
-        (e) => e.name == (map['type_produit'] ?? 'fini'),
-        orElse: () => TypeProduit.fini,
-      ),
+      typeProduit: _parseTypeProduit(map['type_produit']),
       dlc: map['dlc'] != null ? DateTime.parse(map['dlc']) : null,
       dlcJours: map['dlc_jours'],
       dluo: map['dluo'] != null ? DateTime.parse(map['dluo']) : null,
@@ -115,7 +157,7 @@ class Produit {
       dateCreation: DateTime.parse(map['date_creation']),
       dateModification: DateTime.parse(map['date_modification']),
       utilisateurCode: map['utilisateur_code'],
-      surgelagable: map['surgelagable'] == 1,
+      surgelagable: map['surgelagable'] == 1 || map['surgelagable'] == true,
       dlcSurgelationJours: map['dlc_surgelation_jours'],
       ingredients: map['ingredients'],
       quantite: map['quantite'],
