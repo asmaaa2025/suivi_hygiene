@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/nettoyage.dart';
+import '../../services/employee_session_service.dart';
 
 /// Repository for cleaning records (nettoyages)
 class NettoyageRepository {
@@ -59,6 +60,7 @@ class NettoyageRepository {
   }
 
   /// Create a nettoyage record (mark task as done)
+  /// Employee name is automatically retrieved from current session
   Future<Nettoyage> create({
     required String tacheId,
     bool conforme = true,
@@ -71,6 +73,13 @@ class NettoyageRepository {
         throw Exception('User not authenticated');
       }
 
+      // Automatically get current employee from session
+      final employeeSessionService = EmployeeSessionService();
+      await employeeSessionService.initialize();
+      final currentEmployee = employeeSessionService.currentEmployee;
+      final employeeFirstName = currentEmployee?.firstName;
+      final employeeLastName = currentEmployee?.lastName;
+
       final now = DateTime.now();
       final response = await _client
           .from('nettoyages')
@@ -82,6 +91,8 @@ class NettoyageRepository {
             'remarque': remarque,
             'photo_url': photoUrl,
             'owner_id': user.id,
+            'employee_first_name': employeeFirstName, // Employee who performed the action
+            'employee_last_name': employeeLastName, // Employee who performed the action
             // Note: created_by is a legacy column and may not be accessible via RLS
             // owner_id will be set automatically by the database default
           })

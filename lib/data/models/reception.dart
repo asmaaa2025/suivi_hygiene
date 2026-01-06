@@ -14,6 +14,8 @@ class Reception {
   final String? createdBy;
   final String? nonConformityId;
   final String? performedByEmployeeId;
+  final String? employeeFirstName;
+  final String? employeeLastName;
 
   Reception({
     required this.id,
@@ -30,12 +32,14 @@ class Reception {
     this.createdBy,
     this.nonConformityId,
     this.performedByEmployeeId,
+    this.employeeFirstName,
+    this.employeeLastName,
   });
 
   factory Reception.fromJson(Map<String, dynamic> json) {
     return Reception(
-      id: (json['id'] as String?) ?? '',
-      produitId: (json['produit_id'] as String?) ?? '',
+      id: json['id']?.toString() ?? '',
+      produitId: json['produit_id']?.toString() ?? '',
       supplierId: json['supplier_id'] as String? ?? json['fournisseur_id'] as String?,
       fournisseur: json['fournisseur'] as String?,
       lot: json['lot'] as String?,
@@ -60,6 +64,8 @@ class Reception {
       createdBy: json['created_by'] as String?,
       nonConformityId: json['non_conformity_id'] as String?,
       performedByEmployeeId: json['performed_by_employee_id'] as String?,
+      employeeFirstName: json['employee_first_name'] as String?,
+      employeeLastName: json['employee_last_name'] as String?,
     );
   }
 

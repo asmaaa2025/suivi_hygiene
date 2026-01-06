@@ -98,10 +98,15 @@ class _EmployeesListPageState extends State<EmployeesListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Employés'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/admin/home'),
+          tooltip: 'Retour au menu principal',
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => context.push('/employees/new'),
+            onPressed: () => context.push('/admin/employees/new'),
             tooltip: 'Nouvel employé',
           ),
         ],
@@ -201,7 +206,7 @@ class _EmployeesListPageState extends State<EmployeesListPage> {
                                       IconButton(
                                         icon: const Icon(Icons.edit),
                                         onPressed: () => context.push(
-                                          '/employees/${employee.id}',
+                                          '/admin/employees/${employee.id}',
                                         ),
                                       ),
                                       IconButton(

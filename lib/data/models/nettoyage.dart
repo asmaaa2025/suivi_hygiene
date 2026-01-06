@@ -9,6 +9,8 @@ class Nettoyage {
   final String? photoUrl;
   final DateTime createdAt;
   final String? createdBy;
+  final String? employeeFirstName;
+  final String? employeeLastName;
 
   Nettoyage({
     required this.id,
@@ -20,11 +22,13 @@ class Nettoyage {
     this.photoUrl,
     required this.createdAt,
     this.createdBy,
+    this.employeeFirstName,
+    this.employeeLastName,
   });
 
   factory Nettoyage.fromJson(Map<String, dynamic> json) {
     return Nettoyage(
-      id: (json['id'] as String?) ?? '',
+      id: json['id']?.toString() ?? '',
       tacheId:
           (json['tache_id'] as String?) ?? (json['task_id'] as String?) ?? '',
       done: (json['done'] as bool?) ?? false,
@@ -38,6 +42,8 @@ class Nettoyage {
           ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now())
           : DateTime.now(),
       createdBy: json['created_by'] as String?,
+      employeeFirstName: json['employee_first_name'] as String?,
+      employeeLastName: json['employee_last_name'] as String?,
     );
   }
 

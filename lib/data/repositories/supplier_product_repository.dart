@@ -17,29 +17,40 @@ class SupplierProductRepository {
 
       debugPrint('[SupplierProductRepo] Fetching products for supplier: $supplierId');
       
-      // Get products linked to this supplier via supplier_products
-      final response = await _client
+      // First, get product IDs linked to this supplier
+      final linkResponse = await _client
           .from('supplier_products')
-          .select('''
-            product_id,
-            produits!inner(
-              id,
-              nom,
-              description,
-              category,
-              type_produit,
-              created_at,
-              updated_at
-            )
-          ''')
+          .select('product_id')
           .eq('supplier_id', supplierId);
 
-      final products = <Produit>[];
-      for (var item in response as List) {
-        if (item['produits'] != null) {
-          products.add(Produit.fromJson(item['produits'] as Map<String, dynamic>));
-        }
+      if (linkResponse.isEmpty) {
+        debugPrint('[SupplierProductRepo] No products linked to supplier');
+        return [];
       }
+
+      final productIds = (linkResponse as List)
+          .map((item) => item['product_id'] as String)
+          .toList();
+
+      debugPrint('[SupplierProductRepo] Found ${productIds.length} linked product IDs');
+
+      // Then, fetch the actual products
+      final productsResponse = await _client
+          .from('produits')
+          .select()
+          .inFilter('id', productIds)
+          .eq('owner_id', user.id);
+
+      final products = (productsResponse as List)
+          .map((json) {
+            // Map categorie to category for the model
+            final productJson = Map<String, dynamic>.from(json);
+            if (productJson.containsKey('categorie') && !productJson.containsKey('category')) {
+              productJson['category'] = productJson['categorie'];
+            }
+            return Produit.fromJson(productJson);
+          })
+          .toList();
 
       debugPrint('[SupplierProductRepo] ✅ Fetched ${products.length} products for supplier');
       return products;
@@ -81,13 +92,39 @@ class SupplierProductRepository {
     int? defaultDluoDays,
   }) async {
     try {
-      await _client.from('supplier_products').insert({
+      debugPrint('[SupplierProductRepo] [LINK] Linking product $productId to supplier $supplierId');
+      
+      // Check if link already exists
+      final existing = await _client
+          .from('supplier_products')
+          .select('id')
+          .eq('supplier_id', supplierId)
+          .eq('product_id', productId)
+          .maybeSingle();
+      
+      if (existing != null) {
+        debugPrint('[SupplierProductRepo] [LINK] ⚠️ Link already exists, skipping');
+        return;
+      }
+      
+      final insertData = {
         'supplier_id': supplierId,
         'product_id': productId,
-        'default_lot_number': defaultLotNumber,
-        'default_dluo_days': defaultDluoDays,
-      });
+        if (defaultLotNumber != null) 'default_lot_number': defaultLotNumber,
+        if (defaultDluoDays != null) 'default_dluo_days': defaultDluoDays,
+      };
+      
+      debugPrint('[SupplierProductRepo] [LINK] Insert data: $insertData');
+      
+      await _client.from('supplier_products').insert(insertData);
       debugPrint('[SupplierProductRepo] ✅ Linked product to supplier');
+    } on PostgrestException catch (e) {
+      debugPrint('[SupplierProductRepo] ❌ PostgrestException linking:');
+      debugPrint('[SupplierProductRepo]   - code: ${e.code}');
+      debugPrint('[SupplierProductRepo]   - message: ${e.message}');
+      debugPrint('[SupplierProductRepo]   - details: ${e.details}');
+      debugPrint('[SupplierProductRepo]   - hint: ${e.hint}');
+      throw Exception('Failed to link product to supplier: ${e.message}');
     } catch (e) {
       debugPrint('[SupplierProductRepo] ❌ Error linking: $e');
       throw Exception('Failed to link product to supplier: $e');

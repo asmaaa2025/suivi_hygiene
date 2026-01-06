@@ -48,23 +48,79 @@ class EmployeeRepository {
   }
 
   /// Get employee by ID
-  Future<Employee?> getById(String id) async {
+  /// If checkCreatedBy is true, only returns employees created by current user
+  /// If false, returns any employee from the organization (for shared tablet scenario)
+  Future<Employee?> getById(String id, {bool checkCreatedBy = true}) async {
     try {
       final user = _client.auth.currentUser;
       if (user == null) return null;
 
-      final response = await _client
+      var query = _client
           .from('employees')
           .select()
-          .eq('id', id)
-          .eq('created_by', user.id)
-          .maybeSingle();
+          .eq('id', id);
+
+      // Only filter by created_by if requested (for admin management)
+      // For clock-in, we want to allow any employee in the organization
+      if (checkCreatedBy) {
+        query = query.eq('created_by', user.id);
+      } else {
+        // Get organization ID and filter by organization instead
+        final orgRepo = OrganizationRepository();
+        final orgId = await orgRepo.getOrCreateOrganization();
+        query = query.eq('organization_id', orgId);
+      }
+
+      final response = await query.maybeSingle();
 
       if (response == null) return null;
       return Employee.fromJson(response as Map<String, dynamic>);
     } catch (e) {
       debugPrint('[EmployeeRepo] ❌ Error: $e');
       return null;
+    }
+  }
+
+  /// Check if an employee ID exists in the database (for validation)
+  /// First checks without organization filter, then with organization filter
+  Future<bool> employeeExists(String id) async {
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null) {
+        debugPrint('[EmployeeRepo] No authenticated user for employeeExists check');
+        return false;
+      }
+
+      // First, check if employee exists at all (without organization filter)
+      final globalCheck = await _client
+          .from('employees')
+          .select('id, organization_id, first_name, last_name')
+          .eq('id', id)
+          .maybeSingle();
+
+      if (globalCheck == null) {
+        debugPrint('[EmployeeRepo] ❌ Employee ID $id does not exist in employees table at all');
+        return false;
+      }
+
+      debugPrint('[EmployeeRepo] ✅ Employee found: ${globalCheck['first_name']} ${globalCheck['last_name']} (ID: $id, Org: ${globalCheck['organization_id']})');
+
+      // Get organization ID
+      final orgRepo = OrganizationRepository();
+      final orgId = await orgRepo.getOrCreateOrganization();
+      debugPrint('[EmployeeRepo] Current organization ID: $orgId');
+
+      // Check if employee belongs to current organization
+      if (globalCheck['organization_id'] != orgId) {
+        debugPrint('[EmployeeRepo] ⚠️ Employee belongs to different organization (${globalCheck['organization_id']} vs $orgId)');
+        // Still return true - employee exists, just different org (might be OK for shared tablet)
+        return true;
+      }
+
+      return true;
+    } catch (e) {
+      debugPrint('[EmployeeRepo] ❌ Error checking employee existence: $e');
+      return false;
     }
   }
 

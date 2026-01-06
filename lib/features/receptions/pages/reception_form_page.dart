@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
@@ -10,14 +11,18 @@ import '../../../../data/repositories/non_conformity_repository.dart';
 import '../../../../data/repositories/audit_log_repository.dart';
 import '../../../../data/repositories/organization_repository.dart';
 import '../../../../data/repositories/supplier_product_repository.dart';
+import '../../../../services/employee_session_service.dart';
 import '../../../../data/models/supplier.dart';
+import '../../../../data/models/reception.dart';
 import '../../../../data/models/produit.dart';
 import '../../../../data/models/non_conformity.dart';
 import '../../../../shared/widgets/section_card.dart';
 
 /// Enhanced reception form with fixed 10:00 time, non-conformity check
 class ReceptionFormPage extends StatefulWidget {
-  const ReceptionFormPage({super.key});
+  final String? receptionId;
+  
+  const ReceptionFormPage({super.key, this.receptionId});
 
   @override
   State<ReceptionFormPage> createState() => _ReceptionFormPageState();
@@ -36,6 +41,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
   final _nonConformityRepo = NonConformityRepository();
   final _auditLogRepo = AuditLogRepository();
   final _supplierProductRepo = SupplierProductRepository();
+  final _employeeSessionService = EmployeeSessionService();
   
   List<Supplier> _suppliers = [];
   List<Produit> _products = [];
@@ -69,6 +75,33 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
   void initState() {
     super.initState();
     _loadData();
+    if (widget.receptionId != null) {
+      _loadReception();
+    }
+  }
+
+  Future<void> _loadReception() async {
+    try {
+      final reception = await _receptionRepo.getById(widget.receptionId!);
+      if (reception != null && mounted) {
+        setState(() {
+          _selectedProductId = reception.produitId;
+          _selectedSupplierId = reception.supplierId;
+          _lotController.text = reception.lot ?? '';
+          _selectedDluo = reception.dluo;
+          _temperatureController.text = reception.temperature?.toString() ?? '';
+          _remarqueController.text = reception.remarque ?? '';
+          _receptionTime = TimeOfDay.fromDateTime(reception.receivedAt);
+          // Note: photo cannot be loaded from URL, user would need to re-upload
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur lors du chargement: $e')),
+        );
+      }
+    }
   }
 
   @override
@@ -227,14 +260,30 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
 
   Future<void> _loadSupplierProducts(String supplierId) async {
     try {
+      debugPrint('[ReceptionForm] Loading products for supplier: $supplierId');
+      
       // Get products linked to this supplier (only "reçu" type products)
       final supplierProducts = await _supplierProductRepo.getProductsBySupplier(supplierId);
       
+      debugPrint('[ReceptionForm] Fetched ${supplierProducts.length} products from supplier_products');
+      
       // Filter to only show "reçu" type products
-      final recuProducts = supplierProducts.where((p) => 
-        p.typeProduit?.toLowerCase() == 'reçu' || 
-        p.typeProduit?.toLowerCase() == 'recu'
-      ).toList();
+      // Note: TypeProduit.recu.name returns "recu" (without accent)
+      final recuProducts = supplierProducts.where((p) {
+        final type = p.typeProduit?.toLowerCase()?.trim();
+        // Accept: "recu", "reçu", "produit reçu", etc.
+        final isRecu = type != null && (
+          type == 'recu' || 
+          type == 'reçu' || 
+          type == 'reçu' ||
+          type.contains('recu') ||
+          type.contains('reçu')
+        );
+        debugPrint('[ReceptionForm] Product ${p.nom}: type="$type", isRecu=$isRecu');
+        return isRecu;
+      }).toList();
+      
+      debugPrint('[ReceptionForm] Filtered to ${recuProducts.length} "reçu" products');
       
       if (mounted) {
         setState(() {
@@ -249,8 +298,29 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
           }
         });
       }
+      
+      if (recuProducts.isEmpty) {
+        debugPrint('[ReceptionForm] ⚠️ No "reçu" products found for supplier $supplierId');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Aucun produit "reçu" trouvé pour ce fournisseur. Créez d\'abord un produit de type "reçu" et liez-le au fournisseur.'),
+              backgroundColor: Colors.orange,
+              duration: Duration(seconds: 5),
+            ),
+          );
+        }
+      }
     } catch (e) {
-      debugPrint('[ReceptionForm] Error loading supplier products: $e');
+      debugPrint('[ReceptionForm] ❌ Error loading supplier products: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Erreur lors du chargement des produits: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -350,24 +420,43 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
         photoUrl = _photoPath; // In production, upload to Supabase Storage
       }
 
-      // Create reception with custom time
+      // Create or update reception with custom time
       // Mark as non-conformant if checklist is incomplete
+      // Employee name is automatically retrieved by repository from current session
       final isNonConformant = !_allConformityChecked;
       
-      final reception = await _receptionRepo.create(
-        produitId: _selectedProductId!,
-        supplierId: _selectedSupplierId!,
-        lot: _lotController.text.isEmpty ? null : _lotController.text,
-        dluo: _selectedDluo,
-        temperature: temperature,
-        remarque: _remarqueController.text.isEmpty 
-            ? null 
-            : _remarqueController.text,
-        photoUrl: photoUrl,
-        receptionHour: _receptionTime.hour,
-        receptionMinute: _receptionTime.minute,
-        isNonConformant: isNonConformant,
-      );
+      Reception reception;
+      if (widget.receptionId != null) {
+        // Update existing reception
+        reception = await _receptionRepo.update(
+          id: widget.receptionId!,
+          lot: _lotController.text.isEmpty ? null : _lotController.text,
+          dluo: _selectedDluo,
+          temperature: temperature,
+          remarque: _remarqueController.text.isEmpty ? null : _remarqueController.text,
+          photoUrl: photoUrl,
+        );
+      } else {
+        // Create new reception
+        await _employeeSessionService.initialize();
+        final currentEmployee = _employeeSessionService.currentEmployee;
+        
+        reception = await _receptionRepo.create(
+          produitId: _selectedProductId!,
+          supplierId: _selectedSupplierId!,
+          lot: _lotController.text.isEmpty ? null : _lotController.text,
+          dluo: _selectedDluo,
+          temperature: temperature,
+          remarque: _remarqueController.text.isEmpty 
+              ? null 
+              : _remarqueController.text,
+          photoUrl: photoUrl,
+          receptionHour: _receptionTime.hour,
+          receptionMinute: _receptionTime.minute,
+          isNonConformant: isNonConformant,
+          performedByEmployeeId: currentEmployee?.id,
+        );
+      }
 
       // Create non-conformity if needed
       String? nonConformityId;
@@ -403,7 +492,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
           organizationId: orgId,
           operationType: 'reception',
           operationId: reception.id,
-          action: 'create',
+          action: widget.receptionId != null ? 'update' : 'create',
           description: 'Réception de ${_products.firstWhere((p) => p.id == _selectedProductId).nom}',
           metadata: {
             'supplier_id': _selectedSupplierId,
@@ -445,9 +534,19 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+    
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Nouvelle réception'),
+        title: Text(widget.receptionId != null 
+            ? 'Modifier la réception' 
+            : 'Nouvelle réception'),
+        leading: isAdminRoute
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/admin/home'),
+              )
+            : null,
       ),
       body: _isLoadingData
           ? const Center(child: CircularProgressIndicator())
@@ -777,14 +876,27 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                         children: [
                           const Text('Photo de l\'étiquette'),
                           const SizedBox(height: 8),
-                          Container(
-                            height: 200,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[200],
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Center(
-                              child: Icon(Icons.image, size: 100),
+                          InkWell(
+                            onTap: () => _showPhotoDialog(context, _photoPath!),
+                            child: Container(
+                              height: 200,
+                              decoration: BoxDecoration(
+                                color: Colors.grey[200],
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.grey[300]!),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(8),
+                                child: Image.file(
+                                  File(_photoPath!),
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return const Center(
+                                      child: Icon(Icons.broken_image, size: 64),
+                                    );
+                                  },
+                                ),
+                              ),
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -912,14 +1024,29 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                               children: _nonConformityPhotos.map((path) {
                                 return Stack(
                                   children: [
-                                    Container(
-                                      width: 80,
-                                      height: 80,
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[200],
-                                        borderRadius: BorderRadius.circular(8),
+                                    InkWell(
+                                      onTap: () => _showPhotoDialog(context, path),
+                                      child: Container(
+                                        width: 80,
+                                        height: 80,
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[200],
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.grey[300]!),
+                                        ),
+                                        child: ClipRRect(
+                                          borderRadius: BorderRadius.circular(8),
+                                          child: Image.file(
+                                            File(path),
+                                            fit: BoxFit.cover,
+                                            errorBuilder: (context, error, stackTrace) {
+                                              return const Center(
+                                                child: Icon(Icons.broken_image, size: 32),
+                                              );
+                                            },
+                                          ),
+                                        ),
                                       ),
-                                      child: const Icon(Icons.image),
                                     ),
                                     Positioned(
                                       top: 0,
@@ -971,6 +1098,58 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                 ],
               ),
             ),
+    );
+  }
+
+  void _showPhotoDialog(BuildContext context, String photoPath) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(16),
+        child: Stack(
+          children: [
+            Center(
+              child: InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.file(
+                  File(photoPath),
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Container(
+                      padding: const EdgeInsets.all(32),
+                      color: Colors.black87,
+                      child: const Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.broken_image, size: 64, color: Colors.white),
+                          SizedBox(height: 16),
+                          Text(
+                            'Impossible de charger l\'image',
+                            style: TextStyle(color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: IconButton(
+                icon: const Icon(Icons.close, color: Colors.white),
+                onPressed: () => Navigator.of(context).pop(),
+                style: IconButton.styleFrom(
+                  backgroundColor: Colors.black54,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

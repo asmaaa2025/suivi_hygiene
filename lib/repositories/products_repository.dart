@@ -14,8 +14,18 @@ class ProductsRepository {
   /// Get all products
   Future<List<Map<String, dynamic>>> getAll() async {
     try {
-      debugPrint('[ProductsRepo] Fetching all products, user: $userId');
-      final response = await client.from(tableName).select().order('nom');
+      final user = client.auth.currentUser;
+      if (user == null) {
+        debugPrint('[ProductsRepo] No authenticated user');
+        return [];
+      }
+
+      debugPrint('[ProductsRepo] Fetching all products, user: ${user.id}');
+      final response = await client
+          .from(tableName)
+          .select()
+          .eq('owner_id', user.id)
+          .order('nom');
       final List<Map<String, dynamic>> list =
           List<Map<String, dynamic>>.from(response);
       debugPrint('[ProductsRepo] ✅ Fetched ${list.length} products');
@@ -30,7 +40,6 @@ class ProductsRepository {
       debugPrint('[ProductsRepo] ❌ Error: $e');
       throw SupabaseException('Failed to fetch products: $e');
     }
-    return <Map<String, dynamic>>[];
   }
 
   /// Create product

@@ -7,17 +7,31 @@ import '../../../../shared/widgets/section_card.dart';
 class EntryPage extends StatelessWidget {
   const EntryPage({super.key});
 
+  String _getRoutePrefix(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    return location.startsWith('/admin') ? '/admin' : '/app';
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+    final routePrefix = _getRoutePrefix(context);
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text('Saisie rapide'),
+        leading: isAdminRoute
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => context.go('/admin/home'),
+              )
+            : null,
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           SectionCard(
-            onTap: () => context.push('/temperatures/new'),
+            onTap: () => context.push('$routePrefix/temperatures/new'),
             child: Row(
               children: [
                 Container(
@@ -51,7 +65,7 @@ class EntryPage extends StatelessWidget {
             ),
           ),
           SectionCard(
-            onTap: () => context.push('/receptions/new'),
+            onTap: () => context.push('$routePrefix/receptions/new'),
             child: Row(
               children: [
                 Container(
@@ -85,7 +99,7 @@ class EntryPage extends StatelessWidget {
             ),
           ),
           SectionCard(
-            onTap: () => context.push('/cleaning'),
+            onTap: () => context.push('$routePrefix/cleaning'),
             child: Row(
               children: [
                 Container(
@@ -119,7 +133,7 @@ class EntryPage extends StatelessWidget {
             ),
           ),
           SectionCard(
-            onTap: () => context.push('/oil-changes/new'),
+            onTap: () => context.push('$routePrefix/oil'),
             child: Row(
               children: [
                 Container(

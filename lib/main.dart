@@ -33,6 +33,9 @@ void main() async {
   final employeeSessionService = EmployeeSessionService();
   await employeeSessionService.initialize();
 
+  // Note: Clock-in state is now persisted in DB (clock_sessions table)
+  // No need for AppSessionService - state survives app restarts
+
   runApp(
     const ProviderScope(
       child: HaccpApp(),

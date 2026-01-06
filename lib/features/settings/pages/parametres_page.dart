@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../services/cache_service.dart';
 import '../../../../services/employee_session_service.dart';
+import '../../../../services/auth_service.dart';
 
 class ParametresPage extends StatefulWidget {
   const ParametresPage({super.key});
@@ -128,6 +129,7 @@ class _ParametresPageState extends State<ParametresPage> {
     }
   }
 
+
   Future<void> _logout() async {
     try {
       // Clear cache
@@ -166,46 +168,6 @@ class _ParametresPageState extends State<ParametresPage> {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // Section API
-          Card(
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Configuration API',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _apiUrlController,
-                    decoration: const InputDecoration(
-                      labelText: 'URL de l\'API',
-                      border: OutlineInputBorder(),
-                      hintText: 'http://192.168.1.69:8001/api',
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: _timeoutController,
-                    decoration: const InputDecoration(
-                      labelText: 'Timeout (secondes)',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
           // Section Notifications
           Card(
             elevation: 4,
@@ -240,98 +202,6 @@ class _ParametresPageState extends State<ParametresPage> {
 
           const SizedBox(height: 16),
 
-          // Section Synchronisation
-          Card(
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Synchronisation',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SwitchListTile(
-                    title: const Text('Synchronisation automatique'),
-                    subtitle: const Text(
-                        'Synchroniser automatiquement avec le serveur'),
-                    value: _syncAutoEnabled,
-                    onChanged: (value) {
-                      setState(() {
-                        _syncAutoEnabled = value;
-                      });
-                    },
-                  ),
-                  if (_syncAutoEnabled) ...[
-                    const SizedBox(height: 16),
-                    Text(
-                      'Intervalle de synchronisation',
-                      style:
-                          GoogleFonts.montserrat(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    Slider(
-                      value: _syncInterval.toDouble(),
-                      min: 1,
-                      max: 60,
-                      divisions: 59,
-                      label: '$_syncInterval minutes',
-                      onChanged: (value) {
-                        setState(() {
-                          _syncInterval = value.round();
-                        });
-                      },
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
-          // Section Gestion
-          Card(
-            elevation: 4,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Gestion',
-                    style: GoogleFonts.montserrat(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ListTile(
-                    leading: const Icon(Icons.people, color: Colors.blue),
-                    title: const Text('Employés'),
-                    subtitle: const Text('Gérer les employés et leurs rôles'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/employees'),
-                  ),
-                  ListTile(
-                    leading: const Icon(Icons.local_shipping, color: Colors.green),
-                    title: const Text('Fournisseurs'),
-                    subtitle: const Text('Gérer les fournisseurs'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () => context.push('/suppliers'),
-                  ),
-                ],
-              ),
-            ),
-          ),
-
-          const SizedBox(height: 16),
-
           // Section Actions
           Card(
             elevation: 4,
@@ -348,11 +218,6 @@ class _ParametresPageState extends State<ParametresPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  ListTile(
-                    leading: const Icon(Icons.save, color: Colors.blue),
-                    title: const Text('Sauvegarder les paramètres'),
-                    onTap: _saveSettings,
-                  ),
                   ListTile(
                     leading: const Icon(Icons.sync, color: Colors.green),
                     title: const Text('Synchroniser maintenant'),
@@ -395,7 +260,8 @@ class _ParametresPageState extends State<ParametresPage> {
                           content: const Text(
                             'Suivi d\'Hygiène v1.0.0\n\n'
                             'Application de suivi des températures et de l\'hygiène pour la restauration.\n\n'
-                            'Développé avec Flutter et Django.',
+                            'Développé avec Flutter et Supabase.\n\n'
+                            '© 2024 Tous droits réservés.',
                           ),
                           actions: [
                             TextButton(
@@ -412,12 +278,6 @@ class _ParametresPageState extends State<ParametresPage> {
                     title: const Text('Changer d\'employé'),
                     subtitle: const Text('Sélectionner un autre compte employé'),
                     onTap: _changeEmployee,
-                  ),
-                  ListTile(
-                    leading:
-                        const Icon(Icons.delete_forever, color: Colors.red),
-                    title: const Text('Supprimer toutes les données'),
-                    onTap: _clearAllData,
                   ),
                   ListTile(
                     leading: const Icon(Icons.logout, color: Colors.red),

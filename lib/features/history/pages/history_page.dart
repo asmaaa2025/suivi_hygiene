@@ -1,17 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../data/repositories/audit_log_repository.dart';
-import '../../../../data/repositories/employee_repository.dart';
-import '../../../../data/repositories/organization_repository.dart';
-import '../../../../data/models/audit_log_entry.dart';
-import '../../../../data/models/employee.dart';
+import '../../../../data/repositories/temperature_repository.dart';
+import '../../../../data/repositories/reception_repository.dart';
+import '../../../../data/repositories/nettoyage_repository.dart';
+import '../../../../data/repositories/tache_nettoyage_repository.dart';
+import '../../../../repositories/oil_change_repository.dart';
+import '../../../../data/repositories/appareil_repository.dart';
+import '../../../../data/models/temperature.dart';
+import '../../../../data/models/reception.dart';
+import '../../../../data/models/nettoyage.dart';
+import '../../../../data/models/tache_nettoyage.dart';
+import '../../../../data/models/oil_change.dart';
+import '../../../../data/models/appareil.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/error_state.dart';
 
-/// Central history page showing unified audit log
+/// Unified history entry
+class UnifiedHistoryEntry {
+  final String id;
+  final String type; // 'temperature', 'reception', 'cleaning', 'oil_change'
+  final String title;
+  final String? description;
+  final DateTime createdAt;
+  final String? employeeFirstName;
+  final String? employeeLastName;
+  final bool isAlert; // true if temperature out of range or non-conformity
+  final Map<String, dynamic>? metadata;
+
+  UnifiedHistoryEntry({
+    required this.id,
+    required this.type,
+    required this.title,
+    this.description,
+    required this.createdAt,
+    this.employeeFirstName,
+    this.employeeLastName,
+    this.isAlert = false,
+    this.metadata,
+  });
+
+  String get employeeName {
+    if (employeeFirstName != null && employeeLastName != null) {
+      return '$employeeFirstName $employeeLastName';
+    }
+    if (employeeFirstName != null) return employeeFirstName!;
+    if (employeeLastName != null) return employeeLastName!;
+    return 'Non spécifié';
+  }
+}
+
+/// Central unified history page showing all actions from all modules
 class HistoryPage extends StatefulWidget {
   const HistoryPage({super.key});
 
@@ -20,11 +62,17 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  final _auditLogRepo = AuditLogRepository();
-  final _employeeRepo = EmployeeRepository();
+  final _temperatureRepo = TemperatureRepository();
+  final _receptionRepo = ReceptionRepository();
+  final _nettoyageRepo = NettoyageRepository();
+  final _tacheRepo = TacheNettoyageRepository();
+  final _oilChangeRepo = OilChangeRepository();
+  final _appareilRepo = AppareilRepository();
   
-  List<AuditLogEntry> _entries = [];
-  Map<String, Employee> _employees = {}; // Map of employeeId -> Employee
+  List<UnifiedHistoryEntry> _entries = [];
+  Map<String, Appareil> _appareils = {}; // Map of appareilId -> Appareil
+  Map<String, TacheNettoyage> _taches = {}; // Map of tacheId -> TacheNettoyage
+  Map<String, String> _friteuses = {}; // Map of friteuseId -> friteuseNom
   bool _isLoading = true;
   String? _error;
   String? _selectedOperationType;
@@ -35,10 +83,8 @@ class _HistoryPageState extends State<HistoryPage> {
     'all',
     'reception',
     'temperature',
-    'oil_change',
     'cleaning',
-    'non_conformity',
-    'product',
+    'oil_change',
   ];
 
   @override
@@ -51,41 +97,202 @@ class _HistoryPageState extends State<HistoryPage> {
   Future<void> _loadData() async {
     if (!mounted) return;
 
+    debugPrint('[HistoryPage] Loading unified history data...');
     setState(() {
       _isLoading = true;
       _error = null;
     });
 
     try {
-      // Load employees for name resolution
-      final employees = await _employeeRepo.getAll();
-      final employeesMap = <String, Employee>{};
-      for (final emp in employees) {
-        employeesMap[emp.id] = emp;
+      // Load appareils for temperature display
+      final appareils = await _appareilRepo.getAll();
+      final appareilsMap = <String, Appareil>{};
+      for (final appareil in appareils) {
+        appareilsMap[appareil.id] = appareil;
+      }
+      _appareils = appareilsMap;
+
+      // Load tasks for cleaning task names
+      final taches = await _tacheRepo.getAll();
+      final tachesMap = <String, TacheNettoyage>{};
+      for (final tache in taches) {
+        tachesMap[tache.id] = tache;
+      }
+      _taches = tachesMap;
+
+      // Load fryers for oil change machine names
+      final fryers = await _oilChangeRepo.getFryers();
+      final friteusesMap = <String, String>{};
+      for (final fryer in fryers) {
+        final id = fryer['id'] as String?;
+        final nom = fryer['nom'] as String?;
+        if (id != null && nom != null) {
+          friteusesMap[id] = nom;
+        }
+      }
+      _friteuses = friteusesMap;
+
+      final allEntries = <UnifiedHistoryEntry>[];
+
+      // Load temperatures
+      if (_selectedOperationType == 'all' || _selectedOperationType == 'temperature') {
+        debugPrint('[HistoryPage] Loading temperatures...');
+        final temperatures = await _temperatureRepo.getAll(
+          startDate: _startDate,
+          endDate: _endDate,
+        );
+        debugPrint('[HistoryPage] Found ${temperatures.length} temperatures');
+        
+        for (final temp in temperatures) {
+          final appareil = _appareils[temp.appareilId];
+          final appareilName = appareil?.nom ?? 'Appareil inconnu';
+          final isAlert = _isTemperatureAlert(temp.temperature, appareil);
+          
+          allEntries.add(UnifiedHistoryEntry(
+            id: temp.id,
+            type: 'temperature',
+            title: 'Température: $appareilName',
+            description: '${temp.temperature}°C${temp.remarque != null ? ' - ${temp.remarque}' : ''}',
+            createdAt: temp.createdAt,
+            employeeFirstName: temp.employeeFirstName,
+            employeeLastName: temp.employeeLastName,
+            isAlert: isAlert,
+            metadata: {
+              'temperature': temp.temperature,
+              'appareil': appareilName,
+              'remarque': temp.remarque,
+            },
+          ));
+        }
       }
 
-      // Load audit log
-      final orgRepo = OrganizationRepository();
-      final orgId = await orgRepo.getOrCreateOrganization();
-      
-      final entries = await _auditLogRepo.getAll(
-        organizationId: orgId,
-        operationType: _selectedOperationType == 'all' 
-            ? null 
-            : _selectedOperationType,
-        startDate: _startDate,
-        endDate: _endDate,
-        limit: 100,
-      );
+      // Load receptions
+      if (_selectedOperationType == 'all' || _selectedOperationType == 'reception') {
+        debugPrint('[HistoryPage] Loading receptions...');
+        final receptions = await _receptionRepo.getAll(
+          startDate: _startDate,
+          endDate: _endDate,
+        );
+        debugPrint('[HistoryPage] Found ${receptions.length} receptions');
+        
+        for (final reception in receptions) {
+          final isAlert = reception.temperature != null && 
+              (reception.temperature! > 7 || reception.temperature! < -18);
+          
+          allEntries.add(UnifiedHistoryEntry(
+            id: reception.id,
+            type: 'reception',
+            title: 'Réception${reception.fournisseur != null ? ': ${reception.fournisseur}' : ''}',
+            description: reception.lot != null 
+                ? 'Lot: ${reception.lot}${reception.temperature != null ? ' - ${reception.temperature}°C' : ''}'
+                : reception.temperature != null 
+                    ? 'Température: ${reception.temperature}°C'
+                    : null,
+            createdAt: reception.receivedAt,
+            employeeFirstName: reception.employeeFirstName,
+            employeeLastName: reception.employeeLastName,
+            isAlert: isAlert,
+            metadata: {
+              'fournisseur': reception.fournisseur,
+              'lot': reception.lot,
+              'temperature': reception.temperature,
+            },
+          ));
+        }
+      }
+
+      // Load nettoyages
+      if (_selectedOperationType == 'all' || _selectedOperationType == 'cleaning') {
+        debugPrint('[HistoryPage] Loading nettoyages...');
+        final nettoyages = await _nettoyageRepo.getAllCompleted(
+          startDate: _startDate,
+          endDate: _endDate,
+        );
+        debugPrint('[HistoryPage] Found ${nettoyages.length} nettoyages');
+        
+        for (final nettoyage in nettoyages) {
+          final tache = _taches[nettoyage.tacheId];
+          final taskName = tache?.nom ?? 'Tâche inconnue';
+          
+          allEntries.add(UnifiedHistoryEntry(
+            id: nettoyage.id,
+            type: 'cleaning',
+            title: 'Nettoyage: $taskName',
+            description: nettoyage.remarque,
+            createdAt: nettoyage.doneAt ?? nettoyage.createdAt,
+            employeeFirstName: nettoyage.employeeFirstName,
+            employeeLastName: nettoyage.employeeLastName,
+            isAlert: nettoyage.conforme == false,
+            metadata: {
+              'tache_id': nettoyage.tacheId,
+              'tache_nom': taskName,
+              'conforme': nettoyage.conforme,
+            },
+          ));
+        }
+      }
+
+      // Load oil changes
+      if (_selectedOperationType == 'all' || _selectedOperationType == 'oil_change') {
+        debugPrint('[HistoryPage] Loading oil changes...');
+        final oilChangesData = await _oilChangeRepo.getAll();
+        debugPrint('[HistoryPage] Found ${oilChangesData.length} oil changes');
+        
+        // Filter by date if needed
+        final filteredOilChanges = oilChangesData.where((data) {
+          final changedAt = data['changed_at'] != null
+              ? DateTime.tryParse(data['changed_at'].toString())
+              : (data['created_at'] != null
+                  ? DateTime.tryParse(data['created_at'].toString())
+                  : null);
+          if (changedAt == null) return false;
+          if (_startDate != null && changedAt.isBefore(_startDate!)) return false;
+          if (_endDate != null) {
+            final endOfDay = DateTime(_endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59);
+            if (changedAt.isAfter(endOfDay)) return false;
+          }
+          return true;
+        }).toList();
+        
+        for (final data in filteredOilChanges) {
+          final oilChange = OilChange.fromJson(data);
+          // Get machine name from friteuses map or from oilChange model
+          final machineName = oilChange.friteuseNom ?? 
+              _friteuses[oilChange.friteuseId] ?? 
+              'Machine inconnue';
+          
+          allEntries.add(UnifiedHistoryEntry(
+            id: oilChange.id,
+            type: 'oil_change',
+            title: 'Changement d\'huile: $machineName',
+            description: oilChange.remarque,
+            createdAt: oilChange.changedAt,
+            employeeFirstName: oilChange.employeeFirstName,
+            employeeLastName: oilChange.employeeLastName,
+            isAlert: false,
+            metadata: {
+              'friteuse_id': oilChange.friteuseId,
+              'friteuse_nom': machineName,
+              'quantite': data['quantite'],
+            },
+          ));
+        }
+      }
+
+      // Sort by date (newest first)
+      allEntries.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      debugPrint('[HistoryPage] ✅ Total entries: ${allEntries.length}');
 
       if (mounted) {
         setState(() {
-          _entries = entries;
-          _employees = employeesMap;
+          _entries = allEntries;
           _isLoading = false;
         });
       }
-    } catch (e) {
+    } catch (e, stackTrace) {
+      debugPrint('[HistoryPage] ❌ Error: $e');
+      debugPrint('[HistoryPage] StackTrace: $stackTrace');
       if (mounted) {
         setState(() {
           _error = e.toString();
@@ -93,6 +300,13 @@ class _HistoryPageState extends State<HistoryPage> {
         });
       }
     }
+  }
+
+  bool _isTemperatureAlert(double temperature, Appareil? appareil) {
+    if (appareil == null) return false;
+    if (appareil.tempMin != null && temperature < appareil.tempMin!) return true;
+    if (appareil.tempMax != null && temperature > appareil.tempMax!) return true;
+    return false;
   }
 
   String _getOperationTypeLabel(String type) {
@@ -105,10 +319,6 @@ class _HistoryPageState extends State<HistoryPage> {
         return 'Changement d\'huile';
       case 'cleaning':
         return 'Nettoyage';
-      case 'non_conformity':
-        return 'Non-conformité';
-      case 'product':
-        return 'Produit';
       default:
         return type;
     }
@@ -124,31 +334,39 @@ class _HistoryPageState extends State<HistoryPage> {
         return Icons.oil_barrel;
       case 'cleaning':
         return Icons.cleaning_services;
-      case 'non_conformity':
-        return Icons.warning;
-      case 'product':
-        return Icons.shopping_basket;
       default:
         return Icons.history;
     }
   }
 
-  void _navigateToDetail(AuditLogEntry entry) {
-    switch (entry.operationType) {
+  Color _getOperationTypeColor(String type) {
+    switch (type) {
       case 'reception':
-        // Navigate to reception detail if route exists
+        return Colors.green;
+      case 'temperature':
+        return Colors.blue;
+      case 'oil_change':
+        return Colors.orange;
+      case 'cleaning':
+        return Colors.purple;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  void _navigateToDetail(UnifiedHistoryEntry entry) {
+    switch (entry.type) {
+      case 'reception':
+        context.push('/app/receptions');
         break;
       case 'temperature':
-        context.push('/temperatures');
+        context.push('/app/temperatures');
         break;
       case 'oil_change':
         context.push('/oil-changes');
         break;
       case 'cleaning':
-        context.push('/cleaning');
-        break;
-      case 'product':
-        context.push('/products');
+        context.push('/app/cleaning');
         break;
       default:
         break;
@@ -159,7 +377,7 @@ class _HistoryPageState extends State<HistoryPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Historique'),
+        title: const Text('Historique unifié'),
       ),
       body: Column(
         children: [
@@ -290,9 +508,7 @@ class _HistoryPageState extends State<HistoryPage> {
                               itemCount: _entries.length,
                               itemBuilder: (context, index) {
                                 final entry = _entries[index];
-                                final employee = entry.actorEmployeeId != null
-                                    ? _employees[entry.actorEmployeeId]
-                                    : null;
+                                final typeColor = _getOperationTypeColor(entry.type);
                                 
                                 return SectionCard(
                                   onTap: () => _navigateToDetail(entry),
@@ -304,12 +520,22 @@ class _HistoryPageState extends State<HistoryPage> {
                                           Container(
                                             padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
-                                              color: AppTheme.primaryBlue.withOpacity(0.1),
+                                              color: entry.isAlert
+                                                  ? AppTheme.statusCritical.withOpacity(0.1)
+                                                  : typeColor.withOpacity(0.1),
                                               borderRadius: BorderRadius.circular(8),
+                                              border: entry.isAlert
+                                                  ? Border.all(
+                                                      color: AppTheme.statusCritical,
+                                                      width: 2,
+                                                    )
+                                                  : null,
                                             ),
                                             child: Icon(
-                                              _getOperationTypeIcon(entry.operationType),
-                                              color: AppTheme.primaryBlue,
+                                              _getOperationTypeIcon(entry.type),
+                                              color: entry.isAlert
+                                                  ? AppTheme.statusCritical
+                                                  : typeColor,
                                               size: 20,
                                             ),
                                           ),
@@ -318,36 +544,64 @@ class _HistoryPageState extends State<HistoryPage> {
                                             child: Column(
                                               crossAxisAlignment: CrossAxisAlignment.start,
                                               children: [
-                                                Text(
-                                                  _getOperationTypeLabel(entry.operationType),
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .titleMedium
-                                                      ?.copyWith(
-                                                        fontWeight: FontWeight.bold,
+                                                Row(
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        entry.title,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .titleMedium
+                                                            ?.copyWith(
+                                                              fontWeight: FontWeight.bold,
+                                                              color: entry.isAlert
+                                                                  ? AppTheme.statusCritical
+                                                                  : null,
+                                                            ),
                                                       ),
+                                                    ),
+                                                    if (entry.isAlert)
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(
+                                                          horizontal: 6,
+                                                          vertical: 2,
+                                                        ),
+                                                        decoration: BoxDecoration(
+                                                          color: AppTheme.statusCritical,
+                                                          borderRadius: BorderRadius.circular(8),
+                                                        ),
+                                                        child: const Text(
+                                                          'ALERTE',
+                                                          style: TextStyle(
+                                                            color: Colors.white,
+                                                            fontSize: 10,
+                                                            fontWeight: FontWeight.bold,
+                                                          ),
+                                                        ),
+                                                      ),
+                                                  ],
                                                 ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  entry.description ?? entry.action,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium,
-                                                ),
+                                                if (entry.description != null) ...[
+                                                  const SizedBox(height: 4),
+                                                  Text(
+                                                    entry.description!,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodyMedium,
+                                                  ),
+                                                ],
                                               ],
                                             ),
                                           ),
                                         ],
                                       ),
-                                      const SizedBox(height: 8),
+                                      const SizedBox(height: 12),
                                       Row(
                                         children: [
                                           Icon(Icons.person, size: 16, color: Colors.grey[600]),
                                           const SizedBox(width: 4),
                                           Text(
-                                            employee != null
-                                                ? employee.fullName
-                                                : 'Admin',
+                                            entry.employeeName,
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodySmall
@@ -368,45 +622,6 @@ class _HistoryPageState extends State<HistoryPage> {
                                                   color: Colors.grey[600],
                                                 ),
                                           ),
-                                          // Non-conformity flag for receptions
-                                          if (entry.operationType == 'reception' &&
-                                              entry.metadata != null &&
-                                              (entry.metadata!['is_non_conformant'] == true)) ...[
-                                            const Spacer(),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: AppTheme.statusWarn.withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(12),
-                                                border: Border.all(
-                                                  color: AppTheme.statusWarn,
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.warning_amber_rounded,
-                                                    size: 14,
-                                                    color: AppTheme.statusWarn,
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    'Non conforme',
-                                                    style: TextStyle(
-                                                      fontSize: 11,
-                                                      fontWeight: FontWeight.bold,
-                                                      color: AppTheme.statusWarn,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
                                         ],
                                       ),
                                     ],

@@ -31,13 +31,6 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
   bool _isActive = true;
   bool _isAdmin = false;
 
-  final List<String> _roleOptions = [
-    'manager',
-    'cook',
-    'cleaner',
-    'reception',
-    'other',
-  ];
 
   Future<bool> _verifyAdminCreation() async {
     final currentUser = Supabase.instance.client.auth.currentUser;
@@ -81,7 +74,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
 
   Future<void> _loadEmployee() async {
     try {
-      final employee = await _employeeRepo.getById(widget.employeeId!);
+      // Use checkCreatedBy: false to allow editing employees from same organization
+      final employee = await _employeeRepo.getById(widget.employeeId!, checkCreatedBy: false);
       if (employee != null && mounted) {
         setState(() {
           _employee = employee;
@@ -223,9 +217,23 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
                   ? 'Employé modifié'
                   : 'Employé créé',
             ),
+            backgroundColor: Colors.green,
           ),
         );
-        context.pop();
+        // If creating first employee, go back to employee selection page
+        // Otherwise, just pop to previous page
+        if (widget.employeeId == null) {
+          // New employee created - go back to employee selection
+          // Use a small delay to ensure the navigation completes
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (mounted) {
+              context.go('/employee-selection');
+            }
+          });
+        } else {
+          // Employee updated - just pop
+          context.pop();
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -246,6 +254,19 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
         title: Text(widget.employeeId != null 
             ? 'Modifier l\'employé' 
             : 'Nouvel employé'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (widget.employeeId != null) {
+              // Si on modifie, retourner à la liste
+              context.go('/admin/employees');
+            } else {
+              // Si on crée, retourner au menu principal
+              context.go('/admin/home');
+            }
+          },
+          tooltip: 'Retour',
+        ),
       ),
       body: _isLoadingData
           ? const Center(child: CircularProgressIndicator())
@@ -284,29 +305,17 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _roleController.text.isEmpty ? null : _roleController.text,
+                  TextFormField(
+                    controller: _roleController,
                     decoration: const InputDecoration(
                       labelText: 'Rôle *',
+                      hintText: 'Ex: Manager, Employé, Cuisinier, etc.',
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.work),
                     ),
-                    items: _roleOptions.map((role) {
-                      return DropdownMenuItem(
-                        value: role,
-                        child: Text(role),
-                      );
-                    }).toList(),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() {
-                          _roleController.text = value;
-                        });
-                      }
-                    },
                     validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Veuillez sélectionner un rôle';
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Veuillez saisir un rôle';
                       }
                       return null;
                     },

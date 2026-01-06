@@ -3,15 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../../services/employee_session_service.dart';
-import '../../entry/pages/entry_page.dart';
-import '../../cleaning/pages/cleaning_page.dart';
-import '../../temperatures/pages/temperatures_list_page.dart';
-import '../../receptions/pages/receptions_list_page.dart';
-import '../../oil/pages/oil_changes_list_page.dart';
-import '../../history/pages/history_page.dart';
-import '../../labels/pages/labels_page.dart';
-import '../../products/pages/products_list_page.dart';
-import '../../settings/pages/settings_page.dart';
+import '../../../../services/auth_service.dart';
 
 /// Dashboard page - Main entry point after login
 class DashboardPage extends StatefulWidget {
@@ -23,12 +15,15 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   final _sessionService = EmployeeSessionService();
+  final _authService = AuthService();
   String? _greeting;
+  bool _isAdmin = false;
 
   @override
   void initState() {
     super.initState();
     _loadGreeting();
+    _checkAdminStatus();
   }
 
   void _loadGreeting() {
@@ -42,6 +37,19 @@ class _DashboardPageState extends State<DashboardPage> {
         });
       }
     });
+  }
+
+  Future<void> _checkAdminStatus() async {
+    try {
+      final userRole = await _authService.getCurrentUserRole();
+      if (mounted) {
+        setState(() {
+          _isAdmin = userRole.isAdmin;
+        });
+      }
+    } catch (e) {
+      debugPrint('[Dashboard] Error checking admin status: $e');
+    }
   }
 
   @override
@@ -76,11 +84,65 @@ class _DashboardPageState extends State<DashboardPage> {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
+          // Switch Employee Button (Prominent)
+          SectionCard(
+            onTap: () => context.go('/employee-selection'),
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [AppTheme.primaryBlue, AppTheme.primaryBlue.withOpacity(0.8)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Icon(Icons.swap_horiz, color: Colors.white, size: 28),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Changer d\'employé',
+                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Sélectionner un autre compte employé',
+                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                color: Colors.white.withOpacity(0.9),
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, color: Colors.white),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
           // Section Saisie Rapide
           _buildSectionHeader(context, 'Saisie rapide', Icons.add_circle_outline),
           const SizedBox(height: 8),
           SectionCard(
-            onTap: () => context.push('/entry'),
+            onTap: () {
+              final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+              context.push(isAdminRoute ? '/admin/entry' : '/app/entry');
+            },
             child: Row(
               children: [
                 Container(
@@ -202,17 +264,6 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           const SizedBox(height: 8),
           SectionCard(
-            onTap: () => context.push('/employees'),
-            child: _buildMenuItem(
-              context,
-              Icons.people,
-              'Employés',
-              'Gérer les employés et leurs rôles',
-              Colors.teal,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SectionCard(
             onTap: () => context.push('/labels'),
             child: _buildMenuItem(
               context,
@@ -222,6 +273,60 @@ class _DashboardPageState extends State<DashboardPage> {
               Colors.orange,
             ),
           ),
+          // Pointage pour tous les utilisateurs
+          const SizedBox(height: 8),
+          SectionCard(
+            onTap: () {
+              if (_isAdmin) {
+                context.go('/admin/clock');
+              } else {
+                context.go('/app/clock');
+              }
+            },
+            child: _buildMenuItem(
+              context,
+              Icons.access_time,
+              'Pointage',
+              'Pointer l\'entrée et la sortie',
+              Colors.orange,
+            ),
+          ),
+          // Admin-only tools
+          if (_isAdmin) ...[
+            const SizedBox(height: 8),
+            SectionCard(
+              onTap: () => context.go('/admin/employees'),
+              child: _buildMenuItem(
+                context,
+                Icons.people_outline,
+                'Employés',
+                'Gérer les employés et leurs rôles',
+                AppTheme.primaryBlue,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SectionCard(
+              onTap: () => context.go('/admin/rh'),
+              child: _buildMenuItem(
+                context,
+                Icons.people,
+                'RH',
+                'Gérer le registre du personnel',
+                AppTheme.primaryBlue,
+              ),
+            ),
+            const SizedBox(height: 8),
+            SectionCard(
+              onTap: () => context.go('/admin/clock-history'),
+              child: _buildMenuItem(
+                context,
+                Icons.history_outlined,
+                'Historique de pointage',
+                'Consulter l\'historique des pointages',
+                Colors.purple,
+              ),
+            ),
+          ],
         ],
       ),
     );

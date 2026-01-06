@@ -7,6 +7,8 @@ class Temperature {
   final String? photoUrl;
   final DateTime createdAt;
   final String? createdBy;
+  final String? employeeFirstName;
+  final String? employeeLastName;
 
   Temperature({
     required this.id,
@@ -16,6 +18,8 @@ class Temperature {
     this.photoUrl,
     required this.createdAt,
     this.createdBy,
+    this.employeeFirstName,
+    this.employeeLastName,
   });
 
   factory Temperature.fromJson(Map<String, dynamic> json) {
@@ -26,13 +30,16 @@ class Temperature {
             ? appareilIdValue
             : appareilIdValue.toString())
         : '';
+    
+    // Ensure id is never null
+    final id = json['id']?.toString() ?? '';
 
     return Temperature(
-      id: (json['id'] as String?) ?? '',
+      id: id,
       appareilId: appareilId,
       temperature: (json['temperature'] as num?)?.toDouble() ?? 0.0,
       remarque: json['remarque'] as String?,
-      photoUrl: json['photo_url'] ?? json['photo_path'],
+      photoUrl: (json['photo_url'] as String?) ?? (json['photo_path'] as String?),
       createdAt: json['created_at'] != null
           ? (DateTime.tryParse(json['created_at'].toString()) ?? 
              (json['date'] != null 
@@ -42,6 +49,8 @@ class Temperature {
               ? (DateTime.tryParse(json['date'].toString()) ?? DateTime.now())
               : DateTime.now()),
       createdBy: json['created_by'] as String?,
+      employeeFirstName: json['employee_first_name'] as String?,
+      employeeLastName: json['employee_last_name'] as String?,
     );
   }
 

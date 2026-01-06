@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/repositories/tache_nettoyage_repository.dart';
 import '../../../../data/repositories/nettoyage_repository.dart';
+import '../../../../services/employee_session_service.dart';
 import '../../../../data/models/tache_nettoyage.dart';
 import '../../../../data/models/nettoyage.dart';
 import '../../../../shared/widgets/section_card.dart';
@@ -83,6 +85,7 @@ class _CleaningTodoPageState extends State<CleaningTodoPage> {
         }
       } else {
         // Mark as done - create nettoyage
+        // Employee name is automatically retrieved by repository from current session
         await _nettoyageRepo.create(
           tacheId: task.id,
           conforme: true,

@@ -29,7 +29,20 @@ class EmployeeSessionService {
       if (employeeJson != null) {
         final map = jsonDecode(employeeJson) as Map<String, dynamic>;
         _currentEmployee = Employee.fromJson(map);
-        debugPrint('[EmployeeSession] Loaded employee: ${_currentEmployee?.fullName}');
+        
+        // Validate that employee ID is correct (not organization_id)
+        if (_currentEmployee != null) {
+          debugPrint('[EmployeeSession] Loaded employee: ${_currentEmployee!.fullName}');
+          debugPrint('[EmployeeSession] Employee ID: ${_currentEmployee!.id}');
+          debugPrint('[EmployeeSession] Organization ID: ${_currentEmployee!.organizationId}');
+          
+          // Safety check: if ID matches organization_id, clear it (invalid data)
+          if (_currentEmployee!.id == _currentEmployee!.organizationId || _currentEmployee!.id.isEmpty) {
+            debugPrint('[EmployeeSession] ❌ Invalid employee data detected (ID matches org ID or is empty). Clearing session.');
+            _currentEmployee = null;
+            await clear();
+          }
+        }
       }
     } catch (e) {
       debugPrint('[EmployeeSession] Error loading employee: $e');
@@ -40,12 +53,27 @@ class EmployeeSessionService {
   /// Set the current employee
   Future<void> setEmployee(Employee employee) async {
     try {
+      // Validate employee ID before storing
+      if (employee.id.isEmpty) {
+        debugPrint('[EmployeeSession] ❌ ERROR: Cannot set employee with empty ID!');
+        throw Exception('L\'ID de l\'employé est vide. Veuillez réessayer.');
+      }
+      
+      if (employee.id == employee.organizationId) {
+        debugPrint('[EmployeeSession] ❌ ERROR: Employee ID matches Organization ID!');
+        throw Exception('L\'ID de l\'employé est identique à l\'ID de l\'organisation. Données invalides.');
+      }
+      
       _currentEmployee = employee;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefsKey, jsonEncode(employee.toJson()));
-      debugPrint('[EmployeeSession] Set employee: ${employee.fullName}');
+      debugPrint('[EmployeeSession] ✅ Set employee: ${employee.fullName}');
+      debugPrint('[EmployeeSession]   - ID: ${employee.id}');
+      debugPrint('[EmployeeSession]   - Org ID: ${employee.organizationId}');
+      debugPrint('[EmployeeSession]   - Is Admin: ${employee.isAdmin}');
     } catch (e) {
-      debugPrint('[EmployeeSession] Error saving employee: $e');
+      debugPrint('[EmployeeSession] ❌ Error saving employee: $e');
+      rethrow;
     }
   }
 

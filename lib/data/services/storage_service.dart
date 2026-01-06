@@ -75,4 +75,54 @@ class StorageService {
       print('Failed to delete photo from Supabase Storage: $e');
     }
   }
+
+  /// Migrate a local file path to Supabase Storage
+  /// Returns the new public URL if successful, null otherwise
+  Future<String?> migrateLocalPhotoToStorage(String localPath) async {
+    try {
+      final file = File(localPath);
+      
+      // Check if file exists
+      if (!await file.exists()) {
+        debugPrint('[StorageService] ⚠️ Local file does not exist: $localPath');
+        return null;
+      }
+
+      debugPrint('[StorageService] Migrating local photo to Supabase Storage: $localPath');
+      
+      // Upload to Supabase Storage
+      final publicUrl = await uploadPhoto(file);
+      
+      debugPrint('[StorageService] ✅ Migration successful: $publicUrl');
+      return publicUrl;
+    } catch (e) {
+      debugPrint('[StorageService] ❌ Error migrating photo: $e');
+      return null;
+    }
+  }
+
+  /// Check if a photo URL is a valid Supabase Storage URL
+  bool isValidStorageUrl(String? url) {
+    if (url == null || url.isEmpty) return false;
+    
+    // Check if it's a valid HTTP/HTTPS URL
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      // Check if it's a Supabase Storage URL
+      return url.contains('/storage/v1/object/public/') || 
+             url.contains('supabase.co/storage/') ||
+             url.contains('supabase.in/storage/');
+    }
+    
+    return false;
+  }
+
+  /// Check if a photo URL is a local file path
+  bool isLocalPath(String? url) {
+    if (url == null || url.isEmpty) return false;
+    
+    // Check if it looks like a local file path (not starting with http)
+    return !url.startsWith('http://') && 
+           !url.startsWith('https://') &&
+           !url.startsWith('/storage/');
+  }
 }

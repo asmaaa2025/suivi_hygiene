@@ -1,6 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/reception.dart';
+import '../../services/employee_session_service.dart';
+import 'supplier_repository.dart';
 
 /// Repository for receptions
 class ReceptionRepository {
@@ -48,8 +50,30 @@ class ReceptionRepository {
     }
   }
 
+  /// Get a reception by ID
+  Future<Reception?> getById(String id) async {
+    try {
+      final user = _client.auth.currentUser;
+      if (user == null) return null;
+
+      final response = await _client
+          .from('receptions')
+          .select()
+          .eq('id', id)
+          .eq('owner_id', user.id)
+          .maybeSingle();
+
+      if (response == null) return null;
+      return Reception.fromJson(response as Map<String, dynamic>);
+    } catch (e) {
+      debugPrint('[ReceptionRepo] ❌ Error fetching reception: $e');
+      return null;
+    }
+  }
+
   /// Create a new reception
   /// Reception time can be customized (defaults to 10:00)
+  /// Employee name is automatically retrieved from current session
   Future<Reception> create({
     required String produitId,
     required String supplierId,
@@ -70,6 +94,14 @@ class ReceptionRepository {
         throw Exception('User not authenticated');
       }
 
+      // Automatically get current employee from session
+      final employeeSessionService = EmployeeSessionService();
+      await employeeSessionService.initialize();
+      final currentEmployee = employeeSessionService.currentEmployee;
+      final employeeFirstName = currentEmployee?.firstName;
+      final employeeLastName = currentEmployee?.lastName;
+      final actualPerformedByEmployeeId = performedByEmployeeId ?? currentEmployee?.id;
+
       // Reception time (defaults to 10:00 if not provided)
       final hour = receptionHour ?? 10;
       final minute = receptionMinute ?? 0;
@@ -82,12 +114,24 @@ class ReceptionRepository {
         minute,
       );
 
+      // Get supplier name from supplier ID
+      String? supplierName;
+      if (supplierId.isNotEmpty) {
+        try {
+          final supplierRepo = SupplierRepository();
+          final supplier = await supplierRepo.getById(supplierId);
+          supplierName = supplier?.name;
+          debugPrint('[ReceptionRepo] Supplier name: $supplierName');
+        } catch (e) {
+          debugPrint('[ReceptionRepo] ⚠️ Could not fetch supplier name: $e');
+        }
+      }
+
       final response = await _client
           .from('receptions')
           .insert({
             'produit_id': produitId,
-            'supplier_id': supplierId, // Link to supplier (new column)
-            'fournisseur_id': supplierId, // Legacy column for compatibility
+            'fournisseur': supplierName, // Store supplier name as TEXT (schema column)
             'lot': lot,
             'dluo': dluo?.toIso8601String(),
             'temperature': temperature,
@@ -96,7 +140,9 @@ class ReceptionRepository {
             'received_at': receptionDateTime.toIso8601String(),
             'reception_time': '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:00',
             'non_conformity_id': nonConformityId,
-            'performed_by_employee_id': performedByEmployeeId,
+            'performed_by_employee_id': actualPerformedByEmployeeId,
+            'employee_first_name': employeeFirstName, // Automatically retrieved from session
+            'employee_last_name': employeeLastName, // Automatically retrieved from session
             'owner_id': user.id,
           })
           .select()

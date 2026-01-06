@@ -161,14 +161,27 @@ class _ProductFormPageState extends State<ProductFormPage> {
         // Link product to supplier if type is "reçu" and supplier is selected
         if (_selectedType == TypeProduit.recu && _selectedSupplierId != null) {
           try {
+            debugPrint('[ProductForm] Linking product ${productData['id']} to supplier $_selectedSupplierId');
             await _supplierProductRepo.linkProductToSupplier(
               supplierId: _selectedSupplierId!,
               productId: productData['id'] as String,
             );
+            debugPrint('[ProductForm] ✅ Successfully linked product to supplier');
           } catch (e) {
-            debugPrint('[ProductForm] Error linking to supplier: $e');
-            // Don't fail the creation if linking fails
+            debugPrint('[ProductForm] ❌ Error linking to supplier: $e');
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Produit créé mais erreur lors de la liaison au fournisseur: $e'),
+                  backgroundColor: Colors.orange,
+                  duration: const Duration(seconds: 5),
+                ),
+              );
+            }
+            // Don't fail the creation if linking fails, but show warning
           }
+        } else {
+          debugPrint('[ProductForm] ⚠️ Product type is ${_selectedType.name}, supplier is $_selectedSupplierId - skipping link');
         }
       }
 
