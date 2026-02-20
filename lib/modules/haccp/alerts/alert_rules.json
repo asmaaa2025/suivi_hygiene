@@ -1,0 +1,439 @@
+{
+    "meta": {
+      "version": "1.0.0",
+      "organization": "100% Crousty Sevran",
+      "timezone": "Europe/Paris",
+      "generated_at": "2026-01-07",
+      "severities": ["INFO", "WARN", "CRITICAL"],
+      "modules": ["temperature", "reception", "oil", "cleaning", "documents"]
+    },
+    "enums": {
+      "temperature_device_types": ["frigo", "congelateur", "vitrine", "chambre_froide"],
+      "reception_packaging_issues": ["wet_carton", "torn_carton", "dirty_packaging", "open_packaging", "broken_seal"],
+      "reception_label_issues": ["missing_dlc", "missing_lot", "missing_supplier", "missing_product_name", "unreadable_label"],
+      "reception_product_states": ["fresh", "frozen", "chilled", "ambient"],
+      "oil_states": ["ok", "dark", "foamy", "smoke", "bad_smell"],
+      "cleaning_status": ["done", "missed", "partial", "not_applicable"]
+    },
+    "defaults": {
+      "dedupe_window_minutes": 180,
+      "require_corrective_action_for_critical": true,
+      "temperature": {
+        "fallback_min_c": 0.0,
+        "fallback_max_c": 4.0,
+        "critical_margin_c": 2.0,
+        "consecutive_critical_count": 2
+      },
+      "reception": {
+        "critical_temp_margin_c": 2.0,
+        "max_missing_fields_before_critical": 2
+      },
+      "oil": {
+        "max_days_without_change": 7,
+        "max_fry_cycles_without_change": 40
+      },
+      "cleaning": {
+        "critical_missed_count": 3
+      },
+      "documents": {
+        "warning_days_before_due": 14
+      }
+    },
+    "event_types": [
+      "temperature.logged",
+      "temperature.device_config_updated",
+      "reception.checked",
+      "oil.check_logged",
+      "oil.change_logged",
+      "cleaning.task_updated",
+      "cleaning.day_closed",
+      "compliance.daily_check",
+      "compliance.document_uploaded"
+    ],
+    "alert_types": [
+      {
+        "code": "TEMP.NO_DEVICE_SELECTED",
+        "module": "temperature",
+        "severity": "WARN",
+        "blocking": true,
+        "title": "Aucun appareil sélectionné",
+        "message_template": "Vous devez sélectionner un appareil avant de valider le relevé.",
+        "recommended_actions": ["Sélectionner un appareil", "Créer un appareil si la liste est vide"],
+        "dedupe_key_template": "temp|no_device|{employee_id}|{date}"
+      },
+      {
+        "code": "TEMP.DEVICE_THRESHOLD_MISSING",
+        "module": "temperature",
+        "severity": "INFO",
+        "blocking": false,
+        "title": "Seuils manquants pour l'appareil",
+        "message_template": "L'appareil \"{device_name}\" n'a pas de seuils définis. Plage par défaut appliquée ({fallback_min}°C–{fallback_max}°C).",
+        "recommended_actions": ["Définir tempMin/tempMax dans Paramètres > Appareils"],
+        "dedupe_key_template": "temp|threshold_missing|{device_id}|{date}"
+      },
+      {
+        "code": "TEMP.OUT_OF_RANGE_WARN",
+        "module": "temperature",
+        "severity": "WARN",
+        "blocking": false,
+        "title": "Température hors plage",
+        "message_template": "Température {value}°C hors plage recommandée ({min}°C–{max}°C) sur \"{device_name}\".",
+        "recommended_actions": ["Revérifier la sonde/thermomètre", "Vérifier fermeture porte", "Surveiller 30 minutes", "Relever à nouveau"],
+        "dedupe_key_template": "temp|oor_warn|{device_id}|{date}"
+      },
+      {
+        "code": "TEMP.OUT_OF_RANGE_CRITICAL",
+        "module": "temperature",
+        "severity": "CRITICAL",
+        "blocking": true,
+        "title": "Alerte température critique",
+        "message_template": "Température critique {value}°C (plage {min}°C–{max}°C) sur \"{device_name}\". Marge critique ±{critical_margin}°C dépassée.",
+        "recommended_actions": [
+          "Isoler les denrées à risque",
+          "Déplacer en frigo/congélateur conforme",
+          "Contacter maintenance",
+          "Enregistrer action corrective (HACCP)"
+        ],
+        "dedupe_key_template": "temp|oor_critical|{device_id}|{date}"
+      },
+      {
+        "code": "TEMP.CONSECUTIVE_CRITICAL",
+        "module": "temperature",
+        "severity": "CRITICAL",
+        "blocking": true,
+        "title": "Température critique répétée",
+        "message_template": "{count} relevés critiques consécutifs sur \"{device_name}\" aujourd'hui.",
+        "recommended_actions": [
+          "Stopper utilisation de l'appareil",
+          "Mettre en quarantaine",
+          "Action corrective obligatoire",
+          "Planifier intervention"
+        ],
+        "dedupe_key_template": "temp|consecutive_critical|{device_id}|{date}"
+      },
+  
+      {
+        "code": "RECEPT.PACKAGING_WET_CARTON",
+        "module": "reception",
+        "severity": "WARN",
+        "blocking": false,
+        "title": "Carton mouillé à la réception",
+        "message_template": "Carton mouillé détecté pour \"{product_name}\". Risque d'altération/contamination.",
+        "recommended_actions": [
+          "Contrôler intégrité de l'emballage interne",
+          "Vérifier température produit",
+          "Prendre photo et noter le lot",
+          "Refuser si doute sur étanchéité/odeur"
+        ],
+        "dedupe_key_template": "recept|wet_carton|{supplier_id}|{date}|{product_id}"
+      },
+      {
+        "code": "RECEPT.PACKAGING_SEAL_BROKEN",
+        "module": "reception",
+        "severity": "CRITICAL",
+        "blocking": true,
+        "title": "Scellé/emballage ouvert",
+        "message_template": "Emballage ouvert ou scellé cassé pour \"{product_name}\" (lot {lot}). Réception non conforme.",
+        "recommended_actions": [
+          "Refuser le colis / isoler",
+          "Informer le fournisseur",
+          "Tracer en non-conformité",
+          "Photo obligatoire"
+        ],
+        "dedupe_key_template": "recept|seal_broken|{supplier_id}|{date}|{product_id}"
+      },
+      {
+        "code": "RECEPT.MISSING_LABEL_FIELDS",
+        "module": "reception",
+        "severity": "WARN",
+        "blocking": false,
+        "title": "Étiquette incomplète",
+        "message_template": "Champs manquants sur l'étiquette de \"{product_name}\": {missing_fields}.",
+        "recommended_actions": [
+          "Compléter manuellement si info disponible",
+          "Demander la fiche produit au fournisseur",
+          "Refuser si DLC/lot manquants"
+        ],
+        "dedupe_key_template": "recept|missing_label|{supplier_id}|{date}|{product_id}"
+      },
+      {
+        "code": "RECEPT.MISSING_LABEL_FIELDS_CRITICAL",
+        "module": "reception",
+        "severity": "CRITICAL",
+        "blocking": true,
+        "title": "Étiquette non conforme (critique)",
+        "message_template": "Étiquette non conforme pour \"{product_name}\". Trop d'informations manquantes: {missing_fields}.",
+        "recommended_actions": [
+          "Refuser ou isoler en quarantaine",
+          "Non-conformité + photo",
+          "Contact fournisseur"
+        ],
+        "dedupe_key_template": "recept|missing_label_critical|{supplier_id}|{date}|{product_id}"
+      },
+      {
+        "code": "RECEPT.TEMP_OUT_OF_RANGE_CHILLED",
+        "module": "reception",
+        "severity": "CRITICAL",
+        "blocking": true,
+        "title": "Température réception non conforme (frais)",
+        "message_template": "Température réception {value}°C non conforme pour \"{product_name}\" (attendu ≤ {max}°C).",
+        "recommended_actions": [
+          "Refuser ou quarantaine",
+          "Mesure 2ème sonde",
+          "Tracer lot et photo",
+          "Alerter responsable"
+        ],
+        "dedupe_key_template": "recept|temp_chilled_critical|{supplier_id}|{date}|{product_id}"
+      },
+      {
+        "code": "RECEPT.TEMP_OUT_OF_RANGE_FROZEN",
+        "module": "reception",
+        "severity": "CRITICAL",
+        "blocking": true,
+        "title": "Température réception non conforme (surgelé)",
+        "message_template": "Température réception {value}°C non conforme pour \"{product_name}\" (attendu ≤ -18°C, tolérance limitée).",
+        "recommended_actions": [
+          "Refuser si décongélation suspectée",
+          "Contrôle visuel givre/texture",
+          "Tracer lot + photo",
+          "Informer fournisseur"
+        ],
+        "dedupe_key_template": "recept|temp_frozen_critical|{supplier_id}|{date}|{product_id}"
+      },
+  
+      {
+        "code": "OIL.DUE_FOR_CHANGE_DAYS",
+        "module": "oil",
+        "severity": "WARN",
+        "blocking": false,
+        "title": "Huile à changer (délai)",
+        "message_template": "Huile de \"{fryer_name}\" non changée depuis {days_since_change} jours (max recommandé: {max_days}).",
+        "recommended_actions": ["Planifier un changement d'huile aujourd'hui", "Enregistrer l'opération dans l'app"],
+        "dedupe_key_template": "oil|due_days|{fryer_id}|{date}"
+      },
+      {
+        "code": "OIL.DUE_FOR_CHANGE_CYCLES",
+        "module": "oil",
+        "severity": "WARN",
+        "blocking": false,
+        "title": "Huile à changer (cycles)",
+        "message_template": "Huile de \"{fryer_name}\" a atteint {cycles} cycles (max recommandé: {max_cycles}).",
+        "recommended_actions": ["Changer l'huile", "Nettoyer la friteuse", "Tracer le changement"],
+        "dedupe_key_template": "oil|due_cycles|{fryer_id}|{date}"
+      },
+      {
+        "code": "OIL.QUALITY_CRITICAL",
+        "module": "oil",
+        "severity": "CRITICAL",
+        "blocking": true,
+        "title": "Qualité huile critique",
+        "message_template": "Huile de \"{fryer_name}\" signalée: {oil_state}. Risque sécurité/qualité.",
+        "recommended_actions": [
+          "Arrêter la production sur cette friteuse",
+          "Changer l'huile immédiatement",
+          "Nettoyage complet cuve/filtres",
+          "Tracer action corrective"
+        ],
+        "dedupe_key_template": "oil|quality_critical|{fryer_id}|{date}"
+      },
+  
+      {
+        "code": "CLEAN.MISSED_TASK",
+        "module": "cleaning",
+        "severity": "WARN",
+        "blocking": false,
+        "title": "Tâche de nettoyage non effectuée",
+        "message_template": "Tâche \"{task_name}\" non effectuée pour la date {date}.",
+        "recommended_actions": ["Effectuer la tâche dès que possible", "Justifier si non applicable", "Photo si demandé"],
+        "dedupe_key_template": "clean|missed|{task_id}|{date}"
+      },
+      {
+        "code": "CLEAN.MULTIPLE_MISSED_TASKS_CRITICAL",
+        "module": "cleaning",
+        "severity": "CRITICAL",
+        "blocking": true,
+        "title": "Nettoyage critique: plusieurs tâches manquées",
+        "message_template": "{missed_count} tâches de nettoyage manquées aujourd'hui.",
+        "recommended_actions": [
+          "Bloquer la clôture de journée",
+          "Effectuer les tâches prioritaires",
+          "Tracer action corrective",
+          "Alerter responsable"
+        ],
+        "dedupe_key_template": "clean|multi_missed|{date}"
+      },
+      {
+        "code": "DOCS.COMPLIANCE_DUE_SOON",
+        "module": "documents",
+        "severity": "WARN",
+        "blocking": false,
+        "title": "Conformité HACCP à faire bientôt",
+        "message_template": "{requirement_name} doit être effectué avant le {due_date}. Dernière date: {last_date}.",
+        "recommended_actions": [
+          "Planifier le contrôle/audit",
+          "Contacter le prestataire si nécessaire",
+          "Ajouter le document une fois effectué"
+        ],
+        "corrective_action": {
+          "required": false,
+          "steps": [
+            "Planifier la date du contrôle",
+            "Contacter le prestataire si nécessaire",
+            "Ajouter le document dans l'application une fois le contrôle effectué"
+          ],
+          "inputs": [],
+          "contact_url": "https://bekaformation.com/contact/"
+        },
+        "dedupe_key_template": "docs|due_soon|{requirement_code}|{date}"
+      },
+      {
+        "code": "DOCS.COMPLIANCE_OVERDUE",
+        "module": "documents",
+        "severity": "CRITICAL",
+        "blocking": true,
+        "title": "Conformité HACCP en retard",
+        "message_template": "{requirement_name} est en retard de {days_overdue} jour(s). Dernière date: {last_date}. Échéance: {due_date}.",
+        "recommended_actions": [
+          "Contacter immédiatement le prestataire",
+          "Planifier le contrôle en urgence",
+          "Ajouter le document dès réception",
+          "Justifier le retard si nécessaire"
+        ],
+        "corrective_action": {
+          "required": true,
+          "steps": [
+            "Saisir la date prévue du contrôle",
+            "Indiquer si BEKA a été contacté",
+            "Ajouter une raison du retard",
+            "Ajouter une note si nécessaire"
+          ],
+          "inputs": [
+            {
+              "name": "scheduled_date",
+              "type": "date",
+              "label": "Date prévue du contrôle",
+              "required": true
+            },
+            {
+              "name": "contacted_beka",
+              "type": "boolean",
+              "label": "BEKA a été contacté",
+              "required": true
+            },
+            {
+              "name": "reason",
+              "type": "text",
+              "label": "Raison du retard",
+              "required": true
+            },
+            {
+              "name": "note",
+              "type": "text",
+              "label": "Note supplémentaire",
+              "required": false
+            }
+          ],
+          "contact_url": "https://bekaformation.com/contact/"
+        },
+        "dedupe_key_template": "docs|overdue|{requirement_code}|{date}"
+      }
+    ],
+    "rules": [
+      {
+        "id": "temp_no_device_selected",
+        "event_type": "temperature.logged",
+        "when": [{ "path": "device_id", "op": "exists", "value": false }],
+        "emit": [{ "alert_code": "TEMP.NO_DEVICE_SELECTED" }]
+      },
+      {
+        "id": "temp_threshold_missing",
+        "event_type": "temperature.logged",
+        "when": [
+          { "path": "device_id", "op": "exists", "value": true },
+          { "path": "device_thresholds_missing", "op": "eq", "value": true }
+        ],
+        "emit": [{ "alert_code": "TEMP.DEVICE_THRESHOLD_MISSING" }]
+      },
+      {
+        "id": "temp_out_of_range_warn",
+        "event_type": "temperature.logged",
+        "when": [
+          { "path": "temperature_c", "op": "exists", "value": true },
+          { "path": "temp_out_of_range", "op": "eq", "value": true },
+          { "path": "temp_is_critical", "op": "eq", "value": false }
+        ],
+        "emit": [{ "alert_code": "TEMP.OUT_OF_RANGE_WARN" }]
+      },
+      {
+        "id": "temp_out_of_range_critical",
+        "event_type": "temperature.logged",
+        "when": [
+          { "path": "temperature_c", "op": "exists", "value": true },
+          { "path": "temp_is_critical", "op": "eq", "value": true }
+        ],
+        "emit": [{ "alert_code": "TEMP.OUT_OF_RANGE_CRITICAL" }]
+      },
+      {
+        "id": "reception_wet_carton",
+        "event_type": "reception.checked",
+        "when": [{ "path": "packaging.issue", "op": "eq", "value": "wet_carton" }],
+        "emit": [{ "alert_code": "RECEPT.PACKAGING_WET_CARTON" }]
+      },
+      {
+        "id": "reception_seal_broken",
+        "event_type": "reception.checked",
+        "when": [{ "path": "packaging.issue", "op": "in", "value": ["open_packaging", "broken_seal"] }],
+        "emit": [{ "alert_code": "RECEPT.PACKAGING_SEAL_BROKEN" }]
+      },
+      {
+        "id": "reception_missing_label_fields_warn",
+        "event_type": "reception.checked",
+        "when": [
+          { "path": "label.missing_fields_count", "op": "gt", "value": 0 },
+          { "path": "label.missing_fields_count", "op": "lte", "value": 2 }
+        ],
+        "emit": [{ "alert_code": "RECEPT.MISSING_LABEL_FIELDS" }]
+      },
+      {
+        "id": "reception_missing_label_fields_critical",
+        "event_type": "reception.checked",
+        "when": [{ "path": "label.missing_fields_count", "op": "gt", "value": 2 }],
+        "emit": [{ "alert_code": "RECEPT.MISSING_LABEL_FIELDS_CRITICAL" }]
+      },
+      {
+        "id": "oil_quality_critical",
+        "event_type": "oil.check_logged",
+        "when": [{ "path": "oil_state", "op": "in", "value": ["dark", "foamy", "smoke", "bad_smell"] }],
+        "emit": [{ "alert_code": "OIL.QUALITY_CRITICAL" }]
+      },
+      {
+        "id": "clean_missed_task",
+        "event_type": "cleaning.day_closed",
+        "when": [{ "path": "missed_count", "op": "gt", "value": 0 }],
+        "emit": [{ "alert_code": "CLEAN.MISSED_TASK" }]
+      },
+      {
+        "id": "clean_multiple_missed_tasks_critical",
+        "event_type": "cleaning.day_closed",
+        "when": [{ "path": "missed_count", "op": "gte", "value": 3 }],
+        "emit": [{ "alert_code": "CLEAN.MULTIPLE_MISSED_TASKS_CRITICAL" }]
+      },
+      {
+        "id": "compliance_due_soon",
+        "event_type": "compliance.daily_check",
+        "when": [
+          { "path": "status", "op": "eq", "value": "dueSoon" }
+        ],
+        "emit": [{ "alert_code": "DOCS.COMPLIANCE_DUE_SOON" }]
+      },
+      {
+        "id": "compliance_overdue",
+        "event_type": "compliance.daily_check",
+        "when": [
+          { "path": "status", "op": "eq", "value": "overdue" }
+        ],
+        "emit": [{ "alert_code": "DOCS.COMPLIANCE_OVERDUE" }]
+      }
+    ]
+  }
+  
