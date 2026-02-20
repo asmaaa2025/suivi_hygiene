@@ -21,7 +21,9 @@ class HaccpUserAccountRepository {
           .order('created_at', ascending: false);
 
       return (response as List)
-          .map((json) => HaccpUserAccount.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) => HaccpUserAccount.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       debugPrint('[HaccpUserAccountRepo] Error: $e');
@@ -50,12 +52,16 @@ class HaccpUserAccountRepository {
         body: {
           'email': email.trim().toLowerCase(),
           'password': password,
-          'displayName': displayName?.trim().isEmpty == true ? null : displayName?.trim(),
+          'displayName': displayName?.trim().isEmpty == true
+              ? null
+              : displayName?.trim(),
         },
       );
 
       if (response.status != 200) {
-        final err = response.data is Map ? (response.data['error'] ?? response.data) : response.data;
+        final err = response.data is Map
+            ? (response.data['error'] ?? response.data)
+            : response.data;
         throw Exception(err.toString());
       }
 
@@ -66,9 +72,12 @@ class HaccpUserAccountRepository {
       final insertData = <String, dynamic>{
         'email': createdEmail,
         'auth_user_id': authUserId,
-        'display_name': displayName?.trim().isEmpty == true ? null : displayName?.trim(),
+        'display_name': displayName?.trim().isEmpty == true
+            ? null
+            : displayName?.trim(),
         'organization_id': orgId,
-        if (personnelId != null && personnelId.isNotEmpty) 'personnel_id': personnelId,
+        if (personnelId != null && personnelId.isNotEmpty)
+          'personnel_id': personnelId,
         'created_by': user.id,
       };
 

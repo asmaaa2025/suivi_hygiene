@@ -89,8 +89,10 @@ class LotNumberInputFormatter extends TextInputFormatter {
     TextEditingValue newValue,
   ) {
     // Permettre seulement les lettres, chiffres et tirets
-    String cleanedText =
-        newValue.text.replaceAll(RegExp(r'[^a-zA-Z0-9\-_]'), '');
+    String cleanedText = newValue.text.replaceAll(
+      RegExp(r'[^a-zA-Z0-9\-_]'),
+      '',
+    );
 
     // Limiter la longueur
     if (cleanedText.length > 20) {

@@ -1,5 +1,5 @@
 /// NC Wizard Step 3/7 - Causes probables
-/// 
+///
 /// Step 3: Catégorie cause, Cause détaillée, NC répétée
 
 import 'package:flutter/material.dart';
@@ -31,16 +31,16 @@ class NcWizardStep3Causes extends StatelessWidget {
             Text(
               'Causes probables',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Analyse des causes de la non-conformité',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
             // Catégorie cause
@@ -69,7 +69,9 @@ class NcWizardStep3Causes extends StatelessWidget {
               helperText: 'Description précise de la cause identifiée',
               value: draft.causeDetail,
               onChanged: (value) {
-                onDraftChanged((d) => d.copyWith(causeDetail: value.isEmpty ? null : value));
+                onDraftChanged(
+                  (d) => d.copyWith(causeDetail: value.isEmpty ? null : value),
+                );
               },
               required: true,
               maxLines: 5,
@@ -89,9 +91,9 @@ class NcWizardStep3Causes extends StatelessWidget {
                   Text(
                     'Non-conformité répétée ?',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -102,7 +104,9 @@ class NcWizardStep3Causes extends StatelessWidget {
                           value: true,
                           groupValue: draft.isRepeated,
                           onChanged: (value) {
-                            onDraftChanged((d) => d.copyWith(isRepeated: value));
+                            onDraftChanged(
+                              (d) => d.copyWith(isRepeated: value),
+                            );
                           },
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -113,7 +117,9 @@ class NcWizardStep3Causes extends StatelessWidget {
                           value: false,
                           groupValue: draft.isRepeated,
                           onChanged: (value) {
-                            onDraftChanged((d) => d.copyWith(isRepeated: value));
+                            onDraftChanged(
+                              (d) => d.copyWith(isRepeated: value),
+                            );
                           },
                           contentPadding: EdgeInsets.zero,
                         ),
@@ -130,6 +136,3 @@ class NcWizardStep3Causes extends StatelessWidget {
     );
   }
 }
-
-
-

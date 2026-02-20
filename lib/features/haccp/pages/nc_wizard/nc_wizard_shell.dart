@@ -1,5 +1,5 @@
 /// NC Wizard Shell
-/// 
+///
 /// Main container for multi-step NC form wizard
 /// Manages state, navigation, and autosave
 
@@ -24,22 +24,20 @@ import 'steps/nc_wizard_review.dart';
 class NcWizardShell extends StatefulWidget {
   final Map<String, dynamic>? prefillData;
 
-  const NcWizardShell({
-    super.key,
-    this.prefillData,
-  });
+  const NcWizardShell({super.key, this.prefillData});
 
   @override
   State<NcWizardShell> createState() => _NcWizardShellState();
 }
 
-class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserver {
+class _NcWizardShellState extends State<NcWizardShell>
+    with WidgetsBindingObserver {
   final PageController _pageController = PageController();
   final NcDraftRepository _draftRepo = NcDraftRepository();
   final NCRepository _ncRepo = NCRepository();
   final OrganizationRepository _orgRepo = OrganizationRepository();
   final EmployeeSessionService _employeeSession = EmployeeSessionService();
-  
+
   NcDraft? _draft;
   String? _supabaseNcId; // Track Supabase NC ID for draft updates
   int _currentStep = 0;
@@ -48,9 +46,12 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
   bool _isCheckingDraft = true; // Show dialog to resume or create new
   String? _organizationId;
   String? _employeeId;
-  
+
   // Form keys for each step
-  final List<GlobalKey<FormState>> _formKeys = List.generate(7, (_) => GlobalKey<FormState>());
+  final List<GlobalKey<FormState>> _formKeys = List.generate(
+    7,
+    (_) => GlobalKey<FormState>(),
+  );
 
   @override
   void initState() {
@@ -68,24 +69,28 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       _autosave();
     }
   }
 
   Future<void> _initializeDraft({bool createNew = false}) async {
     setState(() => _isLoading = true);
-    
+
     try {
       _organizationId = await _orgRepo.getOrCreateOrganization();
       _employeeId = await _employeeSession.getCurrentEmployeeId();
-      
+
       // Try to load existing draft (unless creating new)
       NcDraft? existingDraft;
       if (!createNew) {
-        existingDraft = await _draftRepo.loadDraft(_organizationId!, _employeeId);
+        existingDraft = await _draftRepo.loadDraft(
+          _organizationId!,
+          _employeeId,
+        );
       }
-      
+
       if (existingDraft != null && !createNew) {
         // Show dialog to resume or create new
         if (mounted && existingDraft.hasData) {
@@ -93,7 +98,9 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
             context: context,
             builder: (context) => AlertDialog(
               title: const Text('Brouillon trouvé'),
-              content: const Text('Un brouillon de non-conformité existe. Voulez-vous le reprendre ou créer un nouveau formulaire ?'),
+              content: const Text(
+                'Un brouillon de non-conformité existe. Voulez-vous le reprendre ou créer un nouveau formulaire ?',
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -106,25 +113,25 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
               ],
             ),
           );
-          
+
           if (shouldResume == true) {
             _draft = existingDraft;
             debugPrint('[NcWizard] Resuming existing draft');
           } else {
             // Create new draft - clear everything
             await _draftRepo.clearDrafts(_organizationId!, _employeeId);
-            
+
             // Find and delete Supabase draft if it exists
             try {
               final draftNCs = await _ncRepo.listNonConformities(
                 status: NCStatus.draft,
               );
-              
+
               // Find draft created by current employee (most recent first)
-              final employeeDrafts = draftNCs.where(
-                (nc) => nc.createdBy == _employeeId,
-              ).toList();
-              
+              final employeeDrafts = draftNCs
+                  .where((nc) => nc.createdBy == _employeeId)
+                  .toList();
+
               if (employeeDrafts.isNotEmpty) {
                 // Delete the most recent draft (or all if multiple)
                 for (final draft in employeeDrafts) {
@@ -136,26 +143,26 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
               // No draft found or error - that's okay, continue
               debugPrint('[NcWizard] No Supabase draft to delete: $e');
             }
-            
+
             // Reset wizard state
             _currentStep = 0;
             _supabaseNcId = null;
             if (_pageController.hasClients) {
               _pageController.jumpToPage(0);
             }
-            
+
             // Create fresh draft
             _draft = NcDraft(
               organizationId: _organizationId!,
               employeeId: _employeeId,
               detectionDate: DateTime.now(),
             );
-            
+
             setState(() {
               _isLoading = false;
               _isCheckingDraft = false;
             });
-            
+
             debugPrint('[NcWizard] Created new draft (ignoring existing)');
           }
         } else {
@@ -171,12 +178,12 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
         );
         debugPrint('[NcWizard] Created new draft');
       }
-      
+
       // Apply prefill data if provided
       if (widget.prefillData != null) {
         _applyPrefillData(widget.prefillData!);
       }
-      
+
       setState(() {
         _isLoading = false;
         _isCheckingDraft = false;
@@ -208,8 +215,10 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
     setState(() {
       _draft = _draft!.copyWith(
         ncType: ncType ?? _draft!.ncType,
-        shortDescription: prefill['description']?.toString() ?? _draft!.shortDescription,
-        detailedDescription: prefill['description']?.toString() ?? _draft!.detailedDescription,
+        shortDescription:
+            prefill['description']?.toString() ?? _draft!.shortDescription,
+        detailedDescription:
+            prefill['description']?.toString() ?? _draft!.detailedDescription,
         detectionDate: detectionDate ?? _draft!.detectionDate,
       );
     });
@@ -233,41 +242,45 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
   }
 
   Future<void> _autosave() async {
-    if (_draft == null || _organizationId == null || _employeeId == null) return;
-    
+    if (_draft == null || _organizationId == null || _employeeId == null)
+      return;
+
     try {
       // Save to local SQLite
       await _draftRepo.saveDraft(_draft!);
-      
+
       // Also save to Supabase (for history visibility)
       // Convert draft to Supabase format
       final draftData = <String, dynamic>{
         'detection_date': _draft!.detectionDate.toIso8601String(),
-        'description': _draft!.shortDescription ?? _draft!.detailedDescription ?? 'Brouillon de non-conformité',
+        'description':
+            _draft!.shortDescription ??
+            _draft!.detailedDescription ??
+            'Brouillon de non-conformité',
         'object_category': _mapNcTypeToObjectCategory(_draft!.ncType),
       };
-      
+
       if (_draft!.ncType != null) {
         draftData['source_type'] = _mapNcTypeToSourceType(_draft!.ncType);
       }
-      
+
       final supabaseId = await _ncRepo.saveDraftToSupabase(
         organizationId: _organizationId!,
         employeeId: _employeeId!,
         draftData: draftData,
         existingNcId: _supabaseNcId,
       );
-      
+
       if (supabaseId != null) {
         _supabaseNcId = supabaseId;
       }
-      
+
       debugPrint('[NcWizard] ✅ Autosaved draft (local + Supabase)');
     } catch (e) {
       debugPrint('[NcWizard] ❌ Error autosaving: $e');
     }
   }
-  
+
   String _mapNcTypeToObjectCategory(String? ncType) {
     // Map NC type to object category
     switch (ncType) {
@@ -283,7 +296,7 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
         return NCObjectCategory.autre.value;
     }
   }
-  
+
   String? _mapNcTypeToSourceType(String? ncType) {
     switch (ncType) {
       case 'Température':
@@ -323,16 +336,21 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
         return; // Don't proceed if validation fails
       }
     }
-    
+
     // Special validation for step 7
     if (_currentStep == 6 && _draft != null) {
       if (_draft!.status == 'Clôturée') {
-        final hasFinalComment = _draft!.finalComment != null && _draft!.finalComment!.isNotEmpty;
-        final hasImmediateAction = _draft!.immediateAction != null && _draft!.immediateAction!.isNotEmpty;
+        final hasFinalComment =
+            _draft!.finalComment != null && _draft!.finalComment!.isNotEmpty;
+        final hasImmediateAction =
+            _draft!.immediateAction != null &&
+            _draft!.immediateAction!.isNotEmpty;
         if (!hasFinalComment && !hasImmediateAction) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Pour clôturer, veuillez remplir le commentaire final ou au moins une action corrective'),
+              content: Text(
+                'Pour clôturer, veuillez remplir le commentaire final ou au moins une action corrective',
+              ),
               backgroundColor: Colors.orange,
             ),
           );
@@ -340,10 +358,10 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
         }
       }
     }
-    
+
     // Autosave before moving
     await _autosave();
-    
+
     if (_currentStep < _totalSteps - 1) {
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
@@ -357,7 +375,9 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
   }
 
   void _navigateToHaccpHub() {
-    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
     final prefix = isAdminRoute ? '/admin' : '/app';
     context.go('$prefix/haccp-hub');
   }
@@ -375,7 +395,10 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
   }
 
   void _navigateToReview() {
-    final prefix = GoRouterState.of(context).matchedLocation.startsWith('/admin') ? '/admin' : '/app';
+    final prefix =
+        GoRouterState.of(context).matchedLocation.startsWith('/admin')
+        ? '/admin'
+        : '/app';
     context.push('$prefix/alerts/nc/review', extra: _draft!);
   }
 
@@ -399,7 +422,7 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
           onPressed: () async {
             // Autosave before leaving
             await _autosave();
-            
+
             // Show confirmation if draft has data
             if (_draft!.hasData) {
               if (!mounted) return;
@@ -407,7 +430,9 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Quitter le formulaire ?'),
-                  content: const Text('Vos modifications seront sauvegardées automatiquement. Vous pourrez reprendre ce brouillon plus tard.'),
+                  content: const Text(
+                    'Vos modifications seront sauvegardées automatiquement. Vous pourrez reprendre ce brouillon plus tard.',
+                  ),
                   actions: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(false),
@@ -463,7 +488,9 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
                 LinearProgressIndicator(
                   value: (_currentStep + 1) / _totalSteps,
                   backgroundColor: Colors.grey[300],
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryBlue),
+                  valueColor: AlwaysStoppedAnimation<Color>(
+                    AppTheme.primaryBlue,
+                  ),
                   minHeight: 8,
                 ),
               ],
@@ -542,7 +569,10 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
                   icon: const Icon(Icons.arrow_back),
                   label: const Text('Précédent'),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
@@ -551,9 +581,14 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
                 ElevatedButton.icon(
                   onPressed: _goToNextStep,
                   icon: const Icon(Icons.arrow_forward),
-                  label: Text(_currentStep == _totalSteps - 1 ? 'Révision' : 'Suivant'),
+                  label: Text(
+                    _currentStep == _totalSteps - 1 ? 'Révision' : 'Suivant',
+                  ),
                   style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
                     backgroundColor: AppTheme.primaryBlue,
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(
@@ -569,4 +604,3 @@ class _NcWizardShellState extends State<NcWizardShell> with WidgetsBindingObserv
     );
   }
 }
-

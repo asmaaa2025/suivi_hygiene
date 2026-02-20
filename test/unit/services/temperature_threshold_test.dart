@@ -45,24 +45,15 @@ void main() {
   group('TemperatureThresholdHelper', () {
     group('isWithinRange', () {
       test('returns true when temp within min and max', () {
-        expect(
-          TemperatureThresholdHelper.isWithinRange(3.0, 2.0, 4.0),
-          true,
-        );
+        expect(TemperatureThresholdHelper.isWithinRange(3.0, 2.0, 4.0), true);
       });
 
       test('returns false when temp below min', () {
-        expect(
-          TemperatureThresholdHelper.isWithinRange(1.0, 2.0, 4.0),
-          false,
-        );
+        expect(TemperatureThresholdHelper.isWithinRange(1.0, 2.0, 4.0), false);
       });
 
       test('returns false when temp above max', () {
-        expect(
-          TemperatureThresholdHelper.isWithinRange(6.0, 2.0, 4.0),
-          false,
-        );
+        expect(TemperatureThresholdHelper.isWithinRange(6.0, 2.0, 4.0), false);
       });
 
       test('returns true when min and max are null', () {
@@ -73,17 +64,11 @@ void main() {
       });
 
       test('boundary: temp equals min is in range', () {
-        expect(
-          TemperatureThresholdHelper.isWithinRange(2.0, 2.0, 4.0),
-          true,
-        );
+        expect(TemperatureThresholdHelper.isWithinRange(2.0, 2.0, 4.0), true);
       });
 
       test('boundary: temp equals max is in range', () {
-        expect(
-          TemperatureThresholdHelper.isWithinRange(4.0, 2.0, 4.0),
-          true,
-        );
+        expect(TemperatureThresholdHelper.isWithinRange(4.0, 2.0, 4.0), true);
       });
     });
 

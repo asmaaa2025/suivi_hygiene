@@ -32,9 +32,9 @@ class ActionsDashboardPage extends StatelessWidget {
             // Title
             Text(
               'Actions rapides',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 24),
             // Action buttons
@@ -144,8 +144,8 @@ class ActionsDashboardPage extends StatelessWidget {
                     Text(
                       label,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
@@ -159,9 +159,9 @@ class ActionsDashboardPage extends StatelessWidget {
                 Text(
                   'Bientôt',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey,
-                        fontStyle: FontStyle.italic,
-                      ),
+                    color: Colors.grey,
+                    fontStyle: FontStyle.italic,
+                  ),
                 )
               else
                 Icon(Icons.chevron_right, color: color),
@@ -196,8 +196,8 @@ class ActionsDashboardPage extends StatelessWidget {
                 Text(
                   'Bienvenue',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -212,9 +212,9 @@ class ActionsDashboardPage extends StatelessWidget {
           // Quick actions grid
           Text(
             'Actions rapides',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
           GridView.count(
@@ -277,9 +277,8 @@ class ActionsDashboardPage extends StatelessWidget {
                     children: [
                       Text(
                         'Historique',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -327,9 +326,9 @@ class ActionsDashboardPage extends StatelessWidget {
           const SizedBox(height: 12),
           Text(
             label,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             textAlign: TextAlign.center,
           ),
         ],
@@ -337,6 +336,3 @@ class ActionsDashboardPage extends StatelessWidget {
     );
   }
 }
-
-
-

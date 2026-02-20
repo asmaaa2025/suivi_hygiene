@@ -16,13 +16,13 @@ class ReleveTemperature {
   });
 
   Map<String, dynamic> toMap() => {
-        'id': id,
-        'appareil': appareil,
-        'temperature': temperature,
-        'date': date.toIso8601String(),
-        'remarque': remarque,
-        'photo_path': photoPath,
-      };
+    'id': id,
+    'appareil': appareil,
+    'temperature': temperature,
+    'date': date.toIso8601String(),
+    'remarque': remarque,
+    'photo_path': photoPath,
+  };
 
   factory ReleveTemperature.fromMap(Map<String, dynamic> map) =>
       ReleveTemperature(

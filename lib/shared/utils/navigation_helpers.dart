@@ -67,9 +67,9 @@ class NavigationHelpers {
     final prefix = userRole.isAdmin ? '/admin' : '/app';
 
     // HACCP module pages -> HACCP hub
-    if (location.contains('/temperatures') || 
-        location.contains('/receptions') || 
-        location.contains('/cleaning') || 
+    if (location.contains('/temperatures') ||
+        location.contains('/receptions') ||
+        location.contains('/cleaning') ||
         location.contains('/oil')) {
       return '$prefix/haccp-hub';
     }
@@ -115,4 +115,3 @@ class NavigationHelpers {
     }
   }
 }
-

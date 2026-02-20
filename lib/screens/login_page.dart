@@ -150,20 +150,23 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       debugPrint(
-          '[AUTH] Attempting login with email: ${_usernameController.text}');
+        '[AUTH] Attempting login with email: ${_usernameController.text}',
+      );
 
       // 3. Login with Supabase - use signInWithPassword
       final response = await Supabase.instance.client.auth
           .signInWithPassword(
-        email: _usernameController.text.trim(),
-        password: _passwordController.text,
-      )
+            email: _usernameController.text.trim(),
+            password: _passwordController.text,
+          )
           .timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw TimeoutException('Connexion timeout. Vérifiez votre réseau.');
-        },
-      );
+            const Duration(seconds: 15),
+            onTimeout: () {
+              throw TimeoutException(
+                'Connexion timeout. Vérifiez votre réseau.',
+              );
+            },
+          );
 
       // Log EVERYTHING
       debugPrint('[AUTH] session=${response.session}');
@@ -172,16 +175,17 @@ class _LoginPageState extends State<LoginPage> {
       debugPrint('[AUTH] user.email=${response.user?.email}');
       final token = response.session?.accessToken;
       debugPrint(
-          '[AUTH] session.accessToken=${token != null ? token.substring(0, 20) : "null"}...');
+        '[AUTH] session.accessToken=${token != null ? token.substring(0, 20) : "null"}...',
+      );
 
       // 4. Check if login was successful
       if (response.session != null && response.user != null) {
         debugPrint('[AUTH] ✅ Login successful');
         _showSuccess('Connexion réussie !');
-        
+
         // Attendre un court délai pour afficher le message de succès
         await Future.delayed(const Duration(milliseconds: 500));
-        
+
         // Rediriger vers la page d'accueil
         if (mounted) {
           debugPrint('[AUTH] Redirecting to /home');
@@ -250,20 +254,23 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       debugPrint(
-          '[AUTH] Attempting sign up with email: ${_usernameController.text}');
+        '[AUTH] Attempting sign up with email: ${_usernameController.text}',
+      );
 
       // Sign up with Supabase - use signUp
       final response = await Supabase.instance.client.auth
           .signUp(
-        email: _usernameController.text.trim(),
-        password: _passwordController.text,
-      )
+            email: _usernameController.text.trim(),
+            password: _passwordController.text,
+          )
           .timeout(
-        const Duration(seconds: 15),
-        onTimeout: () {
-          throw TimeoutException('Inscription timeout. Vérifiez votre réseau.');
-        },
-      );
+            const Duration(seconds: 15),
+            onTimeout: () {
+              throw TimeoutException(
+                'Inscription timeout. Vérifiez votre réseau.',
+              );
+            },
+          );
 
       // Log EVERYTHING
       debugPrint('[AUTH] session=${response.session}');
@@ -271,7 +278,8 @@ class _LoginPageState extends State<LoginPage> {
       debugPrint('[AUTH] user.id=${response.user?.id}');
       debugPrint('[AUTH] user.email=${response.user?.email}');
       debugPrint(
-          '[AUTH] user.emailConfirmedAt=${response.user?.emailConfirmedAt}');
+        '[AUTH] user.emailConfirmedAt=${response.user?.emailConfirmedAt}',
+      );
 
       // Handle email confirmation explicitly
       if (response.user != null) {
@@ -283,9 +291,11 @@ class _LoginPageState extends State<LoginPage> {
         } else {
           // User needs to confirm email
           debugPrint(
-              '[AUTH] ⚠️ Sign up successful but email confirmation required');
+            '[AUTH] ⚠️ Sign up successful but email confirmation required',
+          );
           _showSuccess(
-              'Compte créé ! Veuillez confirmer votre email avant de vous connecter.');
+            'Compte créé ! Veuillez confirmer votre email avant de vous connecter.',
+          );
           await Future.delayed(const Duration(milliseconds: 2000));
           if (mounted) {
             setState(() {
@@ -348,11 +358,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(
-                Icons.thermostat,
-                size: 80,
-                color: Colors.blue,
-              ),
+              const Icon(Icons.thermostat, size: 80, color: Colors.blue),
               const SizedBox(height: 32),
               Text(
                 _isSignUp ? 'Créer un compte' : 'Suivi d\'Hygiène',
@@ -538,22 +544,27 @@ class _LoginPageState extends State<LoginPage> {
                     final user = client.auth.currentUser;
                     debugPrint('=== AUTH STATE DEBUG ===');
                     debugPrint(
-                        'currentSession: ${session != null ? "exists" : "null"}');
+                      'currentSession: ${session != null ? "exists" : "null"}',
+                    );
                     if (session != null) {
                       debugPrint(
-                          '  - accessToken: ${session.accessToken.substring(0, 20) ?? "null"}...');
+                        '  - accessToken: ${session.accessToken.substring(0, 20) ?? "null"}...',
+                      );
                       debugPrint(
-                          '  - refreshToken: ${session.refreshToken?.substring(0, 20) ?? "null"}...');
+                        '  - refreshToken: ${session.refreshToken?.substring(0, 20) ?? "null"}...',
+                      );
                       debugPrint('  - expiresAt: ${session.expiresAt}');
                       debugPrint('  - expiresIn: ${session.expiresIn}');
                     }
                     debugPrint(
-                        'currentUser: ${user != null ? "exists" : "null"}');
+                      'currentUser: ${user != null ? "exists" : "null"}',
+                    );
                     if (user != null) {
                       debugPrint('  - id: ${user.id}');
                       debugPrint('  - email: ${user.email}');
                       debugPrint(
-                          '  - emailConfirmedAt: ${user.emailConfirmedAt}');
+                        '  - emailConfirmedAt: ${user.emailConfirmedAt}',
+                      );
                       debugPrint('  - createdAt: ${user.createdAt}');
                     }
                     debugPrint('=======================');
@@ -582,10 +593,12 @@ class _LoginPageState extends State<LoginPage> {
 
                   // 4. STYLE CONDITIONNEL SELON L'ÉTAT
                   style: ElevatedButton.styleFrom(
-                    backgroundColor:
-                        _isLoading ? Colors.grey.shade300 : Colors.blue,
-                    foregroundColor:
-                        _isLoading ? Colors.grey.shade600 : Colors.white,
+                    backgroundColor: _isLoading
+                        ? Colors.grey.shade300
+                        : Colors.blue,
+                    foregroundColor: _isLoading
+                        ? Colors.grey.shade600
+                        : Colors.white,
                     elevation: _isLoading ? 0 : 2,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
@@ -646,10 +659,7 @@ class _LoginPageState extends State<LoginPage> {
                   _isSignUp
                       ? 'Déjà un compte ? Se connecter'
                       : 'Pas de compte ? Créer un compte',
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: Colors.blue,
-                  ),
+                  style: const TextStyle(fontSize: 14, color: Colors.blue),
                 ),
               ),
             ],

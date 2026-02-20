@@ -2,7 +2,8 @@
 class AuditLogEntry {
   final String id;
   final String organizationId;
-  final String operationType; // 'reception', 'temperature', 'oil_change', 'cleaning', 'non_conformity'
+  final String
+  operationType; // 'reception', 'temperature', 'oil_change', 'cleaning', 'non_conformity'
   final String? operationId; // ID of the related record
   final String action; // 'create', 'update', 'delete', 'complete'
   final String? actorUserId; // Admin who performed action
@@ -69,6 +70,3 @@ class AuditLogEntry {
     };
   }
 }
-
-
-

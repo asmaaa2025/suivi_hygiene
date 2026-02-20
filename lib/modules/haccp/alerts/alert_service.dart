@@ -1,5 +1,5 @@
 /// HACCP Alert Service
-/// 
+///
 /// Centralized service for alert evaluation and management
 /// Initializes the engine and provides high-level API for modules
 
@@ -12,7 +12,7 @@ import 'alert_repository.dart';
 class AlertService {
   static AlertService? _instance;
   static AlertService get instance => _instance ??= AlertService._();
-  
+
   AlertService._();
 
   final AlertEngine _engine = AlertEngine();
@@ -28,7 +28,9 @@ class AlertService {
 
     try {
       debugPrint('[AlertService] Loading alert rules...');
-      final rulesJson = await rootBundle.loadString('lib/modules/haccp/alerts/alert_rules.json');
+      final rulesJson = await rootBundle.loadString(
+        'lib/modules/haccp/alerts/alert_rules.json',
+      );
       await _engine.loadRules(rulesJson);
       _initialized = true;
       debugPrint('[AlertService] ✅ Initialized successfully');
@@ -64,9 +66,11 @@ class AlertService {
             alert.dedupeKey!,
             _engine.dedupeWindowMinutes,
           );
-          
+
           if (isDuplicate) {
-            debugPrint('[AlertService] Skipping duplicate alert: ${alert.dedupeKey}');
+            debugPrint(
+              '[AlertService] Skipping duplicate alert: ${alert.dedupeKey}',
+            );
             continue;
           }
         }
@@ -114,18 +118,10 @@ class AlertService {
   }
 
   /// Link alert to corrective action
-  Future<void> linkCorrectiveAction(String alertId, String correctiveActionId) async {
+  Future<void> linkCorrectiveAction(
+    String alertId,
+    String correctiveActionId,
+  ) async {
     await _repository.linkCorrectiveAction(alertId, correctiveActionId);
   }
 }
-
-
-
-
-
-
-
-
-
-
-

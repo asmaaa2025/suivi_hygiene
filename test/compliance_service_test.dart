@@ -53,10 +53,7 @@ void main() {
       final dueDate = ComplianceService.computeDueDate(requirement, null);
       expect(dueDate, isNotNull);
       // Should be today (within 1 day tolerance)
-      expect(
-        dueDate!.difference(DateTime.now()).inDays,
-        lessThanOrEqualTo(1),
-      );
+      expect(dueDate!.difference(DateTime.now()).inDays, lessThanOrEqualTo(1));
     });
 
     test('computeDueDate adds frequency days to last event', () {
@@ -164,8 +161,10 @@ void main() {
       final requirements = [req1, req2];
       final events = <ComplianceEvent>[];
 
-      final checkEvents =
-          ComplianceService.buildDailyCheckEvents(requirements, events);
+      final checkEvents = ComplianceService.buildDailyCheckEvents(
+        requirements,
+        events,
+      );
 
       expect(checkEvents.length, equals(2));
       expect(checkEvents[0]['event_type'], equals('compliance.daily_check'));
@@ -185,8 +184,9 @@ void main() {
         ),
       ];
 
-      final checkEvents =
-          ComplianceService.buildDailyCheckEvents([requirement], events);
+      final checkEvents = ComplianceService.buildDailyCheckEvents([
+        requirement,
+      ], events);
 
       expect(checkEvents.length, equals(1));
       expect(checkEvents[0]['status'], isNotNull);
@@ -206,20 +206,11 @@ void main() {
         createdAt: DateTime.now(),
       );
 
-      final checkEvents =
-          ComplianceService.buildDailyCheckEvents([inactiveReq], events);
+      final checkEvents = ComplianceService.buildDailyCheckEvents([
+        inactiveReq,
+      ], events);
 
       expect(checkEvents.length, equals(0));
     });
   });
 }
-
-
-
-
-
-
-
-
-
-

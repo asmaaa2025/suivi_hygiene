@@ -70,8 +70,10 @@ class _ReceptionPageState extends State<ReceptionPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  'Erreur: ${e is AppException ? e.message : e.toString()}')),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
+          ),
         );
       }
     } finally {
@@ -103,8 +105,10 @@ class _ReceptionPageState extends State<ReceptionPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  'Erreur: ${e is AppException ? e.message : e.toString()}')),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
+          ),
         );
       }
     } finally {
@@ -148,8 +152,9 @@ class _ReceptionPageState extends State<ReceptionPage> {
           }
           final fileName =
               'reception_${DateTime.now().millisecondsSinceEpoch}.jpg';
-          final savedFile =
-              await File(_photoPath!).copy('${receptionsDir.path}/$fileName');
+          final savedFile = await File(
+            _photoPath!,
+          ).copy('${receptionsDir.path}/$fileName');
           photoPath = savedFile.path;
         } catch (e) {
           // On continue même si la photo ne peut pas être sauvegardée
@@ -158,9 +163,9 @@ class _ReceptionPageState extends State<ReceptionPage> {
       }
 
       if (!_isOnline) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Network required')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Network required')));
         return;
       }
 
@@ -236,9 +241,9 @@ class _ReceptionPageState extends State<ReceptionPage> {
     if (result != null) {
       try {
         if (!_isOnline) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Network required')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Network required')));
           return;
         }
 
@@ -263,7 +268,8 @@ class _ReceptionPageState extends State<ReceptionPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  'Erreur: ${e is AppException ? e.message : e.toString()}'),
+                'Erreur: ${e is AppException ? e.message : e.toString()}',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -285,10 +291,13 @@ class _ReceptionPageState extends State<ReceptionPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Confirmation',
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Confirmation',
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+        ),
         content: Text(
-            'Supprimer le fournisseur "$nom" ?\n\nCette action supprimera également toutes les réceptions associées.'),
+          'Supprimer le fournisseur "$nom" ?\n\nCette action supprimera également toutes les réceptions associées.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -297,8 +306,10 @@ class _ReceptionPageState extends State<ReceptionPage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Supprimer',
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+            child: Text(
+              'Supprimer',
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -306,9 +317,9 @@ class _ReceptionPageState extends State<ReceptionPage> {
     if (confirm != true) return;
 
     if (!_isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Network required')));
       return;
     }
 
@@ -340,8 +351,9 @@ class _ReceptionPageState extends State<ReceptionPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text('Erreur: ${e is AppException ? e.message : e.toString()}'),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -508,8 +520,11 @@ class _ReceptionPageState extends State<ReceptionPage> {
                           return Container(
                             color: Colors.grey.shade200,
                             child: const Center(
-                              child: Icon(Icons.error,
-                                  size: 50, color: Colors.grey),
+                              child: Icon(
+                                Icons.error,
+                                size: 50,
+                                color: Colors.grey,
+                              ),
                             ),
                           );
                         },
@@ -530,9 +545,12 @@ class _ReceptionPageState extends State<ReceptionPage> {
                           borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                      child: Text('Fermer',
-                          style: GoogleFonts.montserrat(
-                              fontWeight: FontWeight.bold)),
+                      child: Text(
+                        'Fermer',
+                        style: GoogleFonts.montserrat(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ),
@@ -548,8 +566,10 @@ class _ReceptionPageState extends State<ReceptionPage> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Confirmation',
-            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+        title: Text(
+          'Confirmation',
+          style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+        ),
         content: Text('Supprimer cette réception ?'),
         actions: [
           TextButton(
@@ -559,8 +579,10 @@ class _ReceptionPageState extends State<ReceptionPage> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            child: Text('Supprimer',
-                style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+            child: Text(
+              'Supprimer',
+              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -569,9 +591,9 @@ class _ReceptionPageState extends State<ReceptionPage> {
     if (confirm != true) return;
 
     if (!_isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Network required')));
       return;
     }
 
@@ -616,16 +638,18 @@ class _ReceptionPageState extends State<ReceptionPage> {
           'Quantité',
           'Statut',
           'Remarque',
-          'Photo'
-        ]
+          'Photo',
+        ],
       ];
 
       // Ajouter les données
       for (var reception in _receptions) {
-        final date = DateFormat('dd/MM/yyyy HH:mm')
-            .format(DateTime.parse(reception['date']));
+        final date = DateFormat(
+          'dd/MM/yyyy HH:mm',
+        ).format(DateTime.parse(reception['date']));
         final statut = reception['conforme'] == 1 ? 'Conforme' : 'Non OK';
-        final photo = reception['photo_path'] != null &&
+        final photo =
+            reception['photo_path'] != null &&
                 reception['photo_path'].toString().isNotEmpty
             ? 'Oui'
             : 'Non';
@@ -642,8 +666,9 @@ class _ReceptionPageState extends State<ReceptionPage> {
       }
 
       // Convertir en CSV
-      String csv =
-          const ListToCsvConverter(fieldDelimiter: ';').convert(csvData);
+      String csv = const ListToCsvConverter(
+        fieldDelimiter: ';',
+      ).convert(csvData);
 
       // Créer le dossier d'export s'il n'existe pas
       final appDir = await getApplicationDocumentsDirectory();
@@ -665,13 +690,18 @@ class _ReceptionPageState extends State<ReceptionPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Export CSV réussi !',
-                  style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
-              Text('Fichier sauvegardé : $fileName',
-                  style: GoogleFonts.montserrat(fontSize: 12)),
-              Text('Dossier : ${exportDir.path}',
-                  style:
-                      GoogleFonts.montserrat(fontSize: 10, color: Colors.grey)),
+              Text(
+                'Export CSV réussi !',
+                style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                'Fichier sauvegardé : $fileName',
+                style: GoogleFonts.montserrat(fontSize: 12),
+              ),
+              Text(
+                'Dossier : ${exportDir.path}',
+                style: GoogleFonts.montserrat(fontSize: 10, color: Colors.grey),
+              ),
             ],
           ),
           backgroundColor: Colors.green,
@@ -718,19 +748,17 @@ class _ReceptionPageState extends State<ReceptionPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF4CAF50),
-            Color(0xFF81C784),
-            Color(0xFFC8E6C9),
-          ],
+          colors: [Color(0xFF4CAF50), Color(0xFF81C784), Color(0xFFC8E6C9)],
         ),
       ),
       child: Scaffold(
         resizeToAvoidBottomInset: true,
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: Text('Réception',
-              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+          title: Text(
+            'Réception',
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           foregroundColor: Colors.white,
@@ -759,7 +787,8 @@ class _ReceptionPageState extends State<ReceptionPage> {
                   margin: const EdgeInsets.all(16),
                   elevation: 8,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Form(
@@ -773,8 +802,11 @@ class _ReceptionPageState extends State<ReceptionPage> {
                               CircleAvatar(
                                 radius: 20,
                                 backgroundColor: Colors.green.shade100,
-                                child: Icon(Icons.local_shipping,
-                                    color: Colors.green.shade700, size: 24),
+                                child: Icon(
+                                  Icons.local_shipping,
+                                  color: Colors.green.shade700,
+                                  size: 24,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -806,21 +838,26 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                           child: Row(
                                             children: [
                                               Expanded(
-                                                child: Text(f,
-                                                    overflow:
-                                                        TextOverflow.ellipsis),
+                                                child: Text(
+                                                  f,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
                                               ),
                                               IconButton(
-                                                icon: Icon(Icons.delete,
-                                                    color: Colors.red.shade400,
-                                                    size: 16),
+                                                icon: Icon(
+                                                  Icons.delete,
+                                                  color: Colors.red.shade400,
+                                                  size: 16,
+                                                ),
                                                 onPressed: () =>
                                                     _deleteFournisseur(f),
                                                 padding: EdgeInsets.zero,
                                                 constraints:
                                                     const BoxConstraints(
-                                                        minWidth: 24,
-                                                        minHeight: 24),
+                                                      minWidth: 24,
+                                                      minHeight: 24,
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -830,16 +867,22 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                           setState(() => _fournisseur = val!),
                                       decoration: InputDecoration(
                                         labelText: 'Fournisseur',
-                                        prefixIcon: Icon(Icons.business,
-                                            color: Colors.green.shade600),
+                                        prefixIcon: Icon(
+                                          Icons.business,
+                                          color: Colors.green.shade600,
+                                        ),
                                         border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
                                         filled: true,
                                         fillColor: Colors.green.shade50,
                                         contentPadding:
                                             const EdgeInsets.symmetric(
-                                                vertical: 16, horizontal: 12),
+                                              vertical: 16,
+                                              horizontal: 12,
+                                            ),
                                       ),
                                       menuMaxHeight: 200,
                                       isExpanded: true,
@@ -850,15 +893,20 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                     child: ElevatedButton.icon(
                                       onPressed: _addFournisseur,
                                       icon: const Icon(Icons.add),
-                                      label: Text('Ajouter un fournisseur',
-                                          style: GoogleFonts.montserrat(
-                                              fontWeight: FontWeight.bold)),
+                                      label: Text(
+                                        'Ajouter un fournisseur',
+                                        style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.green.shade600,
                                         foregroundColor: Colors.white,
                                         shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
                                         elevation: 4,
                                       ),
                                     ),
@@ -875,14 +923,19 @@ class _ReceptionPageState extends State<ReceptionPage> {
                             style: GoogleFonts.montserrat(),
                             decoration: InputDecoration(
                               labelText: 'Produit',
-                              prefixIcon: Icon(Icons.inventory,
-                                  color: Colors.green.shade600),
+                              prefixIcon: Icon(
+                                Icons.inventory,
+                                color: Colors.green.shade600,
+                              ),
                               border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               filled: true,
                               fillColor: Colors.green.shade50,
                               contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 16, horizontal: 12),
+                                vertical: 16,
+                                horizontal: 12,
+                              ),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -904,15 +957,19 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                   keyboardType: TextInputType.number,
                                   decoration: InputDecoration(
                                     labelText: 'Quantité',
-                                    prefixIcon: Icon(Icons.scale,
-                                        color: Colors.green.shade600),
+                                    prefixIcon: Icon(
+                                      Icons.scale,
+                                      color: Colors.green.shade600,
+                                    ),
                                     border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                     filled: true,
                                     fillColor: Colors.green.shade50,
                                     contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 16, horizontal: 12),
+                                      vertical: 16,
+                                      horizontal: 12,
+                                    ),
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -930,28 +987,36 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                   items: [
                                     DropdownMenuItem<String>(
                                       value: 'Conforme',
-                                      child: Text('Conforme',
-                                          overflow: TextOverflow.ellipsis),
+                                      child: Text(
+                                        'Conforme',
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                     DropdownMenuItem<String>(
                                       value: 'Non conforme',
-                                      child: Text('Non OK',
-                                          overflow: TextOverflow.ellipsis),
+                                      child: Text(
+                                        'Non OK',
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ],
                                   onChanged: (val) =>
                                       setState(() => _statut = val!),
                                   decoration: InputDecoration(
                                     labelText: 'Statut',
-                                    prefixIcon: Icon(Icons.check_circle,
-                                        color: Colors.green.shade600),
+                                    prefixIcon: Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green.shade600,
+                                    ),
                                     border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                     filled: true,
                                     fillColor: Colors.green.shade50,
                                     contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 16, horizontal: 12),
+                                      vertical: 16,
+                                      horizontal: 12,
+                                    ),
                                   ),
                                   menuMaxHeight: 200,
                                   isExpanded: true,
@@ -967,14 +1032,19 @@ class _ReceptionPageState extends State<ReceptionPage> {
                             style: GoogleFonts.montserrat(),
                             decoration: InputDecoration(
                               labelText: 'Remarque (optionnel)',
-                              prefixIcon: Icon(Icons.note,
-                                  color: Colors.green.shade600),
+                              prefixIcon: Icon(
+                                Icons.note,
+                                color: Colors.green.shade600,
+                              ),
                               border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               filled: true,
                               fillColor: Colors.green.shade50,
                               contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 16, horizontal: 12),
+                                vertical: 16,
+                                horizontal: 12,
+                              ),
                             ),
                             maxLines: 3,
                             minLines: 2,
@@ -994,8 +1064,10 @@ class _ReceptionPageState extends State<ReceptionPage> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.camera_alt,
-                                        color: Colors.green.shade600),
+                                    Icon(
+                                      Icons.camera_alt,
+                                      color: Colors.green.shade600,
+                                    ),
                                     const SizedBox(width: 8),
                                     Text(
                                       'Photo',
@@ -1014,7 +1086,8 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                          color: Colors.green.shade300),
+                                        color: Colors.green.shade300,
+                                      ),
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
@@ -1031,15 +1104,18 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                         child: ElevatedButton.icon(
                                           onPressed: _showPhotoOptions,
                                           icon: const Icon(Icons.edit),
-                                          label: Text('Modifier',
-                                              style: GoogleFonts.montserrat()),
+                                          label: Text(
+                                            'Modifier',
+                                            style: GoogleFonts.montserrat(),
+                                          ),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor:
                                                 Colors.blue.shade600,
                                             foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8)),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -1048,15 +1124,18 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                         child: ElevatedButton.icon(
                                           onPressed: _removePhoto,
                                           icon: const Icon(Icons.delete),
-                                          label: Text('Supprimer',
-                                              style: GoogleFonts.montserrat()),
+                                          label: Text(
+                                            'Supprimer',
+                                            style: GoogleFonts.montserrat(),
+                                          ),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor:
                                                 Colors.red.shade600,
                                             foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8)),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -1066,14 +1145,16 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                   ElevatedButton.icon(
                                     onPressed: _showPhotoOptions,
                                     icon: const Icon(Icons.add_a_photo),
-                                    label: Text('Ajouter une photo',
-                                        style: GoogleFonts.montserrat()),
+                                    label: Text(
+                                      'Ajouter une photo',
+                                      style: GoogleFonts.montserrat(),
+                                    ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.green.shade600,
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1092,14 +1173,18 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                 }
                               },
                               icon: const Icon(Icons.save),
-                              label: Text('Enregistrer',
-                                  style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold)),
+                              label: Text(
+                                'Enregistrer',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green.shade600,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 elevation: 4,
                               ),
                             ),
@@ -1117,7 +1202,8 @@ class _ReceptionPageState extends State<ReceptionPage> {
                 margin: const EdgeInsets.all(16),
                 elevation: 8,
                 shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20)),
+                  borderRadius: BorderRadius.circular(20),
+                ),
                 child: Column(
                   children: [
                     // Header du tableau
@@ -1132,8 +1218,11 @@ class _ReceptionPageState extends State<ReceptionPage> {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.history,
-                              color: Colors.green.shade700, size: 24),
+                          Icon(
+                            Icons.history,
+                            color: Colors.green.shade700,
+                            size: 24,
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(
@@ -1147,8 +1236,10 @@ class _ReceptionPageState extends State<ReceptionPage> {
                           ),
                           IconButton(
                             onPressed: _exportToCsv,
-                            icon: Icon(Icons.download,
-                                color: Colors.green.shade600),
+                            icon: Icon(
+                              Icons.download,
+                              color: Colors.green.shade600,
+                            ),
                             tooltip: 'Export CSV',
                           ),
                         ],
@@ -1160,15 +1251,17 @@ class _ReceptionPageState extends State<ReceptionPage> {
                         itemCount: _receptions.length,
                         itemBuilder: (context, index) {
                           final r = _receptions[index];
-                          final date = DateFormat('dd/MM/yyyy HH:mm')
-                              .format(DateTime.parse(r['date']));
+                          final date = DateFormat(
+                            'dd/MM/yyyy HH:mm',
+                          ).format(DateTime.parse(r['date']));
                           final photoPath = r['photo_path'] as String?;
 
                           return Card(
                             margin: const EdgeInsets.only(bottom: 8),
                             elevation: 2,
                             shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             child: Padding(
                               padding: const EdgeInsets.all(12),
                               child: Column(
@@ -1211,7 +1304,9 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                           ),
                                           Container(
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 8, vertical: 4),
+                                              horizontal: 8,
+                                              vertical: 4,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: r['conforme'] == 1
                                                   ? Colors.green.shade100
@@ -1235,9 +1330,11 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                         ],
                                       ),
                                       IconButton(
-                                        icon: Icon(Icons.delete,
-                                            color: Colors.red.shade400,
-                                            size: 20),
+                                        icon: Icon(
+                                          Icons.delete,
+                                          color: Colors.red.shade400,
+                                          size: 20,
+                                        ),
                                         onPressed: () =>
                                             _deleteReception(r['id']),
                                         tooltip: 'Supprimer',
@@ -1263,9 +1360,11 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                       ),
                                       child: Row(
                                         children: [
-                                          Icon(Icons.note,
-                                              size: 16,
-                                              color: Colors.green.shade600),
+                                          Icon(
+                                            Icons.note,
+                                            size: 16,
+                                            color: Colors.green.shade600,
+                                          ),
                                           const SizedBox(width: 8),
                                           Expanded(
                                             child: Text(
@@ -1289,7 +1388,8 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                       decoration: BoxDecoration(
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
-                                            color: Colors.green.shade300),
+                                          color: Colors.green.shade300,
+                                        ),
                                       ),
                                       child: ClipRRect(
                                         borderRadius: BorderRadius.circular(8),
@@ -1340,7 +1440,8 @@ class _ReceptionPageState extends State<ReceptionPage> {
                 child: Card(
                   elevation: 8,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Padding(
                     padding: const EdgeInsets.all(20),
                     child: Form(
@@ -1353,8 +1454,11 @@ class _ReceptionPageState extends State<ReceptionPage> {
                               CircleAvatar(
                                 radius: 20,
                                 backgroundColor: Colors.green.shade100,
-                                child: Icon(Icons.local_shipping,
-                                    color: Colors.green.shade700, size: 24),
+                                child: Icon(
+                                  Icons.local_shipping,
+                                  color: Colors.green.shade700,
+                                  size: 24,
+                                ),
                               ),
                               const SizedBox(width: 12),
                               Expanded(
@@ -1386,21 +1490,26 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                           child: Row(
                                             children: [
                                               Expanded(
-                                                child: Text(f,
-                                                    overflow:
-                                                        TextOverflow.ellipsis),
+                                                child: Text(
+                                                  f,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
                                               ),
                                               IconButton(
-                                                icon: Icon(Icons.delete,
-                                                    color: Colors.red.shade400,
-                                                    size: 16),
+                                                icon: Icon(
+                                                  Icons.delete,
+                                                  color: Colors.red.shade400,
+                                                  size: 16,
+                                                ),
                                                 onPressed: () =>
                                                     _deleteFournisseur(f),
                                                 padding: EdgeInsets.zero,
                                                 constraints:
                                                     const BoxConstraints(
-                                                        minWidth: 24,
-                                                        minHeight: 24),
+                                                      minWidth: 24,
+                                                      minHeight: 24,
+                                                    ),
                                               ),
                                             ],
                                           ),
@@ -1410,16 +1519,22 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                           setState(() => _fournisseur = val!),
                                       decoration: InputDecoration(
                                         labelText: 'Fournisseur',
-                                        prefixIcon: Icon(Icons.business,
-                                            color: Colors.green.shade600),
+                                        prefixIcon: Icon(
+                                          Icons.business,
+                                          color: Colors.green.shade600,
+                                        ),
                                         border: OutlineInputBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
                                         filled: true,
                                         fillColor: Colors.green.shade50,
                                         contentPadding:
                                             const EdgeInsets.symmetric(
-                                                vertical: 16, horizontal: 12),
+                                              vertical: 16,
+                                              horizontal: 12,
+                                            ),
                                       ),
                                       menuMaxHeight: 200,
                                       isExpanded: true,
@@ -1430,15 +1545,20 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                     child: ElevatedButton.icon(
                                       onPressed: _addFournisseur,
                                       icon: const Icon(Icons.add),
-                                      label: Text('Ajouter un fournisseur',
-                                          style: GoogleFonts.montserrat(
-                                              fontWeight: FontWeight.bold)),
+                                      label: Text(
+                                        'Ajouter un fournisseur',
+                                        style: GoogleFonts.montserrat(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                       style: ElevatedButton.styleFrom(
                                         backgroundColor: Colors.green.shade600,
                                         foregroundColor: Colors.white,
                                         shape: RoundedRectangleBorder(
-                                            borderRadius:
-                                                BorderRadius.circular(12)),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
                                         elevation: 4,
                                       ),
                                     ),
@@ -1455,14 +1575,19 @@ class _ReceptionPageState extends State<ReceptionPage> {
                             style: GoogleFonts.montserrat(),
                             decoration: InputDecoration(
                               labelText: 'Produit',
-                              prefixIcon: Icon(Icons.inventory,
-                                  color: Colors.green.shade600),
+                              prefixIcon: Icon(
+                                Icons.inventory,
+                                color: Colors.green.shade600,
+                              ),
                               border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               filled: true,
                               fillColor: Colors.green.shade50,
                               contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 16, horizontal: 12),
+                                vertical: 16,
+                                horizontal: 12,
+                              ),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
@@ -1484,15 +1609,19 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                   keyboardType: TextInputType.number,
                                   decoration: InputDecoration(
                                     labelText: 'Quantité',
-                                    prefixIcon: Icon(Icons.scale,
-                                        color: Colors.green.shade600),
+                                    prefixIcon: Icon(
+                                      Icons.scale,
+                                      color: Colors.green.shade600,
+                                    ),
                                     border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                     filled: true,
                                     fillColor: Colors.green.shade50,
                                     contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 16, horizontal: 12),
+                                      vertical: 16,
+                                      horizontal: 12,
+                                    ),
                                   ),
                                   validator: (value) {
                                     if (value == null || value.isEmpty) {
@@ -1510,28 +1639,36 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                   items: [
                                     DropdownMenuItem<String>(
                                       value: 'Conforme',
-                                      child: Text('Conforme',
-                                          overflow: TextOverflow.ellipsis),
+                                      child: Text(
+                                        'Conforme',
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                     DropdownMenuItem<String>(
                                       value: 'Non conforme',
-                                      child: Text('Non OK',
-                                          overflow: TextOverflow.ellipsis),
+                                      child: Text(
+                                        'Non OK',
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ),
                                   ],
                                   onChanged: (val) =>
                                       setState(() => _statut = val!),
                                   decoration: InputDecoration(
                                     labelText: 'Statut',
-                                    prefixIcon: Icon(Icons.check_circle,
-                                        color: Colors.green.shade600),
+                                    prefixIcon: Icon(
+                                      Icons.check_circle,
+                                      color: Colors.green.shade600,
+                                    ),
                                     border: OutlineInputBorder(
-                                        borderRadius:
-                                            BorderRadius.circular(12)),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
                                     filled: true,
                                     fillColor: Colors.green.shade50,
                                     contentPadding: const EdgeInsets.symmetric(
-                                        vertical: 16, horizontal: 12),
+                                      vertical: 16,
+                                      horizontal: 12,
+                                    ),
                                   ),
                                   menuMaxHeight: 200,
                                   isExpanded: true,
@@ -1547,14 +1684,19 @@ class _ReceptionPageState extends State<ReceptionPage> {
                             style: GoogleFonts.montserrat(),
                             decoration: InputDecoration(
                               labelText: 'Remarque (optionnel)',
-                              prefixIcon: Icon(Icons.note,
-                                  color: Colors.green.shade600),
+                              prefixIcon: Icon(
+                                Icons.note,
+                                color: Colors.green.shade600,
+                              ),
                               border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               filled: true,
                               fillColor: Colors.green.shade50,
                               contentPadding: const EdgeInsets.symmetric(
-                                  vertical: 16, horizontal: 12),
+                                vertical: 16,
+                                horizontal: 12,
+                              ),
                             ),
                             maxLines: 3,
                             minLines: 2,
@@ -1574,8 +1716,10 @@ class _ReceptionPageState extends State<ReceptionPage> {
                               children: [
                                 Row(
                                   children: [
-                                    Icon(Icons.camera_alt,
-                                        color: Colors.green.shade600),
+                                    Icon(
+                                      Icons.camera_alt,
+                                      color: Colors.green.shade600,
+                                    ),
                                     const SizedBox(width: 8),
                                     Text(
                                       'Photo',
@@ -1594,7 +1738,8 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(8),
                                       border: Border.all(
-                                          color: Colors.green.shade300),
+                                        color: Colors.green.shade300,
+                                      ),
                                     ),
                                     child: ClipRRect(
                                       borderRadius: BorderRadius.circular(8),
@@ -1611,15 +1756,18 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                         child: ElevatedButton.icon(
                                           onPressed: _showPhotoOptions,
                                           icon: const Icon(Icons.edit),
-                                          label: Text('Modifier',
-                                              style: GoogleFonts.montserrat()),
+                                          label: Text(
+                                            'Modifier',
+                                            style: GoogleFonts.montserrat(),
+                                          ),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor:
                                                 Colors.blue.shade600,
                                             foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8)),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -1628,15 +1776,18 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                         child: ElevatedButton.icon(
                                           onPressed: _removePhoto,
                                           icon: const Icon(Icons.delete),
-                                          label: Text('Supprimer',
-                                              style: GoogleFonts.montserrat()),
+                                          label: Text(
+                                            'Supprimer',
+                                            style: GoogleFonts.montserrat(),
+                                          ),
                                           style: ElevatedButton.styleFrom(
                                             backgroundColor:
                                                 Colors.red.shade600,
                                             foregroundColor: Colors.white,
                                             shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8)),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
                                           ),
                                         ),
                                       ),
@@ -1646,14 +1797,16 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                   ElevatedButton.icon(
                                     onPressed: _showPhotoOptions,
                                     icon: const Icon(Icons.add_a_photo),
-                                    label: Text('Ajouter une photo',
-                                        style: GoogleFonts.montserrat()),
+                                    label: Text(
+                                      'Ajouter une photo',
+                                      style: GoogleFonts.montserrat(),
+                                    ),
                                     style: ElevatedButton.styleFrom(
                                       backgroundColor: Colors.green.shade600,
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8)),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
                                     ),
                                   ),
                                 ],
@@ -1673,14 +1826,18 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                 }
                               },
                               icon: const Icon(Icons.save),
-                              label: Text('Enregistrer',
-                                  style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold)),
+                              label: Text(
+                                'Enregistrer',
+                                style: GoogleFonts.montserrat(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.green.shade600,
                                 foregroundColor: Colors.white,
                                 shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12)),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
                                 elevation: 4,
                               ),
                             ),
@@ -1701,7 +1858,8 @@ class _ReceptionPageState extends State<ReceptionPage> {
                 child: Card(
                   elevation: 8,
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20)),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   child: Column(
                     children: [
                       Container(
@@ -1715,8 +1873,11 @@ class _ReceptionPageState extends State<ReceptionPage> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.history,
-                                color: Colors.green.shade700, size: 24),
+                            Icon(
+                              Icons.history,
+                              color: Colors.green.shade700,
+                              size: 24,
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
@@ -1730,8 +1891,10 @@ class _ReceptionPageState extends State<ReceptionPage> {
                             ),
                             IconButton(
                               onPressed: _exportToCsv,
-                              icon: Icon(Icons.download,
-                                  color: Colors.green.shade600),
+                              icon: Icon(
+                                Icons.download,
+                                color: Colors.green.shade600,
+                              ),
                               tooltip: 'Export CSV',
                             ),
                           ],
@@ -1743,52 +1906,64 @@ class _ReceptionPageState extends State<ReceptionPage> {
                           itemCount: _receptions.length,
                           itemBuilder: (context, index) {
                             final r = _receptions[index];
-                            final date = DateFormat('dd/MM/yyyy HH:mm')
-                                .format(DateTime.parse(r['date']));
+                            final date = DateFormat(
+                              'dd/MM/yyyy HH:mm',
+                            ).format(DateTime.parse(r['date']));
                             final photoPath = r['photo_path'] as String?;
                             return Card(
                               margin: const EdgeInsets.only(bottom: 8),
                               elevation: 2,
                               shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12)),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
                               child: ListTile(
                                 contentPadding: const EdgeInsets.all(16),
                                 title: Text(
                                   '${r['fournisseur']} - ${r['article']} (${r['quantite']})',
                                   style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 subtitle: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     const SizedBox(height: 8),
-                                    Text('Date: $date',
-                                        style: GoogleFonts.poppins()),
+                                    Text(
+                                      'Date: $date',
+                                      style: GoogleFonts.poppins(),
+                                    ),
                                     const SizedBox(height: 4),
                                     Text(
-                                        'Statut: ${r['conforme'] == 1 ? 'Conforme' : 'Non OK'}',
-                                        style: GoogleFonts.poppins()),
+                                      'Statut: ${r['conforme'] == 1 ? 'Conforme' : 'Non OK'}',
+                                      style: GoogleFonts.poppins(),
+                                    ),
                                     if (r['remarque']?.isNotEmpty == true) ...[
                                       const SizedBox(height: 4),
-                                      Text('Remarque: ${r['remarque']}',
-                                          style: GoogleFonts.poppins()),
+                                      Text(
+                                        'Remarque: ${r['remarque']}',
+                                        style: GoogleFonts.poppins(),
+                                      ),
                                     ],
                                     if (photoPath != null &&
                                         photoPath.isNotEmpty) ...[
                                       const SizedBox(height: 4),
                                       Row(
                                         children: [
-                                          Icon(Icons.photo,
-                                              color: Colors.green.shade600,
-                                              size: 16),
+                                          Icon(
+                                            Icons.photo,
+                                            color: Colors.green.shade600,
+                                            size: 16,
+                                          ),
                                           const SizedBox(width: 4),
                                           TextButton(
                                             onPressed: () =>
                                                 _showPhotoDialog(photoPath),
-                                            child: Text('Voir la photo',
-                                                style: GoogleFonts.poppins(
-                                                    color:
-                                                        Colors.green.shade600)),
+                                            child: Text(
+                                              'Voir la photo',
+                                              style: GoogleFonts.poppins(
+                                                color: Colors.green.shade600,
+                                              ),
+                                            ),
                                           ),
                                         ],
                                       ),
@@ -1796,8 +1971,10 @@ class _ReceptionPageState extends State<ReceptionPage> {
                                   ],
                                 ),
                                 trailing: IconButton(
-                                  icon: Icon(Icons.delete,
-                                      color: Colors.red.shade400),
+                                  icon: Icon(
+                                    Icons.delete,
+                                    color: Colors.red.shade400,
+                                  ),
                                   onPressed: () => _deleteReception(r['id']),
                                 ),
                                 leading: Container(

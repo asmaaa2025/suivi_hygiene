@@ -1,5 +1,5 @@
 /// NC Wizard Review Screen
-/// 
+///
 /// Shows recap of all fields before submission
 /// Buttons: "Enregistrer brouillon", "Soumettre"
 
@@ -20,11 +20,7 @@ class NcWizardReview extends StatefulWidget {
   final NcDraft draft;
   final VoidCallback onBack;
 
-  const NcWizardReview({
-    super.key,
-    required this.draft,
-    required this.onBack,
-  });
+  const NcWizardReview({super.key, required this.draft, required this.onBack});
 
   @override
   State<NcWizardReview> createState() => _NcWizardReviewState();
@@ -35,7 +31,7 @@ class _NcWizardReviewState extends State<NcWizardReview> {
   final NcDraftRepository _draftRepo = NcDraftRepository();
   final OrganizationRepository _orgRepo = OrganizationRepository();
   final EmployeeSessionService _employeeSession = EmployeeSessionService();
-  
+
   bool _isSubmitting = false;
   final DateFormat _dateFormat = DateFormat('dd/MM/yyyy', 'fr_FR');
   final DateFormat _dateTimeFormat = DateFormat('dd/MM/yyyy HH:mm', 'fr_FR');
@@ -44,35 +40,35 @@ class _NcWizardReviewState extends State<NcWizardReview> {
     try {
       await _draftRepo.saveDraft(widget.draft);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Brouillon enregistré')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Brouillon enregistré')));
       }
     } catch (e) {
       debugPrint('[NcWizardReview] Error saving draft: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
 
   Future<void> _submit() async {
     if (_isSubmitting) return;
-    
+
     setState(() => _isSubmitting = true);
-    
+
     try {
       // Convert draft to NC model and submit
       final orgId = await _orgRepo.getOrCreateOrganization();
       final employeeId = await _employeeSession.getCurrentEmployeeId();
-      
+
       // Validate employee ID
       if (employeeId == null) {
         throw Exception('Aucun employé connecté. Veuillez vous reconnecter.');
       }
-      
+
       // Map draft to NC source type
       nc_models.NCSourceType? sourceType;
       switch (widget.draft.ncType) {
@@ -91,7 +87,7 @@ class _NcWizardReviewState extends State<NcWizardReview> {
         default:
           sourceType = nc_models.NCSourceType.temperature; // Default
       }
-      
+
       // Map severity to object category
       nc_models.NCObjectCategory objectCategory;
       switch (widget.draft.ncType) {
@@ -107,7 +103,7 @@ class _NcWizardReviewState extends State<NcWizardReview> {
         default:
           objectCategory = nc_models.NCObjectCategory.autre;
       }
-      
+
       // Create NC via repository
       // Note: We'll need to extend NCRepository or create a new method
       // For now, use createDraftFromSource with mapped data
@@ -120,7 +116,10 @@ class _NcWizardReviewState extends State<NcWizardReview> {
         prefillData: {
           'status': _mapStatus(widget.draft.status ?? 'Ouverte'),
           'detection_date': widget.draft.detectionDate.toIso8601String(),
-          'description': widget.draft.detailedDescription ?? widget.draft.shortDescription ?? '',
+          'description':
+              widget.draft.detailedDescription ??
+              widget.draft.shortDescription ??
+              '',
           'object_category': objectCategory.value,
           'opened_by_employee_id': employeeId,
           'opened_by_role_service': widget.draft.siteZone,
@@ -130,10 +129,11 @@ class _NcWizardReviewState extends State<NcWizardReview> {
           'immediate_action_done': widget.draft.immediateAction != null,
           'immediate_action_detail': widget.draft.immediateAction,
           'immediate_action_done_by': widget.draft.immediateActionResponsible,
-          'immediate_action_done_at': widget.draft.immediateActionDate?.toIso8601String(),
+          'immediate_action_done_at': widget.draft.immediateActionDate
+              ?.toIso8601String(),
         },
       );
-      
+
       // Retirer le brouillon après création de la NC (ne plus proposer de le rouvrir)
       await _draftRepo.clearDrafts(orgId, employeeId);
 
@@ -141,7 +141,10 @@ class _NcWizardReviewState extends State<NcWizardReview> {
       _uploadAttachmentsInBackground(ncId, employeeId);
 
       if (mounted) {
-        final prefix = GoRouterState.of(context).matchedLocation.startsWith('/admin') ? '/admin' : '/app';
+        final prefix =
+            GoRouterState.of(context).matchedLocation.startsWith('/admin')
+            ? '/admin'
+            : '/app';
         context.go('$prefix/alerts/nc/success', extra: {'ncId': ncId});
       }
     } catch (e) {
@@ -230,99 +233,123 @@ class _NcWizardReviewState extends State<NcWizardReview> {
                   Text(
                     'Récapitulatif',
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 24,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 24,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Vérifiez les informations avant de soumettre',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                   ),
                   const SizedBox(height: 32),
                   // Step 1: Identification
-                  _buildSection(
-                    '1. Identification',
-                    [
-                      _buildField('Date/heure', _dateTimeFormat.format(widget.draft.detectionDate)),
-                      if (widget.draft.siteZone != null)
-                        _buildField('Site/Zone', widget.draft.siteZone!),
-                      if (widget.draft.ncType != null)
-                        _buildField('Type de NC', widget.draft.ncType!),
-                      if (widget.draft.severity != null)
-                        _buildField('Gravité', widget.draft.severity!),
-                    ],
-                  ),
+                  _buildSection('1. Identification', [
+                    _buildField(
+                      'Date/heure',
+                      _dateTimeFormat.format(widget.draft.detectionDate),
+                    ),
+                    if (widget.draft.siteZone != null)
+                      _buildField('Site/Zone', widget.draft.siteZone!),
+                    if (widget.draft.ncType != null)
+                      _buildField('Type de NC', widget.draft.ncType!),
+                    if (widget.draft.severity != null)
+                      _buildField('Gravité', widget.draft.severity!),
+                  ]),
                   // Step 2: Constat
-                  _buildSection(
-                    '2. Constat',
-                    [
-                      if (widget.draft.shortDescription != null)
-                        _buildField('Description courte', widget.draft.shortDescription!),
-                      if (widget.draft.detailedDescription != null)
-                        _buildField('Description détaillée', widget.draft.detailedDescription!),
-                      if (widget.draft.productLot != null)
-                        _buildField('Produit/Lot', widget.draft.productLot!),
-                      if (widget.draft.affectedQuantity != null)
-                        _buildField('Quantité impactée', widget.draft.affectedQuantity!),
-                    ],
-                  ),
+                  _buildSection('2. Constat', [
+                    if (widget.draft.shortDescription != null)
+                      _buildField(
+                        'Description courte',
+                        widget.draft.shortDescription!,
+                      ),
+                    if (widget.draft.detailedDescription != null)
+                      _buildField(
+                        'Description détaillée',
+                        widget.draft.detailedDescription!,
+                      ),
+                    if (widget.draft.productLot != null)
+                      _buildField('Produit/Lot', widget.draft.productLot!),
+                    if (widget.draft.affectedQuantity != null)
+                      _buildField(
+                        'Quantité impactée',
+                        widget.draft.affectedQuantity!,
+                      ),
+                  ]),
                   // Step 3: Causes
-                  _buildSection(
-                    '3. Causes probables',
-                    [
-                      if (widget.draft.causeCategory != null)
-                        _buildField('Catégorie', widget.draft.causeCategory!),
-                      if (widget.draft.causeDetail != null)
-                        _buildField('Cause détaillée', widget.draft.causeDetail!),
-                      _buildField('NC répétée', widget.draft.isRepeated == true ? 'Oui' : 'Non'),
-                    ],
-                  ),
+                  _buildSection('3. Causes probables', [
+                    if (widget.draft.causeCategory != null)
+                      _buildField('Catégorie', widget.draft.causeCategory!),
+                    if (widget.draft.causeDetail != null)
+                      _buildField('Cause détaillée', widget.draft.causeDetail!),
+                    _buildField(
+                      'NC répétée',
+                      widget.draft.isRepeated == true ? 'Oui' : 'Non',
+                    ),
+                  ]),
                   // Step 4: Actions immédiates
-                  _buildSection(
-                    '4. Actions immédiates',
-                    [
-                      if (widget.draft.immediateAction != null)
-                        _buildField('Action', widget.draft.immediateAction!),
-                      if (widget.draft.productDisposition != null)
-                        _buildField('Disposition produit', widget.draft.productDisposition!),
-                      if (widget.draft.immediateActionDate != null)
-                        _buildField('Date/heure', _dateTimeFormat.format(widget.draft.immediateActionDate!)),
-                    ],
-                  ),
+                  _buildSection('4. Actions immédiates', [
+                    if (widget.draft.immediateAction != null)
+                      _buildField('Action', widget.draft.immediateAction!),
+                    if (widget.draft.productDisposition != null)
+                      _buildField(
+                        'Disposition produit',
+                        widget.draft.productDisposition!,
+                      ),
+                    if (widget.draft.immediateActionDate != null)
+                      _buildField(
+                        'Date/heure',
+                        _dateTimeFormat.format(
+                          widget.draft.immediateActionDate!,
+                        ),
+                      ),
+                  ]),
                   // Step 5: Actions préventives
-                  _buildSection(
-                    '5. Actions préventives',
-                    [
-                      if (widget.draft.preventiveAction != null)
-                        _buildField('Action', widget.draft.preventiveAction!),
-                      if (widget.draft.preventiveActionDueDate != null)
-                        _buildField('Échéance', _dateFormat.format(widget.draft.preventiveActionDueDate!)),
-                      _buildField('Validation admin', widget.draft.requiresAdminValidation == true ? 'Oui' : 'Non'),
-                    ],
-                  ),
+                  _buildSection('5. Actions préventives', [
+                    if (widget.draft.preventiveAction != null)
+                      _buildField('Action', widget.draft.preventiveAction!),
+                    if (widget.draft.preventiveActionDueDate != null)
+                      _buildField(
+                        'Échéance',
+                        _dateFormat.format(
+                          widget.draft.preventiveActionDueDate!,
+                        ),
+                      ),
+                    _buildField(
+                      'Validation admin',
+                      widget.draft.requiresAdminValidation == true
+                          ? 'Oui'
+                          : 'Non',
+                    ),
+                  ]),
                   // Step 6: Preuves
-                  _buildSection(
-                    '6. Preuves',
-                    [
-                      _buildField('Photos', '${widget.draft.photoPaths.length} photo(s)'),
-                      _buildField('Documents', '${widget.draft.documentPaths.length} document(s)'),
-                      if (widget.draft.evidenceComments != null)
-                        _buildField('Commentaires', widget.draft.evidenceComments!),
-                    ],
-                  ),
+                  _buildSection('6. Preuves', [
+                    _buildField(
+                      'Photos',
+                      '${widget.draft.photoPaths.length} photo(s)',
+                    ),
+                    _buildField(
+                      'Documents',
+                      '${widget.draft.documentPaths.length} document(s)',
+                    ),
+                    if (widget.draft.evidenceComments != null)
+                      _buildField(
+                        'Commentaires',
+                        widget.draft.evidenceComments!,
+                      ),
+                  ]),
                   // Step 7: Signature
-                  _buildSection(
-                    '7. Signature & clôture',
-                    [
-                      if (widget.draft.status != null)
-                        _buildField('Statut', widget.draft.status!),
-                      if (widget.draft.finalComment != null)
-                        _buildField('Commentaire final', widget.draft.finalComment!),
-                    ],
-                  ),
+                  _buildSection('7. Signature & clôture', [
+                    if (widget.draft.status != null)
+                      _buildField('Statut', widget.draft.status!),
+                    if (widget.draft.finalComment != null)
+                      _buildField(
+                        'Commentaire final',
+                        widget.draft.finalComment!,
+                      ),
+                  ]),
                 ],
               ),
             ),
@@ -379,16 +406,17 @@ class _NcWizardReviewState extends State<NcWizardReview> {
           children: [
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             if (fields.isEmpty)
               Text(
                 'Non renseigné',
-                style: TextStyle(fontSize: 14, color: Colors.grey[600], fontStyle: FontStyle.italic),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
               )
             else
               ...fields,
@@ -413,13 +441,9 @@ class _NcWizardReviewState extends State<NcWizardReview> {
             ),
           ),
           const SizedBox(height: 4),
-          Text(
-            value,
-            style: const TextStyle(fontSize: 16),
-          ),
+          Text(value, style: const TextStyle(fontSize: 16)),
         ],
       ),
     );
   }
 }
-

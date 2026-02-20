@@ -88,10 +88,12 @@ class PleskSyncService {
   /// Vérifie la connexion à Plesk
   Future<bool> _checkPleskConnection() async {
     try {
-      final response = await http.get(
-        Uri.parse('$pleskBaseUrl/hello/'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .get(
+            Uri.parse('$pleskBaseUrl/hello/'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 10));
 
       return response.statusCode == 200;
     } catch (e) {
@@ -142,13 +144,15 @@ class PleskSyncService {
   Future<int?> _getOrCreateAppareil(String nomAppareil, String token) async {
     try {
       // 1. Récupérer tous les appareils et chercher par nom
-      final getResponse = await http.get(
-        Uri.parse(pleskAppareilsUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 10));
+      final getResponse = await http
+          .get(
+            Uri.parse(pleskAppareilsUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (getResponse.statusCode == 200) {
         final appareils = json.decode(getResponse.body) as List;
@@ -183,7 +187,8 @@ class PleskSyncService {
       }
 
       print(
-          '❌ Impossible de créer l\'appareil: ${createResponse.statusCode} - ${createResponse.body}');
+        '❌ Impossible de créer l\'appareil: ${createResponse.statusCode} - ${createResponse.body}',
+      );
       return null;
     } catch (e) {
       print('❌ Erreur getOrCreateAppareil: $e');
@@ -201,11 +206,14 @@ class PleskSyncService {
       }
 
       // 1. Récupérer ou créer l'appareil et obtenir son ID
-      final appareilId =
-          await _getOrCreateAppareil(temperature.appareil, token);
+      final appareilId = await _getOrCreateAppareil(
+        temperature.appareil,
+        token,
+      );
       if (appareilId == null) {
         print(
-            '❌ Impossible de récupérer/créer l\'appareil: ${temperature.appareil}');
+          '❌ Impossible de récupérer/créer l\'appareil: ${temperature.appareil}',
+        );
         return;
       }
 
@@ -220,7 +228,8 @@ class PleskSyncService {
             body: json.encode({
               'appareil': appareilId, // ID de l'appareil, pas le nom
               'temperature': temperature.temperature.toStringAsFixed(
-                  2), // Formater avec 2 décimales max (max_digits=5, decimal_places=2)
+                2,
+              ), // Formater avec 2 décimales max (max_digits=5, decimal_places=2)
               'remarque': temperature.remarque ?? '',
               // Note: 'date' n'est pas nécessaire, Django le gère automatiquement avec auto_now_add
             }),
@@ -229,11 +238,13 @@ class PleskSyncService {
 
       if (response.statusCode == 201 || response.statusCode == 200) {
         print(
-            '✅ Température synchronisée vers Plesk: ${temperature.appareil} - ${temperature.temperature}°C');
+          '✅ Température synchronisée vers Plesk: ${temperature.appareil} - ${temperature.temperature}°C',
+        );
         await _markTemperatureAsSynced(temperature.id);
       } else {
         print(
-            '❌ Erreur synchronisation température: ${response.statusCode} - ${response.body}');
+          '❌ Erreur synchronisation température: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e) {
       print('❌ Erreur sync température: $e');
@@ -249,13 +260,15 @@ class PleskSyncService {
       final nomAppareil = appareil['nom'];
 
       // 1. Vérifier si l'appareil existe déjà dans Django
-      final getResponse = await http.get(
-        Uri.parse(pleskAppareilsUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 10));
+      final getResponse = await http
+          .get(
+            Uri.parse(pleskAppareilsUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (getResponse.statusCode == 200) {
         final appareils = json.decode(getResponse.body) as List;
@@ -263,7 +276,8 @@ class PleskSyncService {
         for (final app in appareils) {
           if (app['nom'] == nomAppareil) {
             print(
-                'ℹ️ Appareil déjà présent dans Plesk: $nomAppareil (ID: ${app['id']})');
+              'ℹ️ Appareil déjà présent dans Plesk: $nomAppareil (ID: ${app['id']})',
+            );
             await _markAppareilAsSynced(appareil['id']);
             return; // L'appareil existe déjà, pas besoin de le créer
           }
@@ -277,8 +291,9 @@ class PleskSyncService {
       final validTypes = ['frigo', 'congela', 'friteuse', 'autre'];
       final typeAppareil =
           appareil['type_appareil']?.toString().toLowerCase() ?? 'autre';
-      final validatedType =
-          validTypes.contains(typeAppareil) ? typeAppareil : 'autre';
+      final validatedType = validTypes.contains(typeAppareil)
+          ? typeAppareil
+          : 'autre';
 
       // Construire le payload avec seulement les champs non-null
       final payload = <String, dynamic>{
@@ -325,7 +340,8 @@ class PleskSyncService {
         await _markAppareilAsSynced(appareil['id']);
       } else {
         print(
-            '❌ Erreur synchronisation appareil: ${createResponse.statusCode} - ${createResponse.body}');
+          '❌ Erreur synchronisation appareil: ${createResponse.statusCode} - ${createResponse.body}',
+        );
         // Si l'erreur est "already exists", marquer quand même comme synchronisé
         if (createResponse.body.contains('already exists')) {
           print('ℹ️ Appareil déjà présent, marqué comme synchronisé');
@@ -351,24 +367,26 @@ class PleskSyncService {
 
       // Se connecter à Plesk
       // Load credentials from environment variables
-      final username =
-          const String.fromEnvironment('PLESK_USERNAME', defaultValue: '');
-      final password =
-          const String.fromEnvironment('PLESK_PASSWORD', defaultValue: '');
+      final username = const String.fromEnvironment(
+        'PLESK_USERNAME',
+        defaultValue: '',
+      );
+      final password = const String.fromEnvironment(
+        'PLESK_PASSWORD',
+        defaultValue: '',
+      );
 
       if (username.isEmpty || password.isEmpty) {
         throw Exception(
-            'Plesk credentials not configured. Set PLESK_USERNAME and PLESK_PASSWORD environment variables.');
+          'Plesk credentials not configured. Set PLESK_USERNAME and PLESK_PASSWORD environment variables.',
+        );
       }
 
       final response = await http
           .post(
             Uri.parse(pleskLoginUrl),
             headers: {'Content-Type': 'application/json'},
-            body: json.encode({
-              'username': username,
-              'password': password,
-            }),
+            body: json.encode({'username': username, 'password': password}),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -389,12 +407,12 @@ class PleskSyncService {
   /// Valide un token
   Future<bool> _validateToken(String token) async {
     try {
-      final response = await http.get(
-        Uri.parse('$pleskBaseUrl/auth/verify/'),
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 5));
+      final response = await http
+          .get(
+            Uri.parse('$pleskBaseUrl/auth/verify/'),
+            headers: {'Authorization': 'Bearer $token'},
+          )
+          .timeout(const Duration(seconds: 5));
 
       return response.statusCode == 200;
     } catch (e) {
@@ -404,16 +422,20 @@ class PleskSyncService {
 
   /// Récupère ou crée un fournisseur dans Django et retourne son ID
   Future<int?> _getOrCreateFournisseur(
-      String nomFournisseur, String token) async {
+    String nomFournisseur,
+    String token,
+  ) async {
     try {
       // 1. Récupérer tous les fournisseurs et chercher par nom
-      final getResponse = await http.get(
-        Uri.parse(pleskFournisseursUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 10));
+      final getResponse = await http
+          .get(
+            Uri.parse(pleskFournisseursUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (getResponse.statusCode == 200) {
         final fournisseurs = json.decode(getResponse.body) as List;
@@ -434,9 +456,7 @@ class PleskSyncService {
               'Content-Type': 'application/json',
               'Authorization': 'Bearer $token',
             },
-            body: json.encode({
-              'nom': nomFournisseur,
-            }),
+            body: json.encode({'nom': nomFournisseur}),
           )
           .timeout(const Duration(seconds: 10));
 
@@ -447,7 +467,8 @@ class PleskSyncService {
       }
 
       print(
-          '❌ Impossible de créer le fournisseur: ${createResponse.statusCode} - ${createResponse.body}');
+        '❌ Impossible de créer le fournisseur: ${createResponse.statusCode} - ${createResponse.body}',
+      );
       return null;
     } catch (e) {
       print('❌ Erreur getOrCreateFournisseur: $e');
@@ -457,16 +478,21 @@ class PleskSyncService {
 
   /// Récupère ou crée un produit dans Django et retourne son ID
   Future<int?> _getOrCreateProduit(
-      String nomProduit, int fournisseurId, String token) async {
+    String nomProduit,
+    int fournisseurId,
+    String token,
+  ) async {
     try {
       // 1. Récupérer tous les produits et chercher par nom et fournisseur
-      final getResponse = await http.get(
-        Uri.parse(pleskProduitsUrl),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      ).timeout(const Duration(seconds: 10));
+      final getResponse = await http
+          .get(
+            Uri.parse(pleskProduitsUrl),
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Bearer $token',
+            },
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (getResponse.statusCode == 200) {
         final produits = json.decode(getResponse.body) as List;
@@ -503,7 +529,8 @@ class PleskSyncService {
       }
 
       print(
-          '❌ Impossible de créer le produit: ${createResponse.statusCode} - ${createResponse.body}');
+        '❌ Impossible de créer le produit: ${createResponse.statusCode} - ${createResponse.body}',
+      );
       return null;
     } catch (e) {
       print('❌ Erreur getOrCreateProduit: $e');
@@ -525,7 +552,8 @@ class PleskSyncService {
 
       for (final reception in localReceptions) {
         print(
-            '🔄 Traitement réception: ${reception['article']} - ${reception['fournisseur']}');
+          '🔄 Traitement réception: ${reception['article']} - ${reception['fournisseur']}',
+        );
 
         // Vérifier si déjà synchronisé
         final isSynced = await _isReceptionSynced(reception['id']);
@@ -555,7 +583,8 @@ class PleskSyncService {
       print('✅ Token Plesk obtenu');
 
       final fournisseurNom = reception['fournisseur'] as String? ?? '';
-      final produitNom = reception['article'] as String? ??
+      final produitNom =
+          reception['article'] as String? ??
           reception['produit'] as String? ??
           '';
 
@@ -569,19 +598,25 @@ class PleskSyncService {
 
       // 1. Récupérer ou créer le fournisseur
       print('🔄 Récupération/création fournisseur: $fournisseurNom');
-      final fournisseurId =
-          await _getOrCreateFournisseur(fournisseurNom, token);
+      final fournisseurId = await _getOrCreateFournisseur(
+        fournisseurNom,
+        token,
+      );
       if (fournisseurId == null) {
         print(
-            '❌ Impossible de récupérer/créer le fournisseur: $fournisseurNom');
+          '❌ Impossible de récupérer/créer le fournisseur: $fournisseurNom',
+        );
         return;
       }
       print('✅ Fournisseur ID: $fournisseurId');
 
       // 2. Récupérer ou créer le produit
       print('🔄 Récupération/création produit: $produitNom');
-      final produitId =
-          await _getOrCreateProduit(produitNom, fournisseurId, token);
+      final produitId = await _getOrCreateProduit(
+        produitNom,
+        fournisseurId,
+        token,
+      );
       if (produitId == null) {
         print('❌ Impossible de récupérer/créer le produit: $produitNom');
         return;
@@ -595,7 +630,8 @@ class PleskSyncService {
           reception['conforme'] == 1 || reception['conforme'] == true;
 
       print(
-          '🔄 Création réception: Produit=$produitId, Quantité=$quantite, Conforme=$conforme');
+        '🔄 Création réception: Produit=$produitId, Quantité=$quantite, Conforme=$conforme',
+      );
 
       final response = await http
           .post(
@@ -620,7 +656,8 @@ class PleskSyncService {
         await _markReceptionAsSynced(reception['id']);
       } else {
         print(
-            '❌ Erreur synchronisation réception: ${response.statusCode} - ${response.body}');
+          '❌ Erreur synchronisation réception: ${response.statusCode} - ${response.body}',
+        );
       }
     } catch (e, stackTrace) {
       print('❌ Erreur sync réception: $e');

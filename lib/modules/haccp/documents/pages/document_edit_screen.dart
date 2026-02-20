@@ -1,5 +1,5 @@
 /// Document Edit Screen
-/// 
+///
 /// Edit document metadata (title, category, date, notes)
 
 import 'package:flutter/material.dart';
@@ -39,7 +39,9 @@ class _DocumentEditScreenState extends State<DocumentEditScreen> {
   void initState() {
     super.initState();
     _category = widget.document.category;
-    _titleController = TextEditingController(text: widget.document.title ?? widget.document.nom);
+    _titleController = TextEditingController(
+      text: widget.document.title ?? widget.document.nom,
+    );
     _documentDate = widget.document.documentDate;
     _notesController = TextEditingController(text: widget.document.notes ?? '');
   }
@@ -208,8 +210,8 @@ class _DocumentEditScreenState extends State<DocumentEditScreen> {
                   _documentDate != null
                       ? 'Date: ${_formatDate(_documentDate!)}'
                       : _category.isComplianceCategory
-                          ? 'Date du document *'
-                          : 'Date du document',
+                      ? 'Date du document *'
+                      : 'Date du document',
                 ),
                 style: OutlinedButton.styleFrom(
                   padding: const EdgeInsets.all(16),
@@ -221,9 +223,9 @@ class _DocumentEditScreenState extends State<DocumentEditScreen> {
                   padding: const EdgeInsets.only(top: 8.0),
                   child: Text(
                     'La date est requise pour les catégories de conformité',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.red,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.red),
                   ),
                 ),
 
@@ -267,13 +269,3 @@ class _DocumentEditScreenState extends State<DocumentEditScreen> {
     return '${date.day}/${date.month}/${date.year}';
   }
 }
-
-
-
-
-
-
-
-
-
-

@@ -6,7 +6,7 @@ import 'organization_repository.dart';
 /// Repository for employees
 class EmployeeRepository {
   final SupabaseClient _client = Supabase.instance.client;
-  
+
   // Expose client for organization access
   SupabaseClient get client => _client;
 
@@ -28,13 +28,13 @@ class EmployeeRepository {
           .from('employees')
           .select()
           .eq('organization_id', orgId); // Get employees from the organization
-      
+
       if (activeOnly == true) {
         query = query.eq('is_active', true);
       }
-      
+
       final response = await query.order('last_name');
-      
+
       final employees = (response as List)
           .map((json) => Employee.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -55,10 +55,7 @@ class EmployeeRepository {
       final user = _client.auth.currentUser;
       if (user == null) return null;
 
-      var query = _client
-          .from('employees')
-          .select()
-          .eq('id', id);
+      var query = _client.from('employees').select().eq('id', id);
 
       // Only filter by created_by if requested (for admin management)
       // For clock-in, we want to allow any employee in the organization
@@ -87,7 +84,9 @@ class EmployeeRepository {
     try {
       final user = _client.auth.currentUser;
       if (user == null) {
-        debugPrint('[EmployeeRepo] No authenticated user for employeeExists check');
+        debugPrint(
+          '[EmployeeRepo] No authenticated user for employeeExists check',
+        );
         return false;
       }
 
@@ -99,11 +98,15 @@ class EmployeeRepository {
           .maybeSingle();
 
       if (globalCheck == null) {
-        debugPrint('[EmployeeRepo] ❌ Employee ID $id does not exist in employees table at all');
+        debugPrint(
+          '[EmployeeRepo] ❌ Employee ID $id does not exist in employees table at all',
+        );
         return false;
       }
 
-      debugPrint('[EmployeeRepo] ✅ Employee found: ${globalCheck['first_name']} ${globalCheck['last_name']} (ID: $id, Org: ${globalCheck['organization_id']})');
+      debugPrint(
+        '[EmployeeRepo] ✅ Employee found: ${globalCheck['first_name']} ${globalCheck['last_name']} (ID: $id, Org: ${globalCheck['organization_id']})',
+      );
 
       // Get organization ID
       final orgRepo = OrganizationRepository();
@@ -112,7 +115,9 @@ class EmployeeRepository {
 
       // Check if employee belongs to current organization
       if (globalCheck['organization_id'] != orgId) {
-        debugPrint('[EmployeeRepo] ⚠️ Employee belongs to different organization (${globalCheck['organization_id']} vs $orgId)');
+        debugPrint(
+          '[EmployeeRepo] ⚠️ Employee belongs to different organization (${globalCheck['organization_id']} vs $orgId)',
+        );
         // Still return true - employee exists, just different org (might be OK for shared tablet)
         return true;
       }
@@ -157,19 +162,23 @@ class EmployeeRepository {
         'is_admin': isAdmin,
         'created_by': user.id,
       };
-      
+
       // If admin, admin_code and admin_email are REQUIRED by database constraint
       if (isAdmin) {
         final trimmedCode = adminCode?.trim();
         final trimmedEmail = adminEmail?.trim();
-        
+
         if (trimmedCode == null || trimmedCode.isEmpty) {
-          throw Exception('Le code administrateur est requis pour créer un admin');
+          throw Exception(
+            'Le code administrateur est requis pour créer un admin',
+          );
         }
         if (trimmedEmail == null || trimmedEmail.isEmpty) {
-          throw Exception('L\'email administrateur est requis pour créer un admin');
+          throw Exception(
+            'L\'email administrateur est requis pour créer un admin',
+          );
         }
-        
+
         insertData['admin_code'] = trimmedCode;
         insertData['admin_email'] = trimmedEmail;
       }
@@ -178,11 +187,11 @@ class EmployeeRepository {
 
       debugPrint('[EmployeeRepo] Creating employee with data: $insertData');
       final response = await _client
-        .from('employees')
-        .insert(insertData)
-        .select()
-        .single();
-      
+          .from('employees')
+          .insert(insertData)
+          .select()
+          .single();
+
       return Employee.fromJson(response);
     } catch (e) {
       debugPrint('[EmployeeRepo] ❌ Error creating employee: $e');
@@ -207,7 +216,7 @@ class EmployeeRepository {
       if (lastName != null) updates['last_name'] = lastName;
       if (role != null) updates['role'] = role;
       if (isActive != null) updates['is_active'] = isActive;
-      
+
       // Handle admin fields based on isAdmin value
       if (isAdmin != null) {
         updates['is_admin'] = isAdmin;
@@ -256,4 +265,3 @@ class EmployeeRepository {
     }
   }
 }
-

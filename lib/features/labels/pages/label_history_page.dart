@@ -66,8 +66,9 @@ class _LabelHistoryPageState extends State<LabelHistoryPage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title:
-            Text('Détails impression - ${printRecord['produit_nom'] ?? 'N/A'}'),
+        title: Text(
+          'Détails impression - ${printRecord['produit_nom'] ?? 'N/A'}',
+        ),
         content: SingleChildScrollView(
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -149,115 +150,116 @@ class _LabelHistoryPageState extends State<LabelHistoryPage> {
       body: _isLoading
           ? const LoadingSkeleton()
           : _error != null
-              ? ErrorState(message: _error!, onRetry: _loadHistory)
-              : _prints.isEmpty
-                  ? const EmptyState(
-                      title: 'Aucun historique',
-                      message: 'Aucune impression enregistrée',
-                      icon: Icons.print_disabled,
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadHistory,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _prints.length,
-                        itemBuilder: (context, index) {
-                          final printRecord = _prints[index];
-                          final printedAt = printRecord['printed_at'] != null
-                              ? DateTime.tryParse(
-                                  printRecord['printed_at'].toString())
-                              : null;
+          ? ErrorState(message: _error!, onRetry: _loadHistory)
+          : _prints.isEmpty
+          ? const EmptyState(
+              title: 'Aucun historique',
+              message: 'Aucune impression enregistrée',
+              icon: Icons.print_disabled,
+            )
+          : RefreshIndicator(
+              onRefresh: _loadHistory,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _prints.length,
+                itemBuilder: (context, index) {
+                  final printRecord = _prints[index];
+                  final printedAt = printRecord['printed_at'] != null
+                      ? DateTime.tryParse(printRecord['printed_at'].toString())
+                      : null;
 
-                          return SectionCard(
-                            child: InkWell(
-                              onTap: () => _showZPLDetails(printRecord),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              printRecord['produit_nom'] ??
-                                                  'Produit inconnu',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleMedium,
-                                            ),
-                                            if (printedAt != null) ...[
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                DateFormat('dd/MM/yyyy HH:mm')
-                                                    .format(printedAt),
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall,
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                      HaccpBadge(
-                                        status: printRecord['success'] == true
-                                            ? HaccpStatus.ok
-                                            : HaccpStatus.critical,
-                                        label: printRecord['success'] == true
-                                            ? 'Réussi'
-                                            : 'Échec',
-                                        compact: true,
+                  return SectionCard(
+                    child: InkWell(
+                      onTap: () => _showZPLDetails(printRecord),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      printRecord['produit_nom'] ??
+                                          'Produit inconnu',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleMedium,
+                                    ),
+                                    if (printedAt != null) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        DateFormat(
+                                          'dd/MM/yyyy HH:mm',
+                                        ).format(printedAt),
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall,
                                       ),
                                     ],
+                                  ],
+                                ),
+                              ),
+                              HaccpBadge(
+                                status: printRecord['success'] == true
+                                    ? HaccpStatus.ok
+                                    : HaccpStatus.critical,
+                                label: printRecord['success'] == true
+                                    ? 'Réussi'
+                                    : 'Échec',
+                                compact: true,
+                              ),
+                            ],
+                          ),
+                          if (printRecord['error_message'] != null) ...[
+                            const SizedBox(height: 8),
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.statusCriticalBg,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.error,
+                                    size: 16,
+                                    color: AppTheme.statusCritical,
                                   ),
-                                  if (printRecord['error_message'] != null) ...[
-                                    const SizedBox(height: 8),
-                                    Container(
-                                      padding: const EdgeInsets.all(8),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.statusCriticalBg,
-                                        borderRadius: BorderRadius.circular(6),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(Icons.error,
-                                              size: 16,
-                                              color: AppTheme.statusCritical),
-                                          const SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              printRecord['error_message'],
-                                              style: TextStyle(
-                                                color: AppTheme.statusCritical,
-                                                fontSize: 12,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      printRecord['error_message'],
+                                      style: TextStyle(
+                                        color: AppTheme.statusCritical,
+                                        fontSize: 12,
                                       ),
                                     ),
-                                  ],
-                                  const SizedBox(height: 8),
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
-                                    children: [
-                                      TextButton.icon(
-                                        onPressed: () => _copyZPL(
-                                            printRecord['zpl_payload'] ?? ''),
-                                        icon: const Icon(Icons.copy, size: 16),
-                                        label: const Text('Copier ZPL'),
-                                      ),
-                                    ],
                                   ),
                                 ],
                               ),
                             ),
-                          );
-                        },
+                          ],
+                          const SizedBox(height: 8),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              TextButton.icon(
+                                onPressed: () =>
+                                    _copyZPL(printRecord['zpl_payload'] ?? ''),
+                                icon: const Icon(Icons.copy, size: 16),
+                                label: const Text('Copier ZPL'),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
+                  );
+                },
+              ),
+            ),
     );
   }
 }

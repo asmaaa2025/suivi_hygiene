@@ -20,20 +20,21 @@ Map<String, dynamic> mapTemperatureToNC({
   // Determine object category based on device type
   final deviceNameLower = device.nom.toLowerCase();
   NCObjectCategory objectCategory;
-  if (deviceNameLower.contains('congélateur') || 
+  if (deviceNameLower.contains('congélateur') ||
       deviceNameLower.contains('congelateur') ||
       deviceNameLower.contains('frigo') ||
       deviceNameLower.contains('réfrigérateur')) {
     objectCategory = NCObjectCategory.chaineDuFroid;
-  } else if (deviceNameLower.contains('ccp') || 
-             deviceNameLower.contains('prpo')) {
+  } else if (deviceNameLower.contains('ccp') ||
+      deviceNameLower.contains('prpo')) {
     objectCategory = NCObjectCategory.ccp;
   } else {
     objectCategory = NCObjectCategory.chaineDuFroid; // Default
   }
 
   // Build description
-  final description = 'Température hors plage détectée: ${releve.temperature}°C '
+  final description =
+      'Température hors plage détectée: ${releve.temperature}°C '
       '(Plage recommandée: ${tempMin != null ? '$tempMin' : 'N/A'}°C - '
       '${tempMax != null ? '$tempMax' : 'N/A'}°C) '
       'Appareil: ${device.nom}';
@@ -108,8 +109,8 @@ Map<String, dynamic> mapReceptionToNC({
 
   return {
     'object_category': objectCategory.value,
-    'object_other': objectCategory == NCObjectCategory.autre 
-        ? 'Réception non conforme' 
+    'object_other': objectCategory == NCObjectCategory.autre
+        ? 'Réception non conforme'
         : null,
     'product_id': productId,
     'product_name': productName,
@@ -139,17 +140,19 @@ Map<String, dynamic> mapOilToNC({
   }
 
   // Build description
-  final descriptionParts = <String>[
-    'Friteuse: $fryerName',
-  ];
+  final descriptionParts = <String>['Friteuse: $fryerName'];
   if (lastChangeDate != null) {
-    descriptionParts.add('Dernier changement: ${lastChangeDate.toLocal().toString().split(' ')[0]}');
+    descriptionParts.add(
+      'Dernier changement: ${lastChangeDate.toLocal().toString().split(' ')[0]}',
+    );
   }
   if (targetIntervalDays != null) {
     descriptionParts.add('Intervalle cible: $targetIntervalDays jours');
   }
   if (alertDate != null) {
-    final daysOverdue = alertDate.difference(lastChangeDate ?? alertDate).inDays;
+    final daysOverdue = alertDate
+        .difference(lastChangeDate ?? alertDate)
+        .inDays;
     if (daysOverdue > 0) {
       descriptionParts.add('En retard de $daysOverdue jour(s)');
     }
@@ -183,14 +186,16 @@ Map<String, dynamic> mapCleaningToNC({
   Employee? employee,
 }) {
   // Build description
-  final descriptionParts = <String>[
-    'Tâche: ${task.nom}',
-  ];
+  final descriptionParts = <String>['Tâche: ${task.nom}'];
   if (scheduledDate != null) {
-    descriptionParts.add('Date prévue: ${scheduledDate.toLocal().toString().split(' ')[0]}');
+    descriptionParts.add(
+      'Date prévue: ${scheduledDate.toLocal().toString().split(' ')[0]}',
+    );
   }
   if (missedDate != null) {
-    descriptionParts.add('Date manquée: ${missedDate.toLocal().toString().split(' ')[0]}');
+    descriptionParts.add(
+      'Date manquée: ${missedDate.toLocal().toString().split(' ')[0]}',
+    );
   }
   final description = descriptionParts.join(', ');
 
@@ -224,4 +229,3 @@ Map<String, dynamic> mapCleaningToNC({
     'source_payload': sourcePayload,
   };
 }
-

@@ -30,7 +30,11 @@ class NcPdfExportService {
   }
 
   /// Construit le contenu PDF d'une fiche NC (1 page)
-  Future<pw.Widget> buildNcFormPage(NonConformity nc, {int? pageIndex, int? totalPages}) async {
+  Future<pw.Widget> buildNcFormPage(
+    NonConformity nc, {
+    int? pageIndex,
+    int? totalPages,
+  }) async {
     final footer = (pageIndex != null && totalPages != null)
         ? 'Fiche ${pageIndex + 1}/$totalPages - Document généré le ${_dfTime.format(DateTime.now())}'
         : 'Document généré le ${_dfTime.format(DateTime.now())}';
@@ -62,7 +66,10 @@ class NcPdfExportService {
                   pw.SizedBox(height: 4),
                   pw.Text(
                     'N° ${nc.ficheNumber ?? nc.id.substring(0, 8)}',
-                    style: const pw.TextStyle(color: PdfColors.white, fontSize: 12),
+                    style: const pw.TextStyle(
+                      color: PdfColors.white,
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
@@ -79,7 +86,10 @@ class NcPdfExportService {
                   ),
                   pw.Text(
                     _df.format(nc.detectionDate),
-                    style: const pw.TextStyle(color: PdfColors.grey200, fontSize: 10),
+                    style: const pw.TextStyle(
+                      color: PdfColors.grey200,
+                      fontSize: 10,
+                    ),
                   ),
                 ],
               ),
@@ -108,7 +118,8 @@ class NcPdfExportService {
         // Section 3 - Action immédiate
         _sectionTitle('3. Action immédiate'),
         _row('Effectuée', nc.immediateActionDone ? 'Oui' : 'Non'),
-        if (nc.immediateActionDetail != null && nc.immediateActionDetail!.isNotEmpty)
+        if (nc.immediateActionDetail != null &&
+            nc.immediateActionDetail!.isNotEmpty)
           _paragraph('Détail', nc.immediateActionDetail!),
         if (nc.immediateActionDoneAt != null)
           _row('Date', _dfTime.format(nc.immediateActionDoneAt!)),
@@ -117,8 +128,12 @@ class NcPdfExportService {
         // Section 4 - Évaluation RQ
         _sectionTitle('4. Évaluation RQ'),
         if (nc.rqDate != null) _row('Date RQ', _df.format(nc.rqDate!)),
-        if (nc.rqClassification != null) _row('Classification', nc.rqClassification!),
-        _row('Action corrective requise', nc.rqActionCorrectiveRequired ? 'Oui' : 'Non'),
+        if (nc.rqClassification != null)
+          _row('Classification', nc.rqClassification!),
+        _row(
+          'Action corrective requise',
+          nc.rqActionCorrectiveRequired ? 'Oui' : 'Non',
+        ),
         pw.SizedBox(height: 8),
 
         // Section 5 - Causes
@@ -141,7 +156,10 @@ class NcPdfExportService {
           for (final s in nc.solutions!)
             pw.Padding(
               padding: const pw.EdgeInsets.only(bottom: 4),
-              child: pw.Text('• ${_truncate(s.solutionText, 200)}', style: const pw.TextStyle(fontSize: 9)),
+              child: pw.Text(
+                '• ${_truncate(s.solutionText, 200)}',
+                style: const pw.TextStyle(fontSize: 9),
+              ),
             ),
           pw.SizedBox(height: 8),
         ],
@@ -183,12 +201,17 @@ class NcPdfExportService {
 
         pw.Spacer(),
         pw.Divider(thickness: 0.5),
-        pw.Text(footer, style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600)),
+        pw.Text(
+          footer,
+          style: const pw.TextStyle(fontSize: 7, color: PdfColors.grey600),
+        ),
       ],
     );
   }
 
-  Future<List<pw.Widget>> _buildAttachmentWidgets(List<NCAttachment> attachments) async {
+  Future<List<pw.Widget>> _buildAttachmentWidgets(
+    List<NCAttachment> attachments,
+  ) async {
     final widgets = <pw.Widget>[];
     final images = attachments.where(_isImageAttachment).toList();
     final others = attachments.where((a) => !_isImageAttachment(a)).toList();
@@ -202,11 +225,23 @@ class NcPdfExportService {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Text(att.fileName, style: const pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold)),
+                pw.Text(
+                  att.fileName,
+                  style: const pw.TextStyle(
+                    fontSize: 8,
+                    fontWeight: pw.FontWeight.bold,
+                  ),
+                ),
                 pw.SizedBox(height: 4),
                 pw.Container(
-                  constraints: const pw.BoxConstraints(maxWidth: 200, maxHeight: 150),
-                  child: pw.Image(pw.MemoryImage(bytes), fit: pw.BoxFit.contain),
+                  constraints: const pw.BoxConstraints(
+                    maxWidth: 200,
+                    maxHeight: 150,
+                  ),
+                  child: pw.Image(
+                    pw.MemoryImage(bytes),
+                    fit: pw.BoxFit.contain,
+                  ),
                 ),
               ],
             ),
@@ -216,7 +251,10 @@ class NcPdfExportService {
         widgets.add(
           pw.Padding(
             padding: const pw.EdgeInsets.only(bottom: 4),
-            child: pw.Text('Photo: ${att.fileName}', style: const pw.TextStyle(fontSize: 9)),
+            child: pw.Text(
+              'Photo: ${att.fileName}',
+              style: const pw.TextStyle(fontSize: 9),
+            ),
           ),
         );
       }
@@ -236,40 +274,55 @@ class NcPdfExportService {
   }
 
   pw.Widget _sectionTitle(String title) => pw.Padding(
-        padding: const pw.EdgeInsets.only(bottom: 4),
-        child: pw.Text(
-          title,
-          style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
-        ),
-      );
+    padding: const pw.EdgeInsets.only(bottom: 4),
+    child: pw.Text(
+      title,
+      style: pw.TextStyle(fontSize: 10, fontWeight: pw.FontWeight.bold),
+    ),
+  );
 
   pw.Widget _row(String label, String value) => pw.Padding(
-        padding: const pw.EdgeInsets.only(bottom: 2),
-        child: pw.Row(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.SizedBox(
-              width: 100,
-              child: pw.Text('$label:', style: const pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
+    padding: const pw.EdgeInsets.only(bottom: 2),
+    child: pw.Row(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.SizedBox(
+          width: 100,
+          child: pw.Text(
+            '$label:',
+            style: const pw.TextStyle(
+              fontSize: 9,
+              fontWeight: pw.FontWeight.bold,
             ),
-            pw.Expanded(
-              child: pw.Text(_truncate(value, 300), style: const pw.TextStyle(fontSize: 9)),
-            ),
-          ],
+          ),
         ),
-      );
+        pw.Expanded(
+          child: pw.Text(
+            _truncate(value, 300),
+            style: const pw.TextStyle(fontSize: 9),
+          ),
+        ),
+      ],
+    ),
+  );
 
   pw.Widget _paragraph(String label, String value) => pw.Padding(
-        padding: const pw.EdgeInsets.only(bottom: 4),
-        child: pw.Column(
-          crossAxisAlignment: pw.CrossAxisAlignment.start,
-          children: [
-            pw.Text('$label:', style: const pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
-            pw.SizedBox(height: 2),
-            pw.Text(_truncate(value, 500), style: const pw.TextStyle(fontSize: 9)),
-          ],
+    padding: const pw.EdgeInsets.only(bottom: 4),
+    child: pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          '$label:',
+          style: const pw.TextStyle(
+            fontSize: 9,
+            fontWeight: pw.FontWeight.bold,
+          ),
         ),
-      );
+        pw.SizedBox(height: 2),
+        pw.Text(_truncate(value, 500), style: const pw.TextStyle(fontSize: 9)),
+      ],
+    ),
+  );
 
   String _truncate(String s, int maxLen) {
     if (s.length <= maxLen) return s;
@@ -278,19 +331,27 @@ class NcPdfExportService {
 
   String _ncStatusLabel(NCStatus s) {
     switch (s) {
-      case NCStatus.draft: return 'Brouillon';
-      case NCStatus.open: return 'Ouvert';
-      case NCStatus.inProgress: return 'En cours';
-      case NCStatus.closed: return 'Clôturé';
+      case NCStatus.draft:
+        return 'Brouillon';
+      case NCStatus.open:
+        return 'Ouvert';
+      case NCStatus.inProgress:
+        return 'En cours';
+      case NCStatus.closed:
+        return 'Clôturé';
     }
   }
 
   String _actionStatusLabel(NCActionStatus s) {
     switch (s) {
-      case NCActionStatus.pending: return 'En attente';
-      case NCActionStatus.inProgress: return 'En cours';
-      case NCActionStatus.completed: return 'Terminé';
-      case NCActionStatus.cancelled: return 'Annulé';
+      case NCActionStatus.pending:
+        return 'En attente';
+      case NCActionStatus.inProgress:
+        return 'En cours';
+      case NCActionStatus.completed:
+        return 'Terminé';
+      case NCActionStatus.cancelled:
+        return 'Annulé';
     }
   }
 
@@ -316,7 +377,8 @@ class NcPdfExportService {
     final appDir = await getApplicationDocumentsDirectory();
     final exportDir = Directory('${appDir.path}/exports_nc');
     if (!await exportDir.exists()) await exportDir.create(recursive: true);
-    final fileName = 'fiche_nc_${fullNc.ficheNumber ?? fullNc.id.substring(0, 8)}_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
+    final fileName =
+        'fiche_nc_${fullNc.ficheNumber ?? fullNc.id.substring(0, 8)}_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.pdf';
     final file = File('${exportDir.path}/$fileName');
     await file.writeAsBytes(await pdf.save());
     debugPrint('[NcPdfExport] ✅ Fiche exportée: ${file.path}');
@@ -336,7 +398,9 @@ class NcPdfExportService {
     final filledNcs = ncs.where((nc) => nc.status != NCStatus.draft).toList();
 
     if (filledNcs.isEmpty) {
-      throw Exception('Aucune fiche de non-conformité remplie sur cette période');
+      throw Exception(
+        'Aucune fiche de non-conformité remplie sur cette période',
+      );
     }
 
     // Charger les données complètes pour chaque NC
@@ -350,7 +414,11 @@ class NcPdfExportService {
     final total = fullNcs.length;
 
     for (var i = 0; i < fullNcs.length; i++) {
-      final pageContent = await buildNcFormPage(fullNcs[i], pageIndex: i, totalPages: total);
+      final pageContent = await buildNcFormPage(
+        fullNcs[i],
+        pageIndex: i,
+        totalPages: total,
+      );
       pdf.addPage(
         pw.Page(
           pageFormat: PdfPageFormat.a4,
@@ -363,7 +431,8 @@ class NcPdfExportService {
     final appDir = await getApplicationDocumentsDirectory();
     final exportDir = Directory('${appDir.path}/exports_nc');
     if (!await exportDir.exists()) await exportDir.create(recursive: true);
-    final fileName = 'fiches_nc_${_df.format(startDate).replaceAll('/', '')}_${_df.format(endDate).replaceAll('/', '')}_${DateFormat('HHmmss').format(DateTime.now())}.pdf';
+    final fileName =
+        'fiches_nc_${_df.format(startDate).replaceAll('/', '')}_${_df.format(endDate).replaceAll('/', '')}_${DateFormat('HHmmss').format(DateTime.now())}.pdf';
     final file = File('${exportDir.path}/$fileName');
     await file.writeAsBytes(await pdf.save());
     debugPrint('[NcPdfExport] ✅ $total fiche(s) exportée(s): ${file.path}');

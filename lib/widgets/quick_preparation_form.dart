@@ -13,7 +13,8 @@ class QuickPreparationForm extends StatefulWidget {
     String? preparateur,
     DateTime dateFabrication,
     bool surgeler,
-  ) onValidate;
+  )
+  onValidate;
 
   const QuickPreparationForm({
     super.key,
@@ -60,8 +61,9 @@ class _QuickPreparationFormState extends State<QuickPreparationForm> {
                 padding: const pw.EdgeInsets.all(10),
                 decoration: pw.BoxDecoration(
                   color: PdfColors.blue,
-                  borderRadius:
-                      const pw.BorderRadius.all(pw.Radius.circular(8)),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(8),
+                  ),
                 ),
                 child: pw.Text(
                   'ÉTIQUETTE PRODUIT',
@@ -77,8 +79,10 @@ class _QuickPreparationFormState extends State<QuickPreparationForm> {
 
               // Informations du produit
               _buildInfoRow('Produit:', widget.produit.nom),
-              _buildInfoRow('Date fabrication:',
-                  DateFormat('dd/MM/yyyy').format(_dateFab)),
+              _buildInfoRow(
+                'Date fabrication:',
+                DateFormat('dd/MM/yyyy').format(_dateFab),
+              ),
               _buildInfoRow('DLC:', DateFormat('dd/MM/yyyy').format(dlc)),
               _buildInfoRow('Lot:', _lotController.text),
               _buildInfoRow('Poids:', '${_poidsController.text} kg'),
@@ -94,8 +98,9 @@ class _QuickPreparationFormState extends State<QuickPreparationForm> {
                 padding: const pw.EdgeInsets.all(10),
                 decoration: pw.BoxDecoration(
                   border: pw.Border.all(color: PdfColors.grey),
-                  borderRadius:
-                      const pw.BorderRadius.all(pw.Radius.circular(4)),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(4),
+                  ),
                 ),
                 child: pw.Text(
                   'Code: ${_lotController.text}-${DateFormat('ddMMyyyy').format(dlc)}',
@@ -110,7 +115,8 @@ class _QuickPreparationFormState extends State<QuickPreparationForm> {
     );
 
     await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save());
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
   }
 
   pw.Widget _buildInfoRow(String label, String value) {
@@ -127,10 +133,7 @@ class _QuickPreparationFormState extends State<QuickPreparationForm> {
             ),
           ),
           pw.Expanded(
-            child: pw.Text(
-              value,
-              style: const pw.TextStyle(fontSize: 10),
-            ),
+            child: pw.Text(value, style: const pw.TextStyle(fontSize: 10)),
           ),
         ],
       ),
@@ -141,14 +144,20 @@ class _QuickPreparationFormState extends State<QuickPreparationForm> {
   Widget build(BuildContext context) {
     return Padding(
       padding: EdgeInsets.fromLTRB(
-          16, 24, 16, MediaQuery.of(context).viewInsets.bottom + 16),
+        16,
+        24,
+        16,
+        MediaQuery.of(context).viewInsets.bottom + 16,
+      ),
       child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Préparation - ${widget.produit.nom}",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+            Text(
+              "Préparation - ${widget.produit.nom}",
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+            ),
             SizedBox(height: 16),
             TextField(
               controller: _lotController,
@@ -180,7 +189,8 @@ class _QuickPreparationFormState extends State<QuickPreparationForm> {
             SizedBox(height: 12),
             ListTile(
               title: Text(
-                  "Date de fabrication: ${_dateFab.day.toString().padLeft(2, '0')}/${_dateFab.month.toString().padLeft(2, '0')}/${_dateFab.year}"),
+                "Date de fabrication: ${_dateFab.day.toString().padLeft(2, '0')}/${_dateFab.month.toString().padLeft(2, '0')}/${_dateFab.year}",
+              ),
               leading: Icon(Icons.calendar_today),
               onTap: () async {
                 final picked = await showDatePicker(
@@ -199,9 +209,11 @@ class _QuickPreparationFormState extends State<QuickPreparationForm> {
             if (widget.produit.surgelagable)
               SwitchListTile(
                 title: Text("Produit surgelé ?"),
-                subtitle: Text(_isSurgel
-                    ? "DLC: +${widget.produit.dlcSurgelationJours ?? widget.produit.dlcJours} jours"
-                    : "DLC: +${widget.produit.dlcJours} jours"),
+                subtitle: Text(
+                  _isSurgel
+                      ? "DLC: +${widget.produit.dlcSurgelationJours ?? widget.produit.dlcJours} jours"
+                      : "DLC: +${widget.produit.dlcJours} jours",
+                ),
                 value: _isSurgel,
                 onChanged: (val) => setState(() => _isSurgel = val),
               ),
@@ -216,15 +228,17 @@ class _QuickPreparationFormState extends State<QuickPreparationForm> {
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10)),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
                 ),
                 onPressed: () async {
                   if (_lotController.text.isEmpty ||
                       _poidsController.text.isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content:
-                            Text("Veuillez remplir les champs obligatoires."),
+                        content: Text(
+                          "Veuillez remplir les champs obligatoires.",
+                        ),
                         backgroundColor: Colors.orange,
                       ),
                     );

@@ -1,5 +1,5 @@
 /// HACCP Alert Repository
-/// 
+///
 /// Manages storage and retrieval of alerts in SQLite (offline) and Supabase (online)
 
 import 'package:flutter/foundation.dart';
@@ -154,7 +154,9 @@ class AlertRepository {
       final orgRepo = OrganizationRepository();
       final orgId = await orgRepo.getOrCreateOrganization();
 
-      final cutoffTime = DateTime.now().subtract(Duration(minutes: windowMinutes));
+      final cutoffTime = DateTime.now().subtract(
+        Duration(minutes: windowMinutes),
+      );
 
       final response = await _client
           .from('haccp_alerts')
@@ -201,9 +203,7 @@ class AlertRepository {
     try {
       await _client
           .from('haccp_alerts')
-          .update({
-            'status': 'acknowledged',
-          })
+          .update({'status': 'acknowledged'})
           .eq('id', alertId);
 
       debugPrint('[AlertRepo] Acknowledged alert: $alertId');
@@ -214,16 +214,19 @@ class AlertRepository {
   }
 
   /// Link alert to corrective action
-  Future<void> linkCorrectiveAction(String alertId, String correctiveActionId) async {
+  Future<void> linkCorrectiveAction(
+    String alertId,
+    String correctiveActionId,
+  ) async {
     try {
       await _client
           .from('haccp_alerts')
-          .update({
-            'corrective_action_id': correctiveActionId,
-          })
+          .update({'corrective_action_id': correctiveActionId})
           .eq('id', alertId);
 
-      debugPrint('[AlertRepo] Linked alert $alertId to corrective action $correctiveActionId');
+      debugPrint(
+        '[AlertRepo] Linked alert $alertId to corrective action $correctiveActionId',
+      );
     } catch (e) {
       debugPrint('[AlertRepo] Error linking corrective action: $e');
       rethrow;
@@ -257,10 +260,7 @@ class AlertRepository {
   /// Delete alert
   Future<void> delete(String id) async {
     try {
-      await _client
-          .from('haccp_alerts')
-          .delete()
-          .eq('id', id);
+      await _client.from('haccp_alerts').delete().eq('id', id);
 
       debugPrint('[AlertRepo] Deleted alert: $id');
     } catch (e) {
@@ -269,4 +269,3 @@ class AlertRepository {
     }
   }
 }
-

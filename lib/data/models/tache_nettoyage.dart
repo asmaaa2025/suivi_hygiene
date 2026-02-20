@@ -30,9 +30,12 @@ class TacheNettoyage {
       interval: (json['interval'] as int?) ?? 1,
       weekdays: json['weekdays'] != null
           ? (json['weekdays'] is List
-              ? List<int>.from((json['weekdays'] as List)
-                  .map((e) => (e as num?)?.toInt() ?? 0))
-              : null)
+                ? List<int>.from(
+                    (json['weekdays'] as List).map(
+                      (e) => (e as num?)?.toInt() ?? 0,
+                    ),
+                  )
+                : null)
           : null,
       dayOfMonth: (json['day_of_month'] as int?),
       timeOfDay: (json['time_of_day'] as String?) ?? '08:00',

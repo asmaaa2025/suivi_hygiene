@@ -22,7 +22,9 @@ class AuthService {
       // First check if employee session exists and is admin
       await _employeeSession.initialize();
       if (_employeeSession.isAdmin) {
-        debugPrint('[AuthService] Role resolved: admin (from employee session)');
+        debugPrint(
+          '[AuthService] Role resolved: admin (from employee session)',
+        );
         return UserRole.admin;
       }
 
@@ -32,10 +34,14 @@ class AuthService {
         // Map employee role to UserRole
         final roleStr = employee.role.toLowerCase();
         if (roleStr.contains('manager') || roleStr.contains('gestionnaire')) {
-          debugPrint('[AuthService] Role resolved: manager (from employee role)');
+          debugPrint(
+            '[AuthService] Role resolved: manager (from employee role)',
+          );
           return UserRole.manager;
         }
-        debugPrint('[AuthService] Role resolved: employee (from employee session)');
+        debugPrint(
+          '[AuthService] Role resolved: employee (from employee session)',
+        );
         return UserRole.employee;
       }
 
@@ -52,12 +58,16 @@ class AuthService {
           if (response != null) {
             final role = UserRole.fromString(response['role'] as String?);
             if (role != null) {
-              debugPrint('[AuthService] Role resolved: ${role.toValue()} (from user_accounts)');
+              debugPrint(
+                '[AuthService] Role resolved: ${role.toValue()} (from user_accounts)',
+              );
               return role;
             }
           }
         } catch (e) {
-          debugPrint('[AuthService] Could not fetch role from user_accounts: $e');
+          debugPrint(
+            '[AuthService] Could not fetch role from user_accounts: $e',
+          );
         }
       }
 
@@ -107,4 +117,3 @@ class AuthService {
     }
   }
 }
-

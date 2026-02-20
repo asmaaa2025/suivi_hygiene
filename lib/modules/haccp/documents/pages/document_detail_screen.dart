@@ -1,5 +1,5 @@
 /// Document Detail Screen
-/// 
+///
 /// View and download document details
 
 import 'package:flutter/foundation.dart';
@@ -18,10 +18,7 @@ import '../models.dart';
 class DocumentDetailScreen extends StatefulWidget {
   final String documentId;
 
-  const DocumentDetailScreen({
-    super.key,
-    required this.documentId,
-  });
+  const DocumentDetailScreen({super.key, required this.documentId});
 
   @override
   State<DocumentDetailScreen> createState() => _DocumentDetailScreenState();
@@ -68,9 +65,9 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
         });
       } else {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Document introuvable')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Document introuvable')));
           Navigator.pop(context);
         }
       }
@@ -99,23 +96,24 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
     try {
       String documentUrl = _document!.storageUrl!;
       debugPrint('[DocumentDetail] Original storageUrl: $documentUrl');
-      
+
       // Si l'URL est déjà une URL complète (http/https), l'utiliser directement
-      if (documentUrl.startsWith('http://') || documentUrl.startsWith('https://')) {
+      if (documentUrl.startsWith('http://') ||
+          documentUrl.startsWith('https://')) {
         final url = Uri.parse(documentUrl);
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
           return;
         }
       }
-      
+
       // Sinon, c'est un chemin relatif - obtenir l'URL publique
       try {
         final publicUrl = _supabase.client.storage
             .from('documents')
             .getPublicUrl(documentUrl);
         debugPrint('[DocumentDetail] Public URL: $publicUrl');
-        
+
         final url = Uri.parse(publicUrl);
         if (await canLaunchUrl(url)) {
           await launchUrl(url, mode: LaunchMode.externalApplication);
@@ -124,14 +122,14 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
       } catch (e) {
         debugPrint('[DocumentDetail] Error getting public URL: $e');
       }
-      
+
       // Si l'URL publique ne fonctionne pas, essayer avec une URL signée
       try {
         final signedUrl = await _supabase.client.storage
             .from('documents')
             .createSignedUrl(documentUrl, 3600); // URL valide 1 heure
         debugPrint('[DocumentDetail] Signed URL: $signedUrl');
-        
+
         final signedUri = Uri.parse(signedUrl);
         if (await canLaunchUrl(signedUri)) {
           await launchUrl(signedUri, mode: LaunchMode.externalApplication);
@@ -140,7 +138,7 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
       } catch (e) {
         debugPrint('[DocumentDetail] Error getting signed URL: $e');
       }
-      
+
       // Si tout échoue
       throw Exception('Impossible d\'ouvrir le document');
     } catch (e) {
@@ -212,7 +210,7 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
 
       // Extract storage path from chemin
       final storagePath = _document!.storageUrl;
-      
+
       await _documentsRepo.deleteDocument(widget.documentId, storagePath);
 
       if (mounted) {
@@ -304,9 +302,9 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
             // Title
             Text(
               doc.displayTitle,
-              style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
             ),
 
             const SizedBox(height: 24),
@@ -357,9 +355,9 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
               const SizedBox(height: 24),
               Text(
                 'Notes',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Container(
@@ -448,14 +446,11 @@ class _DetailRow extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                 ),
-                Text(
-                  value,
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
+                Text(value, style: Theme.of(context).textTheme.bodyMedium),
               ],
             ),
           ),
@@ -464,4 +459,3 @@ class _DetailRow extends StatelessWidget {
     );
   }
 }
-

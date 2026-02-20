@@ -49,9 +49,7 @@ class _CorrelationPageState extends State<CorrelationPage> {
       final employees = await _employeeRepo.getAll(activeOnly: false);
       setState(() {
         _employees = employees;
-        _employeeMap = {
-          for (var emp in employees) emp.id: emp
-        };
+        _employeeMap = {for (var emp in employees) emp.id: emp};
       });
     } catch (e) {
       debugPrint('[Correlation] Error loading employees: $e');
@@ -89,7 +87,9 @@ class _CorrelationPageState extends State<CorrelationPage> {
       // For now, we'll load all actions and filter by time range
       // TODO: Update HACCP actions to use employee_id if needed
       final actions = await _haccpRepo.getActionsForUsers(
-        userIds: [_selectedEmployeeId!], // This might need to be updated if HACCP uses employee_id
+        userIds: [
+          _selectedEmployeeId!,
+        ], // This might need to be updated if HACCP uses employee_id
         startDate: _startDate,
         endDate: _endDate,
       );
@@ -111,10 +111,9 @@ class _CorrelationPageState extends State<CorrelationPage> {
         }
 
         if (containingSession != null) {
-          actionsBySession.putIfAbsent(
-            containingSession.id,
-            () => [],
-          ).add(action);
+          actionsBySession
+              .putIfAbsent(containingSession.id, () => [])
+              .add(action);
         } else {
           // Action outside any session = anomaly
           anomalies.add(action);
@@ -166,15 +165,19 @@ class _CorrelationPageState extends State<CorrelationPage> {
   @override
   Widget build(BuildContext context) {
     final displaySessions = _showAnomaliesOnly
-        ? _sessions.where((s) => _anomalies.any((a) =>
-            a.occurredAt.isAfter(s.startAt) &&
-            (s.endAt == null || a.occurredAt.isBefore(s.endAt!)))).toList()
+        ? _sessions
+              .where(
+                (s) => _anomalies.any(
+                  (a) =>
+                      a.occurredAt.isAfter(s.startAt) &&
+                      (s.endAt == null || a.occurredAt.isBefore(s.endAt!)),
+                ),
+              )
+              .toList()
         : _sessions;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Corrélation Pointage / HACCP'),
-      ),
+      appBar: AppBar(title: const Text('Corrélation Pointage / HACCP')),
       body: Column(
         children: [
           // Filters
@@ -197,10 +200,12 @@ class _CorrelationPageState extends State<CorrelationPage> {
                         value: null,
                         child: Text('Sélectionner un employé'),
                       ),
-                      ..._employees.map((emp) => DropdownMenuItem<String>(
-                                value: emp.id,
-                                child: Text(emp.fullName),
-                              )),
+                      ..._employees.map(
+                        (emp) => DropdownMenuItem<String>(
+                          value: emp.id,
+                          child: Text(emp.fullName),
+                        ),
+                      ),
                     ],
                     onChanged: (value) {
                       setState(() => _selectedEmployeeId = value);
@@ -323,97 +328,98 @@ class _CorrelationPageState extends State<CorrelationPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? ErrorState(message: _error!, onRetry: _loadData)
-                    : _selectedEmployeeId == null
-                        ? const EmptyState(
-                            title: 'Sélectionner un employé',
-                            message: 'Veuillez sélectionner un employé pour voir les corrélations',
-                            icon: Icons.person_search,
-                          )
-                        : displaySessions.isEmpty
-                            ? const EmptyState(
-                                title: 'Aucune session',
-                                message: 'Aucune session trouvée pour cette période',
-                                icon: Icons.timeline,
-                              )
-                            : RefreshIndicator(
-                                onRefresh: _loadData,
-                                child: ListView.builder(
-                                  padding: const EdgeInsets.all(16),
-                                  itemCount: displaySessions.length,
-                                  itemBuilder: (context, index) {
-                                    final session = displaySessions[index];
-                                    final sessionActions =
-                                        _actionsBySession[session.id] ?? [];
-                                    final employee = _employeeMap[session.employeeId];
+                ? ErrorState(message: _error!, onRetry: _loadData)
+                : _selectedEmployeeId == null
+                ? const EmptyState(
+                    title: 'Sélectionner un employé',
+                    message:
+                        'Veuillez sélectionner un employé pour voir les corrélations',
+                    icon: Icons.person_search,
+                  )
+                : displaySessions.isEmpty
+                ? const EmptyState(
+                    title: 'Aucune session',
+                    message: 'Aucune session trouvée pour cette période',
+                    icon: Icons.timeline,
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: displaySessions.length,
+                      itemBuilder: (context, index) {
+                        final session = displaySessions[index];
+                        final sessionActions =
+                            _actionsBySession[session.id] ?? [];
+                        final employee = _employeeMap[session.employeeId];
 
-                                    return Card(
-                                      margin: const EdgeInsets.only(bottom: 16),
-                                      child: ExpansionTile(
-                                        leading: CircleAvatar(
-                                          backgroundColor: session.isOpen
-                                              ? Colors.orange
-                                              : Colors.green,
-                                          child: Icon(
-                                            session.isOpen
-                                                ? Icons.access_time
-                                                : Icons.check,
-                                            color: Colors.white,
-                                          ),
-                                        ),
-                                        title: Text(
-                                          employee?.fullName ?? 'Employé ${session.employeeId.substring(0, 8)}...',
-                                        ),
-                                        subtitle: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              '${DateFormat('dd/MM/yyyy HH:mm').format(session.startAt)} - ${session.endAt != null ? DateFormat('HH:mm').format(session.endAt!) : 'En cours'}',
-                                            ),
-                                            Text(
-                                              '${sessionActions.length} action(s) HACCP',
-                                              style: TextStyle(
-                                                color: sessionActions.isEmpty
-                                                    ? Colors.grey
-                                                    : Colors.blue,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        children: [
-                                          if (sessionActions.isEmpty)
-                                            const Padding(
-                                              padding: EdgeInsets.all(16),
-                                              child: Text(
-                                                'Aucune action HACCP pendant cette session',
-                                                style: TextStyle(
-                                                  color: Colors.grey,
-                                                  fontStyle: FontStyle.italic,
-                                                ),
-                                              ),
-                                            )
-                                          else
-                                            ...sessionActions.map((action) {
-                                              return ListTile(
-                                                leading: Icon(
-                                                  _getActionIcon(action.type),
-                                                  color: _getActionColor(
-                                                      action.type),
-                                                ),
-                                                title: Text(action.type.displayName),
-                                                subtitle: Text(
-                                                  DateFormat('dd/MM/yyyy HH:mm')
-                                                      .format(action.occurredAt),
-                                                ),
-                                              );
-                                            }),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                ),
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 16),
+                          child: ExpansionTile(
+                            leading: CircleAvatar(
+                              backgroundColor: session.isOpen
+                                  ? Colors.orange
+                                  : Colors.green,
+                              child: Icon(
+                                session.isOpen
+                                    ? Icons.access_time
+                                    : Icons.check,
+                                color: Colors.white,
                               ),
+                            ),
+                            title: Text(
+                              employee?.fullName ??
+                                  'Employé ${session.employeeId.substring(0, 8)}...',
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${DateFormat('dd/MM/yyyy HH:mm').format(session.startAt)} - ${session.endAt != null ? DateFormat('HH:mm').format(session.endAt!) : 'En cours'}',
+                                ),
+                                Text(
+                                  '${sessionActions.length} action(s) HACCP',
+                                  style: TextStyle(
+                                    color: sessionActions.isEmpty
+                                        ? Colors.grey
+                                        : Colors.blue,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            children: [
+                              if (sessionActions.isEmpty)
+                                const Padding(
+                                  padding: EdgeInsets.all(16),
+                                  child: Text(
+                                    'Aucune action HACCP pendant cette session',
+                                    style: TextStyle(
+                                      color: Colors.grey,
+                                      fontStyle: FontStyle.italic,
+                                    ),
+                                  ),
+                                )
+                              else
+                                ...sessionActions.map((action) {
+                                  return ListTile(
+                                    leading: Icon(
+                                      _getActionIcon(action.type),
+                                      color: _getActionColor(action.type),
+                                    ),
+                                    title: Text(action.type.displayName),
+                                    subtitle: Text(
+                                      DateFormat(
+                                        'dd/MM/yyyy HH:mm',
+                                      ).format(action.occurredAt),
+                                    ),
+                                  );
+                                }),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
           ),
           // Anomalies section
           if (_anomalies.isNotEmpty && !_showAnomaliesOnly)
@@ -449,7 +455,10 @@ class _CorrelationPageState extends State<CorrelationPage> {
                   if (_anomalies.length > 3)
                     Text(
                       '... et ${_anomalies.length - 3} autre(s)',
-                      style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                 ],
               ),
@@ -497,4 +506,3 @@ class _CorrelationPageState extends State<CorrelationPage> {
     }
   }
 }
-

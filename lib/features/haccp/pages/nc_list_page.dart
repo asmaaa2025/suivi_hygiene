@@ -53,9 +53,9 @@ class _NCListPageState extends State<NCListPage> {
     } catch (e) {
       debugPrint('[NCList] Error loading NCs: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
       setState(() => _isLoading = false);
     }
@@ -107,66 +107,72 @@ class _NCListPageState extends State<NCListPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _ncs.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.all(32.0),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.description_outlined,
-                                size: 80,
-                                color: Colors.grey[400],
-                              ),
-                              const SizedBox(height: 24),
-                              Text(
-                                'Aucune non-conformité',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w500,
-                                  color: Colors.grey[700],
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                _hasActiveFilters()
-                                    ? 'Aucun résultat avec les filtres sélectionnés'
-                                    : 'Commencez par créer votre première non-conformité',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              ElevatedButton.icon(
-                                onPressed: _createNewNC,
-                                icon: const Icon(Icons.add),
-                                label: const Text('Créer une NC'),
-                                style: ElevatedButton.styleFrom(
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                                  backgroundColor: AppTheme.primaryBlue,
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                              ),
-                            ],
+                ? Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.description_outlined,
+                            size: 80,
+                            color: Colors.grey[400],
                           ),
-                        ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadNCs,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                          itemCount: _ncs.length,
-                          itemBuilder: (context, index) {
-                            final nc = _ncs[index];
-                            return _buildNCCard(nc);
-                          },
-                        ),
+                          const SizedBox(height: 24),
+                          Text(
+                            'Aucune non-conformité',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
+                              color: Colors.grey[700],
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _hasActiveFilters()
+                                ? 'Aucun résultat avec les filtres sélectionnés'
+                                : 'Commencez par créer votre première non-conformité',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          ElevatedButton.icon(
+                            onPressed: _createNewNC,
+                            icon: const Icon(Icons.add),
+                            label: const Text('Créer une NC'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 16,
+                              ),
+                              backgroundColor: AppTheme.primaryBlue,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadNCs,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 12,
+                      ),
+                      itemCount: _ncs.length,
+                      itemBuilder: (context, index) {
+                        final nc = _ncs[index];
+                        return _buildNCCard(nc);
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -174,7 +180,8 @@ class _NCListPageState extends State<NCListPage> {
   }
 
   Widget _buildFilters() {
-    final hasActiveFilters = _selectedStatus != null ||
+    final hasActiveFilters =
+        _selectedStatus != null ||
         _selectedSourceType != null ||
         _selectedObjectCategory != null ||
         _startDate != null ||
@@ -184,9 +191,7 @@ class _NCListPageState extends State<NCListPage> {
       constraints: const BoxConstraints(maxHeight: 200), // Limit filter height
       decoration: BoxDecoration(
         color: Colors.grey[50],
-        border: Border(
-          bottom: BorderSide(color: Colors.grey[300]!),
-        ),
+        border: Border(bottom: BorderSide(color: Colors.grey[300]!)),
       ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -198,10 +203,7 @@ class _NCListPageState extends State<NCListPage> {
               children: [
                 const Text(
                   'Filtres',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                 ),
                 if (hasActiveFilters) ...[
                   const SizedBox(width: 8),
@@ -213,7 +215,10 @@ class _NCListPageState extends State<NCListPage> {
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                   ),
                 ],
                 const Spacer(),
@@ -232,7 +237,10 @@ class _NCListPageState extends State<NCListPage> {
                     icon: const Icon(Icons.clear, size: 18),
                     label: const Text('Réinitialiser'),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
                     ),
                   ),
               ],
@@ -253,17 +261,35 @@ class _NCListPageState extends State<NCListPage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       isExpanded: true,
                       items: [
-                        const DropdownMenuItem(value: null, child: Text('Tous')),
-                        const DropdownMenuItem(value: NCStatus.draft, child: Text('Brouillon')),
-                        const DropdownMenuItem(value: NCStatus.open, child: Text('Ouvert')),
-                        const DropdownMenuItem(value: NCStatus.inProgress, child: Text('En cours')),
-                        const DropdownMenuItem(value: NCStatus.closed, child: Text('Fermé')),
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('Tous'),
+                        ),
+                        const DropdownMenuItem(
+                          value: NCStatus.draft,
+                          child: Text('Brouillon'),
+                        ),
+                        const DropdownMenuItem(
+                          value: NCStatus.open,
+                          child: Text('Ouvert'),
+                        ),
+                        const DropdownMenuItem(
+                          value: NCStatus.inProgress,
+                          child: Text('En cours'),
+                        ),
+                        const DropdownMenuItem(
+                          value: NCStatus.closed,
+                          child: Text('Fermé'),
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -284,17 +310,35 @@ class _NCListPageState extends State<NCListPage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       isExpanded: true,
                       items: [
-                        const DropdownMenuItem(value: null, child: Text('Tous')),
-                        const DropdownMenuItem(value: NCSourceType.temperature, child: Text('Température')),
-                        const DropdownMenuItem(value: NCSourceType.reception, child: Text('Réception')),
-                        const DropdownMenuItem(value: NCSourceType.oil, child: Text('Huile')),
-                        const DropdownMenuItem(value: NCSourceType.cleaning, child: Text('Nettoyage')),
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('Tous'),
+                        ),
+                        const DropdownMenuItem(
+                          value: NCSourceType.temperature,
+                          child: Text('Température'),
+                        ),
+                        const DropdownMenuItem(
+                          value: NCSourceType.reception,
+                          child: Text('Réception'),
+                        ),
+                        const DropdownMenuItem(
+                          value: NCSourceType.oil,
+                          child: Text('Huile'),
+                        ),
+                        const DropdownMenuItem(
+                          value: NCSourceType.cleaning,
+                          child: Text('Nettoyage'),
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -315,20 +359,28 @@ class _NCListPageState extends State<NCListPage> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
-                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 12,
+                        ),
                         filled: true,
                         fillColor: Colors.white,
                       ),
                       isExpanded: true,
                       items: [
-                        const DropdownMenuItem(value: null, child: Text('Toutes')),
-                        ...NCObjectCategory.values.map((cat) => DropdownMenuItem(
-                              value: cat,
-                              child: Text(
-                                cat.displayName,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            )),
+                        const DropdownMenuItem(
+                          value: null,
+                          child: Text('Toutes'),
+                        ),
+                        ...NCObjectCategory.values.map(
+                          (cat) => DropdownMenuItem(
+                            value: cat,
+                            child: Text(
+                              cat.displayName,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ),
                       ],
                       onChanged: (value) {
                         setState(() {
@@ -355,7 +407,10 @@ class _NCListPageState extends State<NCListPage> {
                         ),
                       ),
                       style: OutlinedButton.styleFrom(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 12,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -428,9 +483,7 @@ class _NCListPageState extends State<NCListPage> {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -450,7 +503,10 @@ class _NCListPageState extends State<NCListPage> {
                       if (nc.ficheNumber != null) ...[
                         Flexible(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: AppTheme.primaryBlue.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(6),
@@ -471,7 +527,10 @@ class _NCListPageState extends State<NCListPage> {
                       // Status badge
                       Flexible(
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: statusColor.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(6),
@@ -523,7 +582,11 @@ class _NCListPageState extends State<NCListPage> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.category, size: 16, color: Colors.grey[600]),
+                          Icon(
+                            Icons.category,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
@@ -561,10 +624,16 @@ class _NCListPageState extends State<NCListPage> {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.calendar_today, size: 14, color: Colors.grey[600]),
+                          Icon(
+                            Icons.calendar_today,
+                            size: 14,
+                            color: Colors.grey[600],
+                          ),
                           const SizedBox(width: 4),
                           Text(
-                            DateFormat('dd/MM/yyyy HH:mm').format(nc.detectionDate),
+                            DateFormat(
+                              'dd/MM/yyyy HH:mm',
+                            ).format(nc.detectionDate),
                             style: TextStyle(
                               fontSize: 12,
                               color: Colors.grey[600],
@@ -606,7 +675,9 @@ class _NCListPageState extends State<NCListPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Fermer le ticket'),
-        content: const Text('Êtes-vous sûr de vouloir fermer ce ticket de non-conformité ?'),
+        content: const Text(
+          'Êtes-vous sûr de vouloir fermer ce ticket de non-conformité ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -659,7 +730,9 @@ class _NCListPageState extends State<NCListPage> {
   }
 
   void _openNC(String ncId) {
-    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
     final prefix = isAdminRoute ? '/admin' : '/app';
     context.push('$prefix/alerts/nc/$ncId');
   }
@@ -722,10 +795,11 @@ class _NCListPageState extends State<NCListPage> {
                     if (picked != null) setState(() => endDate = picked);
                   },
                 ),
-                if (loading) const Padding(
-                  padding: EdgeInsets.only(top: 16),
-                  child: Center(child: CircularProgressIndicator()),
-                ),
+                if (loading)
+                  const Padding(
+                    padding: EdgeInsets.only(top: 16),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
               ],
             ),
           ),
@@ -751,9 +825,9 @@ class _NCListPageState extends State<NCListPage> {
                         }
                       } catch (e) {
                         if (ctx.mounted) {
-                          ScaffoldMessenger.of(ctx).showSnackBar(
-                            SnackBar(content: Text('Erreur: $e')),
-                          );
+                          ScaffoldMessenger.of(
+                            ctx,
+                          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
                         }
                       } finally {
                         if (ctx.mounted) setState(() => loading = false);
@@ -772,20 +846,18 @@ class _NCListPageState extends State<NCListPage> {
     );
 
     if (result == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Fiches exportées en PDF')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Fiches exportées en PDF')));
     }
   }
 
   void _createNewNC() {
     // Use new wizard instead of old form
-    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
     final prefix = isAdminRoute ? '/admin' : '/app';
     context.push('$prefix/alerts/nc/wizard');
   }
 }
-
-
-
-

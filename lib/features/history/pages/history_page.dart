@@ -68,7 +68,7 @@ class _HistoryPageState extends State<HistoryPage> {
   final _tacheRepo = TacheNettoyageRepository();
   final _oilChangeRepo = OilChangeRepository();
   final _appareilRepo = AppareilRepository();
-  
+
   List<UnifiedHistoryEntry> _entries = [];
   Map<String, Appareil> _appareils = {}; // Map of appareilId -> Appareil
   Map<String, TacheNettoyage> _taches = {}; // Map of tacheId -> TacheNettoyage
@@ -135,147 +135,171 @@ class _HistoryPageState extends State<HistoryPage> {
       final allEntries = <UnifiedHistoryEntry>[];
 
       // Load temperatures
-      if (_selectedOperationType == 'all' || _selectedOperationType == 'temperature') {
+      if (_selectedOperationType == 'all' ||
+          _selectedOperationType == 'temperature') {
         debugPrint('[HistoryPage] Loading temperatures...');
         final temperatures = await _temperatureRepo.getAll(
           startDate: _startDate,
           endDate: _endDate,
         );
         debugPrint('[HistoryPage] Found ${temperatures.length} temperatures');
-        
+
         for (final temp in temperatures) {
           final appareil = _appareils[temp.appareilId];
           final appareilName = appareil?.nom ?? 'Appareil inconnu';
           final isAlert = _isTemperatureAlert(temp.temperature, appareil);
-          
-          allEntries.add(UnifiedHistoryEntry(
-            id: temp.id,
-            type: 'temperature',
-            title: 'Température: $appareilName',
-            description: '${temp.temperature}°C${temp.remarque != null ? ' - ${temp.remarque}' : ''}',
-            createdAt: temp.createdAt,
-            employeeFirstName: temp.employeeFirstName,
-            employeeLastName: temp.employeeLastName,
-            isAlert: isAlert,
-            metadata: {
-              'temperature': temp.temperature,
-              'appareil': appareilName,
-              'remarque': temp.remarque,
-            },
-          ));
+
+          allEntries.add(
+            UnifiedHistoryEntry(
+              id: temp.id,
+              type: 'temperature',
+              title: 'Température: $appareilName',
+              description:
+                  '${temp.temperature}°C${temp.remarque != null ? ' - ${temp.remarque}' : ''}',
+              createdAt: temp.createdAt,
+              employeeFirstName: temp.employeeFirstName,
+              employeeLastName: temp.employeeLastName,
+              isAlert: isAlert,
+              metadata: {
+                'temperature': temp.temperature,
+                'appareil': appareilName,
+                'remarque': temp.remarque,
+              },
+            ),
+          );
         }
       }
 
       // Load receptions
-      if (_selectedOperationType == 'all' || _selectedOperationType == 'reception') {
+      if (_selectedOperationType == 'all' ||
+          _selectedOperationType == 'reception') {
         debugPrint('[HistoryPage] Loading receptions...');
         final receptions = await _receptionRepo.getAll(
           startDate: _startDate,
           endDate: _endDate,
         );
         debugPrint('[HistoryPage] Found ${receptions.length} receptions');
-        
+
         for (final reception in receptions) {
-          final isAlert = reception.temperature != null && 
+          final isAlert =
+              reception.temperature != null &&
               (reception.temperature! > 7 || reception.temperature! < -18);
-          
-          allEntries.add(UnifiedHistoryEntry(
-            id: reception.id,
-            type: 'reception',
-            title: 'Réception${reception.fournisseur != null ? ': ${reception.fournisseur}' : ''}',
-            description: reception.lot != null 
-                ? 'Lot: ${reception.lot}${reception.temperature != null ? ' - ${reception.temperature}°C' : ''}'
-                : reception.temperature != null 
-                    ? 'Température: ${reception.temperature}°C'
-                    : null,
-            createdAt: reception.receivedAt,
-            employeeFirstName: reception.employeeFirstName,
-            employeeLastName: reception.employeeLastName,
-            isAlert: isAlert,
-            metadata: {
-              'fournisseur': reception.fournisseur,
-              'lot': reception.lot,
-              'temperature': reception.temperature,
-            },
-          ));
+
+          allEntries.add(
+            UnifiedHistoryEntry(
+              id: reception.id,
+              type: 'reception',
+              title:
+                  'Réception${reception.fournisseur != null ? ': ${reception.fournisseur}' : ''}',
+              description: reception.lot != null
+                  ? 'Lot: ${reception.lot}${reception.temperature != null ? ' - ${reception.temperature}°C' : ''}'
+                  : reception.temperature != null
+                  ? 'Température: ${reception.temperature}°C'
+                  : null,
+              createdAt: reception.receivedAt,
+              employeeFirstName: reception.employeeFirstName,
+              employeeLastName: reception.employeeLastName,
+              isAlert: isAlert,
+              metadata: {
+                'fournisseur': reception.fournisseur,
+                'lot': reception.lot,
+                'temperature': reception.temperature,
+              },
+            ),
+          );
         }
       }
 
       // Load nettoyages
-      if (_selectedOperationType == 'all' || _selectedOperationType == 'cleaning') {
+      if (_selectedOperationType == 'all' ||
+          _selectedOperationType == 'cleaning') {
         debugPrint('[HistoryPage] Loading nettoyages...');
         final nettoyages = await _nettoyageRepo.getAllCompleted(
           startDate: _startDate,
           endDate: _endDate,
         );
         debugPrint('[HistoryPage] Found ${nettoyages.length} nettoyages');
-        
+
         for (final nettoyage in nettoyages) {
           final tache = _taches[nettoyage.tacheId];
           final taskName = tache?.nom ?? 'Tâche inconnue';
-          
-          allEntries.add(UnifiedHistoryEntry(
-            id: nettoyage.id,
-            type: 'cleaning',
-            title: 'Nettoyage: $taskName',
-            description: nettoyage.remarque,
-            createdAt: nettoyage.doneAt ?? nettoyage.createdAt,
-            employeeFirstName: nettoyage.employeeFirstName,
-            employeeLastName: nettoyage.employeeLastName,
-            isAlert: nettoyage.conforme == false,
-            metadata: {
-              'tache_id': nettoyage.tacheId,
-              'tache_nom': taskName,
-              'conforme': nettoyage.conforme,
-            },
-          ));
+
+          allEntries.add(
+            UnifiedHistoryEntry(
+              id: nettoyage.id,
+              type: 'cleaning',
+              title: 'Nettoyage: $taskName',
+              description: nettoyage.remarque,
+              createdAt: nettoyage.doneAt ?? nettoyage.createdAt,
+              employeeFirstName: nettoyage.employeeFirstName,
+              employeeLastName: nettoyage.employeeLastName,
+              isAlert: nettoyage.conforme == false,
+              metadata: {
+                'tache_id': nettoyage.tacheId,
+                'tache_nom': taskName,
+                'conforme': nettoyage.conforme,
+              },
+            ),
+          );
         }
       }
 
       // Load oil changes
-      if (_selectedOperationType == 'all' || _selectedOperationType == 'oil_change') {
+      if (_selectedOperationType == 'all' ||
+          _selectedOperationType == 'oil_change') {
         debugPrint('[HistoryPage] Loading oil changes...');
         final oilChangesData = await _oilChangeRepo.getAll();
         debugPrint('[HistoryPage] Found ${oilChangesData.length} oil changes');
-        
+
         // Filter by date if needed
         final filteredOilChanges = oilChangesData.where((data) {
           final changedAt = data['changed_at'] != null
               ? DateTime.tryParse(data['changed_at'].toString())
               : (data['created_at'] != null
-                  ? DateTime.tryParse(data['created_at'].toString())
-                  : null);
+                    ? DateTime.tryParse(data['created_at'].toString())
+                    : null);
           if (changedAt == null) return false;
-          if (_startDate != null && changedAt.isBefore(_startDate!)) return false;
+          if (_startDate != null && changedAt.isBefore(_startDate!))
+            return false;
           if (_endDate != null) {
-            final endOfDay = DateTime(_endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59);
+            final endOfDay = DateTime(
+              _endDate!.year,
+              _endDate!.month,
+              _endDate!.day,
+              23,
+              59,
+              59,
+            );
             if (changedAt.isAfter(endOfDay)) return false;
           }
           return true;
         }).toList();
-        
+
         for (final data in filteredOilChanges) {
           final oilChange = OilChange.fromJson(data);
           // Get machine name from friteuses map or from oilChange model
-          final machineName = oilChange.friteuseNom ?? 
-              _friteuses[oilChange.friteuseId] ?? 
+          final machineName =
+              oilChange.friteuseNom ??
+              _friteuses[oilChange.friteuseId] ??
               'Machine inconnue';
-          
-          allEntries.add(UnifiedHistoryEntry(
-            id: oilChange.id,
-            type: 'oil_change',
-            title: 'Changement d\'huile: $machineName',
-            description: oilChange.remarque,
-            createdAt: oilChange.changedAt,
-            employeeFirstName: oilChange.employeeFirstName,
-            employeeLastName: oilChange.employeeLastName,
-            isAlert: false,
-            metadata: {
-              'friteuse_id': oilChange.friteuseId,
-              'friteuse_nom': machineName,
-              'quantite': data['quantite'],
-            },
-          ));
+
+          allEntries.add(
+            UnifiedHistoryEntry(
+              id: oilChange.id,
+              type: 'oil_change',
+              title: 'Changement d\'huile: $machineName',
+              description: oilChange.remarque,
+              createdAt: oilChange.changedAt,
+              employeeFirstName: oilChange.employeeFirstName,
+              employeeLastName: oilChange.employeeLastName,
+              isAlert: false,
+              metadata: {
+                'friteuse_id': oilChange.friteuseId,
+                'friteuse_nom': machineName,
+                'quantite': data['quantite'],
+              },
+            ),
+          );
         }
       }
 
@@ -304,8 +328,10 @@ class _HistoryPageState extends State<HistoryPage> {
 
   bool _isTemperatureAlert(double temperature, Appareil? appareil) {
     if (appareil == null) return false;
-    if (appareil.tempMin != null && temperature < appareil.tempMin!) return true;
-    if (appareil.tempMax != null && temperature > appareil.tempMax!) return true;
+    if (appareil.tempMin != null && temperature < appareil.tempMin!)
+      return true;
+    if (appareil.tempMax != null && temperature > appareil.tempMax!)
+      return true;
     return false;
   }
 
@@ -376,9 +402,7 @@ class _HistoryPageState extends State<HistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Historique unifié'),
-      ),
+      appBar: AppBar(title: const Text('Historique unifié')),
       body: Column(
         children: [
           // Filters
@@ -397,7 +421,9 @@ class _HistoryPageState extends State<HistoryPage> {
                   items: _operationTypes.map((type) {
                     return DropdownMenuItem(
                       value: type,
-                      child: Text(type == 'all' ? 'Tous' : _getOperationTypeLabel(type)),
+                      child: Text(
+                        type == 'all' ? 'Tous' : _getOperationTypeLabel(type),
+                      ),
                     );
                   }).toList(),
                   onChanged: (value) {
@@ -494,142 +520,151 @@ class _HistoryPageState extends State<HistoryPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? ErrorState(message: _error!, onRetry: _loadData)
-                    : _entries.isEmpty
-                        ? const EmptyState(
-                            title: 'Aucun historique',
-                            message: 'Vos actions récentes apparaîtront ici',
-                            icon: Icons.history,
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadData,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _entries.length,
-                              itemBuilder: (context, index) {
-                                final entry = _entries[index];
-                                final typeColor = _getOperationTypeColor(entry.type);
-                                
-                                return SectionCard(
-                                  onTap: () => _navigateToDetail(entry),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Container(
-                                            padding: const EdgeInsets.all(8),
-                                            decoration: BoxDecoration(
-                                              color: entry.isAlert
-                                                  ? AppTheme.statusCritical.withOpacity(0.1)
-                                                  : typeColor.withOpacity(0.1),
-                                              borderRadius: BorderRadius.circular(8),
-                                              border: entry.isAlert
-                                                  ? Border.all(
-                                                      color: AppTheme.statusCritical,
-                                                      width: 2,
-                                                    )
-                                                  : null,
-                                            ),
-                                            child: Icon(
-                                              _getOperationTypeIcon(entry.type),
-                                              color: entry.isAlert
-                                                  ? AppTheme.statusCritical
-                                                  : typeColor,
-                                              size: 20,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 12),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Row(
-                                                  children: [
-                                                    Expanded(
-                                                      child: Text(
-                                                        entry.title,
-                                                        style: Theme.of(context)
-                                                            .textTheme
-                                                            .titleMedium
-                                                            ?.copyWith(
-                                                              fontWeight: FontWeight.bold,
-                                                              color: entry.isAlert
-                                                                  ? AppTheme.statusCritical
-                                                                  : null,
-                                                            ),
-                                                      ),
-                                                    ),
-                                                    if (entry.isAlert)
-                                                      Container(
-                                                        padding: const EdgeInsets.symmetric(
-                                                          horizontal: 6,
-                                                          vertical: 2,
-                                                        ),
-                                                        decoration: BoxDecoration(
-                                                          color: AppTheme.statusCritical,
-                                                          borderRadius: BorderRadius.circular(8),
-                                                        ),
-                                                        child: const Text(
-                                                          'ALERTE',
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontSize: 10,
-                                                            fontWeight: FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                  ],
-                                                ),
-                                                if (entry.description != null) ...[
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    entry.description!,
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodyMedium,
-                                                  ),
-                                                ],
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Row(
-                                        children: [
-                                          Icon(Icons.person, size: 16, color: Colors.grey[600]),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            entry.employeeName,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
-                                                  color: Colors.grey[600],
-                                                ),
-                                          ),
-                                          const SizedBox(width: 16),
-                                          Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            DateFormat('dd/MM/yyyy à HH:mm')
-                                                .format(entry.createdAt),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
-                                                  color: Colors.grey[600],
-                                                ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                ? ErrorState(message: _error!, onRetry: _loadData)
+                : _entries.isEmpty
+                ? const EmptyState(
+                    title: 'Aucun historique',
+                    message: 'Vos actions récentes apparaîtront ici',
+                    icon: Icons.history,
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _entries.length,
+                      itemBuilder: (context, index) {
+                        final entry = _entries[index];
+                        final typeColor = _getOperationTypeColor(entry.type);
+
+                        return SectionCard(
+                          onTap: () => _navigateToDetail(entry),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(8),
+                                    decoration: BoxDecoration(
+                                      color: entry.isAlert
+                                          ? AppTheme.statusCritical.withOpacity(
+                                              0.1,
+                                            )
+                                          : typeColor.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: entry.isAlert
+                                          ? Border.all(
+                                              color: AppTheme.statusCritical,
+                                              width: 2,
+                                            )
+                                          : null,
+                                    ),
+                                    child: Icon(
+                                      _getOperationTypeIcon(entry.type),
+                                      color: entry.isAlert
+                                          ? AppTheme.statusCritical
+                                          : typeColor,
+                                      size: 20,
+                                    ),
                                   ),
-                                );
-                              },
-                            ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                entry.title,
+                                                style: Theme.of(context)
+                                                    .textTheme
+                                                    .titleMedium
+                                                    ?.copyWith(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: entry.isAlert
+                                                          ? AppTheme
+                                                                .statusCritical
+                                                          : null,
+                                                    ),
+                                              ),
+                                            ),
+                                            if (entry.isAlert)
+                                              Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 6,
+                                                      vertical: 2,
+                                                    ),
+                                                decoration: BoxDecoration(
+                                                  color:
+                                                      AppTheme.statusCritical,
+                                                  borderRadius:
+                                                      BorderRadius.circular(8),
+                                                ),
+                                                child: const Text(
+                                                  'ALERTE',
+                                                  style: TextStyle(
+                                                    color: Colors.white,
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        ),
+                                        if (entry.description != null) ...[
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            entry.description!,
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodyMedium,
+                                          ),
+                                        ],
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.person,
+                                    size: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    entry.employeeName,
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: Colors.grey[600]),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Icon(
+                                    Icons.access_time,
+                                    size: 16,
+                                    color: Colors.grey[600],
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    DateFormat(
+                                      'dd/MM/yyyy à HH:mm',
+                                    ).format(entry.createdAt),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),

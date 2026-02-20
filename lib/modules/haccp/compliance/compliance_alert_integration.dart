@@ -1,5 +1,5 @@
 /// Compliance Alert Integration
-/// 
+///
 /// Integrates compliance daily checks with the alert engine
 /// Should be called on app start and after document uploads
 
@@ -35,12 +35,16 @@ class ComplianceAlertIntegration {
       }
 
       if (organizationId == null) {
-        debugPrint('[ComplianceAlert] No organization ID found, skipping checks');
+        debugPrint(
+          '[ComplianceAlert] No organization ID found, skipping checks',
+        );
         return;
       }
 
       // Load requirements and events
-      final requirements = await _complianceRepo.getRequirements(organizationId);
+      final requirements = await _complianceRepo.getRequirements(
+        organizationId,
+      );
       final events = await _complianceRepo.getEvents(organizationId);
 
       // Build daily check events
@@ -71,7 +75,9 @@ class ComplianceAlertIntegration {
 
         final storedAlerts = await _alertService.evaluateAndStore(event);
         if (storedAlerts.isNotEmpty) {
-          debugPrint('[ComplianceAlert] ✅ Created ${storedAlerts.length} alert(s) for ${eventData['requirement_code']}');
+          debugPrint(
+            '[ComplianceAlert] ✅ Created ${storedAlerts.length} alert(s) for ${eventData['requirement_code']}',
+          );
         }
       }
 
@@ -95,10 +101,14 @@ class ComplianceAlertIntegration {
     }
 
     try {
-      debugPrint('[ComplianceAlert] Checking compliance after document upload...');
+      debugPrint(
+        '[ComplianceAlert] Checking compliance after document upload...',
+      );
 
       // Load requirements and events
-      final requirements = await _complianceRepo.getRequirements(organizationId);
+      final requirements = await _complianceRepo.getRequirements(
+        organizationId,
+      );
       final events = await _complianceRepo.getEvents(organizationId);
 
       // Build daily check events
@@ -125,10 +135,11 @@ class ComplianceAlertIntegration {
 
       debugPrint('[ComplianceAlert] ✅ Completed compliance check after upload');
     } catch (e, stackTrace) {
-      debugPrint('[ComplianceAlert] ❌ Error checking compliance after upload: $e');
+      debugPrint(
+        '[ComplianceAlert] ❌ Error checking compliance after upload: $e',
+      );
       debugPrint('[ComplianceAlert] Stack trace: $stackTrace');
       // Don't throw - alerts are non-blocking
     }
   }
 }
-

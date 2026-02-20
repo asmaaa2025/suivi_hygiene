@@ -25,15 +25,22 @@ class DBService {
 
   static Future<void> insertReleve(ReleveTemperature r) async {
     final db = await initDB();
-    await db.insert('releves', r.toMap(),
-        conflictAlgorithm: ConflictAlgorithm.replace);
+    await db.insert(
+      'releves',
+      r.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.replace,
+    );
   }
 
   static Future<List<ReleveTemperature>> getReleves() async {
     final db = await initDB();
-    final List<Map<String, dynamic>> maps =
-        await db.query('releves', orderBy: 'date DESC');
+    final List<Map<String, dynamic>> maps = await db.query(
+      'releves',
+      orderBy: 'date DESC',
+    );
     return List.generate(
-        maps.length, (i) => ReleveTemperature.fromMap(maps[i]));
+      maps.length,
+      (i) => ReleveTemperature.fromMap(maps[i]),
+    );
   }
 }

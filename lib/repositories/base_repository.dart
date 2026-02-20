@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' hide AuthException;
-import 'package:supabase_flutter/supabase_flutter.dart' as gotrue
+import 'package:supabase_flutter/supabase_flutter.dart'
+    as gotrue
     show AuthException;
 import '../services/supabase_service.dart';
 import '../services/cache_service.dart';
@@ -64,8 +65,9 @@ abstract class BaseRepository {
       }
 
       final data = await query;
-      final List<Map<String, dynamic>> list =
-          List<Map<String, dynamic>>.from(data);
+      final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
+        data,
+      );
 
       // Cache the result
       if (cacheKey != null) {
@@ -73,7 +75,8 @@ abstract class BaseRepository {
       }
 
       debugPrint(
-          '[$tableName] [FETCH_LIST] ✅ Success: Fetched ${list.length} records');
+        '[$tableName] [FETCH_LIST] ✅ Success: Fetched ${list.length} records',
+      );
       return list;
     } catch (e) {
       debugPrint('[$tableName] [FETCH_LIST] ❌ Error: ${e.toString()}');
@@ -84,7 +87,8 @@ abstract class BaseRepository {
         final cached = _cache.get('${cachePrefix}_$cacheKey');
         if (cached != null) {
           debugPrint(
-              '[$tableName] [FETCH_LIST] Using cached data (${cached.length} records)');
+            '[$tableName] [FETCH_LIST] Using cached data (${cached.length} records)',
+          );
           return List<Map<String, dynamic>>.from(cached);
         }
       }
@@ -95,8 +99,10 @@ abstract class BaseRepository {
   }
 
   /// Fetch by ID
-  Future<Map<String, dynamic>?> fetchById(String id,
-      {bool filterByUserId = true}) async {
+  Future<Map<String, dynamic>?> fetchById(
+    String id, {
+    bool filterByUserId = true,
+  }) async {
     try {
       await _ensureNetwork();
 
@@ -126,7 +132,8 @@ abstract class BaseRepository {
       _logSupabaseError(e, 'fetchById');
       if (e is NetworkException) rethrow;
       throw SupabaseException(
-          'Failed to fetch $tableName record: ${e.toString()}');
+        'Failed to fetch $tableName record: ${e.toString()}',
+      );
     }
   }
 
@@ -136,23 +143,24 @@ abstract class BaseRepository {
       await _ensureNetwork();
 
       // Ensure user_id is set (override if already present)
-      final record = {
-        ...data,
-        'user_id': userId,
-      };
+      final record = {...data, 'user_id': userId};
 
       debugPrint('[$tableName] [CREATE] Starting create');
       debugPrint('[$tableName] [CREATE] userId: $userId');
       debugPrint('[$tableName] [CREATE] payload: $record');
 
-      final result =
-          await client.from(tableName).insert(record).select().single();
+      final result = await client
+          .from(tableName)
+          .insert(record)
+          .select()
+          .single();
 
       // Clear cache
       await _cache.clearTable(tableName);
 
       debugPrint(
-          '[$tableName] [CREATE] ✅ Success: Created record ${result['id']}');
+        '[$tableName] [CREATE] ✅ Success: Created record ${result['id']}',
+      );
       debugPrint('[$tableName] [CREATE] Result: $result');
       return result;
     } catch (e) {
@@ -160,13 +168,17 @@ abstract class BaseRepository {
       _logSupabaseError(e, 'create');
       if (e is NetworkException) rethrow;
       throw SupabaseException(
-          'Failed to create $tableName record: ${e.toString()}');
+        'Failed to create $tableName record: ${e.toString()}',
+      );
     }
   }
 
   /// Update record
-  Future<Map<String, dynamic>> update(String id, Map<String, dynamic> data,
-      {bool filterByUserId = true}) async {
+  Future<Map<String, dynamic>> update(
+    String id,
+    Map<String, dynamic> data, {
+    bool filterByUserId = true,
+  }) async {
     try {
       await _ensureNetwork();
 
@@ -196,7 +208,8 @@ abstract class BaseRepository {
       _logSupabaseError(e, 'update');
       if (e is NetworkException) rethrow;
       throw SupabaseException(
-          'Failed to update $tableName record: ${e.toString()}');
+        'Failed to update $tableName record: ${e.toString()}',
+      );
     }
   }
 
@@ -228,47 +241,63 @@ abstract class BaseRepository {
       _logSupabaseError(e, 'delete');
       if (e is NetworkException) rethrow;
       throw SupabaseException(
-          'Failed to delete $tableName record: ${e.toString()}');
+        'Failed to delete $tableName record: ${e.toString()}',
+      );
     }
   }
 
   /// Log Supabase errors with full details
   void _logSupabaseError(dynamic error, String operation) {
     debugPrint(
-        '[$tableName] [${operation.toUpperCase()}] ========== ERROR DETAILS ==========');
+      '[$tableName] [${operation.toUpperCase()}] ========== ERROR DETAILS ==========',
+    );
     debugPrint(
-        '[$tableName] [${operation.toUpperCase()}] Error type: ${error.runtimeType}');
+      '[$tableName] [${operation.toUpperCase()}] Error type: ${error.runtimeType}',
+    );
     debugPrint(
-        '[$tableName] [${operation.toUpperCase()}] Error message: ${error.toString()}');
+      '[$tableName] [${operation.toUpperCase()}] Error message: ${error.toString()}',
+    );
 
     if (error is PostgrestException) {
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}] PostgrestException details:');
+        '[$tableName] [${operation.toUpperCase()}] PostgrestException details:',
+      );
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}]   - code: ${error.code}');
+        '[$tableName] [${operation.toUpperCase()}]   - code: ${error.code}',
+      );
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}]   - message: ${error.message}');
+        '[$tableName] [${operation.toUpperCase()}]   - message: ${error.message}',
+      );
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}]   - details: ${error.details}');
+        '[$tableName] [${operation.toUpperCase()}]   - details: ${error.details}',
+      );
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}]   - hint: ${error.hint}');
+        '[$tableName] [${operation.toUpperCase()}]   - hint: ${error.hint}',
+      );
     } else if (error is gotrue.AuthException) {
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}] AuthException details:');
+        '[$tableName] [${operation.toUpperCase()}] AuthException details:',
+      );
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}]   - message: ${error.message}');
+        '[$tableName] [${operation.toUpperCase()}]   - message: ${error.message}',
+      );
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}]   - statusCode: ${error.statusCode}');
+        '[$tableName] [${operation.toUpperCase()}]   - statusCode: ${error.statusCode}',
+      );
     } else if (error is StorageException) {
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}] StorageException details:');
+        '[$tableName] [${operation.toUpperCase()}] StorageException details:',
+      );
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}]   - message: ${error.message}');
+        '[$tableName] [${operation.toUpperCase()}]   - message: ${error.message}',
+      );
       debugPrint(
-          '[$tableName] [${operation.toUpperCase()}]   - statusCode: ${error.statusCode}');
+        '[$tableName] [${operation.toUpperCase()}]   - statusCode: ${error.statusCode}',
+      );
     }
 
     debugPrint(
-        '[$tableName] [${operation.toUpperCase()}] ====================================');
+      '[$tableName] [${operation.toUpperCase()}] ====================================',
+    );
   }
 }

@@ -6,12 +6,7 @@ class SectionCard extends StatelessWidget {
   final VoidCallback? onTap;
   final Color? color;
 
-  const SectionCard({
-    super.key,
-    required this.child,
-    this.onTap,
-    this.color,
-  });
+  const SectionCard({super.key, required this.child, this.onTap, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +14,7 @@ class SectionCard extends StatelessWidget {
       color: color,
       child: InkWell(
         onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: child,
-        ),
+        child: Padding(padding: const EdgeInsets.all(16), child: child),
       ),
     );
   }

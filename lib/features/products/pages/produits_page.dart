@@ -104,8 +104,10 @@ class _ProduitsPageState extends State<ProduitsPage>
 
       // Load from Supabase
       final produitsMaps = await _productsRepo.getAll();
-      debugPrint('[ProduitsPage] Got ${produitsMaps.length} products from repository');
-      
+      debugPrint(
+        '[ProduitsPage] Got ${produitsMaps.length} products from repository',
+      );
+
       final produits = <Produit>[];
       for (final map in produitsMaps) {
         try {
@@ -117,14 +119,18 @@ class _ProduitsPageState extends State<ProduitsPage>
           debugPrint('[ProduitsPage] Product map: $map');
         }
       }
-      
-      debugPrint('[ProduitsPage] Loaded ${produits.length} products from Supabase (parsed successfully)');
+
+      debugPrint(
+        '[ProduitsPage] Loaded ${produits.length} products from Supabase (parsed successfully)',
+      );
       if (mounted) {
         setState(() {
           _produits = produits;
           _isLoading = false;
         });
-        debugPrint('[ProduitsPage] Updated _produits list with ${_produits.length} items');
+        debugPrint(
+          '[ProduitsPage] Updated _produits list with ${_produits.length} items',
+        );
       } else {
         debugPrint('[ProduitsPage] Widget not mounted, skipping setState');
       }
@@ -135,8 +141,10 @@ class _ProduitsPageState extends State<ProduitsPage>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  'Erreur: ${e is AppException ? e.message : e.toString()}')),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
+          ),
         );
       }
     }
@@ -144,9 +152,9 @@ class _ProduitsPageState extends State<ProduitsPage>
 
   Future<void> _ajouterProduit() async {
     if (!_isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Network required')));
       return;
     }
 
@@ -224,39 +232,40 @@ class _ProduitsPageState extends State<ProduitsPage>
 
     if (confirmed == true) {
       if (!_isOnline) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Network required')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Network required')));
         return;
       }
 
       try {
         // Get product name before deletion for audit log
-        final produit = _produits.firstWhere((p) => p.id == id, orElse: () => _produits.first);
+        final produit = _produits.firstWhere(
+          (p) => p.id == id,
+          orElse: () => _produits.first,
+        );
         final productName = produit.nom;
-        
+
         await _productsRepo.deleteProduct(id);
-        
+
         // Create audit log entry
         try {
           final orgRepo = OrganizationRepository();
           final orgId = await orgRepo.getOrCreateOrganization();
-          
+
           await _auditLogRepo.create(
             organizationId: orgId,
             operationType: 'product',
             operationId: id,
             action: 'delete',
             description: 'Suppression du produit "$productName"',
-            metadata: {
-              'product_name': productName,
-            },
+            metadata: {'product_name': productName},
           );
         } catch (e) {
           debugPrint('[ProduitsPage] Error creating audit log: $e');
           // Don't fail the deletion if audit log fails
         }
-        
+
         if (mounted) {
           _loadProduits(forceRefresh: true);
           ScaffoldMessenger.of(context).showSnackBar(
@@ -343,8 +352,9 @@ class _ProduitsPageState extends State<ProduitsPage>
                     final DateTime? picked = await showDatePicker(
                       context: context,
                       initialDate: selectedDateFabrication,
-                      firstDate:
-                          DateTime.now().subtract(const Duration(days: 30)),
+                      firstDate: DateTime.now().subtract(
+                        const Duration(days: 30),
+                      ),
                       lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
                     if (picked != null) {
@@ -426,8 +436,9 @@ class _ProduitsPageState extends State<ProduitsPage>
 
                   // Recharger les produits et imprimer
                   await _loadProduits();
-                  final updatedProduit =
-                      _produits.firstWhere((p) => p.id == produit.id);
+                  final updatedProduit = _produits.firstWhere(
+                    (p) => p.id == produit.id,
+                  );
                   await _printEtiquette(updatedProduit);
                 }
               },
@@ -459,8 +470,9 @@ class _ProduitsPageState extends State<ProduitsPage>
                 padding: const pw.EdgeInsets.all(10),
                 decoration: pw.BoxDecoration(
                   color: PdfColors.blue,
-                  borderRadius:
-                      const pw.BorderRadius.all(pw.Radius.circular(8)),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(8),
+                  ),
                 ),
                 child: pw.Text(
                   'ÉTIQUETTE PRODUIT',
@@ -476,19 +488,29 @@ class _ProduitsPageState extends State<ProduitsPage>
 
               // Informations du produit
               _buildInfoRow('Produit:', produit.nom),
-              _buildInfoRow('Date fabrication:',
-                  DateFormat('dd/MM/yyyy').format(produit.dateFabrication)),
-              if (produit.heurePreparation != null)
-                _buildInfoRow('Heure préparation:',
-                    DateFormat('HH:mm').format(produit.heurePreparation!)),
               _buildInfoRow(
-                  'DLC:', DateFormat('dd/MM/yyyy').format(dlcActuelle)),
+                'Date fabrication:',
+                DateFormat('dd/MM/yyyy').format(produit.dateFabrication),
+              ),
+              if (produit.heurePreparation != null)
+                _buildInfoRow(
+                  'Heure préparation:',
+                  DateFormat('HH:mm').format(produit.heurePreparation!),
+                ),
+              _buildInfoRow(
+                'DLC:',
+                DateFormat('dd/MM/yyyy').format(dlcActuelle),
+              ),
               if (produit.dluo != null)
                 _buildInfoRow(
-                    'DLUO:', DateFormat('dd/MM/yyyy').format(produit.dluo!)),
+                  'DLUO:',
+                  DateFormat('dd/MM/yyyy').format(produit.dluo!),
+                ),
               _buildInfoRow('Lot:', produit.lot ?? ''),
               _buildInfoRow(
-                  'Poids:', '${(produit.poids ?? 0.0).toStringAsFixed(2)} kg'),
+                'Poids:',
+                '${(produit.poids ?? 0.0).toStringAsFixed(2)} kg',
+              ),
               if (produit.preparateur != null)
                 _buildInfoRow('Préparateur:', produit.preparateur!),
 
@@ -500,8 +522,9 @@ class _ProduitsPageState extends State<ProduitsPage>
                 padding: const pw.EdgeInsets.all(10),
                 decoration: pw.BoxDecoration(
                   border: pw.Border.all(color: PdfColors.grey),
-                  borderRadius:
-                      const pw.BorderRadius.all(pw.Radius.circular(4)),
+                  borderRadius: const pw.BorderRadius.all(
+                    pw.Radius.circular(4),
+                  ),
                 ),
                 child: pw.Text(
                   'Code: ${produit.lot ?? ''}-${DateFormat('ddMMyyyy').format(dlcActuelle)}',
@@ -515,7 +538,8 @@ class _ProduitsPageState extends State<ProduitsPage>
       ),
     );
     await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => pdf.save());
+      onLayout: (PdfPageFormat format) async => pdf.save(),
+    );
   }
 
   pw.Widget _buildInfoRow(String label, String value) {
@@ -532,10 +556,7 @@ class _ProduitsPageState extends State<ProduitsPage>
             ),
           ),
           pw.Expanded(
-            child: pw.Text(
-              value,
-              style: const pw.TextStyle(fontSize: 10),
-            ),
+            child: pw.Text(value, style: const pw.TextStyle(fontSize: 10)),
           ),
         ],
       ),
@@ -554,12 +575,11 @@ class _ProduitsPageState extends State<ProduitsPage>
         ),
         child: QuickPreparationForm(
           produit: produit,
-          onValidate:
-              (lot, poids, preparateur, dateFabrication, surgeler) async {
+          onValidate: (lot, poids, preparateur, dateFabrication, surgeler) async {
             if (!_isOnline) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Network required')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Network required')));
               return;
             }
             // Mettre à jour le produit avec les détails de préparation
@@ -596,18 +616,16 @@ class _ProduitsPageState extends State<ProduitsPage>
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF4CAF50),
-            Color(0xFF66BB6A),
-            Color(0xFF81C784),
-          ],
+          colors: [Color(0xFF4CAF50), Color(0xFF66BB6A), Color(0xFF81C784)],
         ),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: Text('Nouveau Produit',
-              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+          title: Text(
+            'Nouveau Produit',
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           foregroundColor: Colors.white,
@@ -615,8 +633,9 @@ class _ProduitsPageState extends State<ProduitsPage>
         body: Card(
           margin: const EdgeInsets.all(16),
           elevation: 8,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Form(
@@ -631,8 +650,11 @@ class _ProduitsPageState extends State<ProduitsPage>
                         CircleAvatar(
                           radius: 25,
                           backgroundColor: Colors.green.shade100,
-                          child: Icon(Icons.inventory,
-                              color: Colors.green.shade700, size: 30),
+                          child: Icon(
+                            Icons.inventory,
+                            color: Colors.green.shade700,
+                            size: 30,
+                          ),
                         ),
                         const SizedBox(width: 16),
                         Expanded(
@@ -667,10 +689,13 @@ class _ProduitsPageState extends State<ProduitsPage>
                       style: GoogleFonts.montserrat(),
                       decoration: InputDecoration(
                         labelText: 'Nom du produit *',
-                        prefixIcon:
-                            Icon(Icons.inventory, color: Colors.green.shade600),
+                        prefixIcon: Icon(
+                          Icons.inventory,
+                          color: Colors.green.shade600,
+                        ),
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.green.shade50,
                       ),
@@ -688,10 +713,13 @@ class _ProduitsPageState extends State<ProduitsPage>
                       decoration: InputDecoration(
                         labelText: 'DLC en +n jours *',
                         hintText: 'Ex: 3 pour DLC = +3 jours',
-                        prefixIcon:
-                            Icon(Icons.add_circle, color: Colors.blue.shade600),
+                        prefixIcon: Icon(
+                          Icons.add_circle,
+                          color: Colors.blue.shade600,
+                        ),
                         border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         filled: true,
                         fillColor: Colors.blue.shade50,
                       ),
@@ -758,7 +786,8 @@ class _ProduitsPageState extends State<ProduitsPage>
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         elevation: 4,
                       ),
                       child: Text(
@@ -789,18 +818,16 @@ class _ProduitsPageState extends State<ProduitsPage>
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            Color(0xFF2196F3),
-            Color(0xFF42A5F5),
-            Color(0xFF64B5F6),
-          ],
+          colors: [Color(0xFF2196F3), Color(0xFF42A5F5), Color(0xFF64B5F6)],
         ),
       ),
       child: Scaffold(
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: Text('Liste des Produits',
-              style: GoogleFonts.montserrat(fontWeight: FontWeight.bold)),
+          title: Text(
+            'Liste des Produits',
+            style: GoogleFonts.montserrat(fontWeight: FontWeight.bold),
+          ),
           backgroundColor: Colors.transparent,
           elevation: 0,
           foregroundColor: Colors.white,
@@ -808,8 +835,9 @@ class _ProduitsPageState extends State<ProduitsPage>
         body: Card(
           margin: const EdgeInsets.all(16),
           elevation: 8,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
           child: SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: SingleChildScrollView(
@@ -819,33 +847,54 @@ class _ProduitsPageState extends State<ProduitsPage>
                 columnSpacing: 20,
                 columns: [
                   DataColumn(
-                    label: Text('Nom',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      'Nom',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   DataColumn(
-                    label: Text('Type',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      'Type',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   DataColumn(
-                    label: Text('DLC',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      'DLC',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   DataColumn(
-                    label: Text('Détails',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      'Détails',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   DataColumn(
-                    label: Text('Actions',
-                        style: GoogleFonts.montserrat(
-                            fontSize: 14, fontWeight: FontWeight.bold)),
+                    label: Text(
+                      'Actions',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 ],
                 rows: _produits.map((produit) {
-                  final isExpired = produit.dlcCalculee != null &&
+                  final isExpired =
+                      produit.dlcCalculee != null &&
                       produit.dlcCalculee!.isBefore(DateTime.now());
                   final hasDetails =
                       produit.lot != null && produit.poids != null;
@@ -856,37 +905,57 @@ class _ProduitsPageState extends State<ProduitsPage>
                         Text(
                           produit.nom,
                           style: GoogleFonts.montserrat(
-                              fontSize: 14, fontWeight: FontWeight.w600),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       DataCell(
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
-                            color: Color(int.parse(
-                                    (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex).substring(1),
-                                    radix: 16) +
-                                0xFF000000)
-                                .withOpacity(0.1),
+                            color: Color(
+                              int.parse(
+                                    (produit.typeProduit?.couleurHex ??
+                                            TypeProduit.fini.couleurHex)
+                                        .substring(1),
+                                    radix: 16,
+                                  ) +
+                                  0xFF000000,
+                            ).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: Color(int.parse(
-                                      (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex).substring(1),
-                                      radix: 16) +
-                                  0xFF000000),
+                              color: Color(
+                                int.parse(
+                                      (produit.typeProduit?.couleurHex ??
+                                              TypeProduit.fini.couleurHex)
+                                          .substring(1),
+                                      radix: 16,
+                                    ) +
+                                    0xFF000000,
+                              ),
                               width: 1.5,
                             ),
                           ),
                           child: Text(
-                            _getTypeProduitText(produit.typeProduit ?? TypeProduit.fini),
+                            _getTypeProduitText(
+                              produit.typeProduit ?? TypeProduit.fini,
+                            ),
                             style: GoogleFonts.montserrat(
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
-                              color: Color(int.parse(
-                                      (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex).substring(1),
-                                      radix: 16) +
-                                  0xFF000000),
+                              color: Color(
+                                int.parse(
+                                      (produit.typeProduit?.couleurHex ??
+                                              TypeProduit.fini.couleurHex)
+                                          .substring(1),
+                                      radix: 16,
+                                    ) +
+                                    0xFF000000,
+                              ),
                             ),
                           ),
                         ),
@@ -894,7 +963,9 @@ class _ProduitsPageState extends State<ProduitsPage>
                       DataCell(
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: isExpired
                                 ? Colors.red.shade100
@@ -911,8 +982,9 @@ class _ProduitsPageState extends State<ProduitsPage>
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                DateFormat('dd/MM/yyyy').format(
-                                    produit.dlcCalculee ?? DateTime.now()),
+                                DateFormat(
+                                  'dd/MM/yyyy',
+                                ).format(produit.dlcCalculee ?? DateTime.now()),
                                 style: GoogleFonts.montserrat(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
@@ -936,7 +1008,9 @@ class _ProduitsPageState extends State<ProduitsPage>
                       DataCell(
                         Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 4),
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           decoration: BoxDecoration(
                             color: hasDetails
                                 ? Colors.green.shade100
@@ -965,20 +1039,29 @@ class _ProduitsPageState extends State<ProduitsPage>
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
-                              icon: Icon(Icons.fastfood,
-                                  size: 24, color: Colors.orange.shade600),
+                              icon: Icon(
+                                Icons.fastfood,
+                                size: 24,
+                                color: Colors.orange.shade600,
+                              ),
                               tooltip: 'Préparation rapide',
                               onPressed: () => _showQuickPreparation(produit),
                             ),
                             IconButton(
-                              icon: Icon(Icons.print,
-                                  size: 24, color: Colors.blue.shade600),
+                              icon: Icon(
+                                Icons.print,
+                                size: 24,
+                                color: Colors.blue.shade600,
+                              ),
                               tooltip: 'Imprimer étiquette',
                               onPressed: () => _imprimerEtiquette(produit),
                             ),
                             IconButton(
-                              icon: Icon(Icons.delete,
-                                  size: 24, color: Colors.red.shade600),
+                              icon: Icon(
+                                Icons.delete,
+                                size: 24,
+                                color: Colors.red.shade600,
+                              ),
                               tooltip: 'Supprimer',
                               onPressed: () => _supprimerProduit(produit.id),
                             ),
@@ -998,7 +1081,9 @@ class _ProduitsPageState extends State<ProduitsPage>
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('[ProduitsPage] build() called - _produits.length = ${_produits.length}, _isLoading = $_isLoading');
+    debugPrint(
+      '[ProduitsPage] build() called - _produits.length = ${_produits.length}, _isLoading = $_isLoading',
+    );
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -1020,23 +1105,20 @@ class _ProduitsPageState extends State<ProduitsPage>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.inventory_2_outlined,
-                      size: 64, color: Colors.grey.shade400),
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 64,
+                    color: Colors.grey.shade400,
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'Aucun produit',
-                    style: TextStyle(
-                      fontSize: 18,
-                      color: Colors.grey.shade600,
-                    ),
+                    style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Ajoutez votre premier produit',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey.shade500,
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
                   ),
                   const SizedBox(height: 24),
                   ElevatedButton.icon(
@@ -1056,13 +1138,17 @@ class _ProduitsPageState extends State<ProduitsPage>
               itemBuilder: (context, index) {
                 final produit = _produits[index];
                 return Card(
-                  margin:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: Colors.purple.shade100,
-                      child:
-                          Icon(Icons.inventory, color: Colors.purple.shade600),
+                      child: Icon(
+                        Icons.inventory,
+                        color: Colors.purple.shade600,
+                      ),
                     ),
                     title: Text(
                       produit.nom,
@@ -1075,34 +1161,49 @@ class _ProduitsPageState extends State<ProduitsPage>
                           children: [
                             Container(
                               padding: const EdgeInsets.symmetric(
-                                  horizontal: 6, vertical: 2),
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
-                                color: Color(int.parse(
-                                        (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex)
+                                color: Color(
+                                  int.parse(
+                                        (produit.typeProduit?.couleurHex ??
+                                                TypeProduit.fini.couleurHex)
                                             .substring(1),
-                                        radix: 16) +
-                                    0xFF000000)
-                                    .withOpacity(0.1),
+                                        radix: 16,
+                                      ) +
+                                      0xFF000000,
+                                ).withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
-                                  color: Color(int.parse(
-                                          (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex)
+                                  color: Color(
+                                    int.parse(
+                                          (produit.typeProduit?.couleurHex ??
+                                                  TypeProduit.fini.couleurHex)
                                               .substring(1),
-                                          radix: 16) +
-                                      0xFF000000),
+                                          radix: 16,
+                                        ) +
+                                        0xFF000000,
+                                  ),
                                   width: 1,
                                 ),
                               ),
                               child: Text(
-                                _getTypeProduitText(produit.typeProduit ?? TypeProduit.fini),
+                                _getTypeProduitText(
+                                  produit.typeProduit ?? TypeProduit.fini,
+                                ),
                                 style: TextStyle(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
-                                  color: Color(int.parse(
-                                          (produit.typeProduit?.couleurHex ?? TypeProduit.fini.couleurHex)
+                                  color: Color(
+                                    int.parse(
+                                          (produit.typeProduit?.couleurHex ??
+                                                  TypeProduit.fini.couleurHex)
                                               .substring(1),
-                                          radix: 16) +
-                                      0xFF000000),
+                                          radix: 16,
+                                        ) +
+                                        0xFF000000,
+                                  ),
                                 ),
                               ),
                             ),
@@ -1160,7 +1261,7 @@ class _ProduitsPageState extends State<ProduitsPage>
     List<Supplier> localSuppliers = [];
     final supplierRepo = SupplierRepository();
     final supplierProductRepo = SupplierProductRepository();
-    
+
     // Load suppliers
     try {
       localSuppliers = await supplierRepo.getAll(includeOccasional: null);
@@ -1206,16 +1307,13 @@ class _ProduitsPageState extends State<ProduitsPage>
                     localSelectedType == TypeProduit.recu
                         ? 'Produit reçu d\'un fournisseur'
                         : localSelectedType == TypeProduit.fini
-                            ? 'Produit vendu directement aux clients'
-                            : localSelectedType == TypeProduit.prepare
-                                ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
-                                : localSelectedType == TypeProduit.ouverture
-                                    ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
-                                    : 'Produit décongelé pour utilisation',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
+                        ? 'Produit vendu directement aux clients'
+                        : localSelectedType == TypeProduit.prepare
+                        ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
+                        : localSelectedType == TypeProduit.ouverture
+                        ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
+                        : 'Produit décongelé pour utilisation',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                   SizedBox(height: 16),
                   GridView.count(
@@ -1230,20 +1328,20 @@ class _ProduitsPageState extends State<ProduitsPage>
                       final color = type == TypeProduit.recu
                           ? Colors.purple
                           : type == TypeProduit.fini
-                              ? Colors.green
-                              : type == TypeProduit.prepare
-                                  ? Colors.orange
-                                  : type == TypeProduit.ouverture
-                                      ? Colors.red
-                                      : Colors.blue;
+                          ? Colors.green
+                          : type == TypeProduit.prepare
+                          ? Colors.orange
+                          : type == TypeProduit.ouverture
+                          ? Colors.red
+                          : Colors.blue;
 
                       return InkWell(
                         onTap: () {
                           setDialogState(() {
                             localSelectedType = type;
                             // Remplir automatiquement la DLC selon le type
-                            _dlcJoursController.text =
-                                type.dlcParDefaut.toString();
+                            _dlcJoursController.text = type.dlcParDefaut
+                                .toString();
                             // Clear supplier if not "reçu"
                             if (type != TypeProduit.recu) {
                               localSelectedSupplierId = null;
@@ -1256,9 +1354,7 @@ class _ProduitsPageState extends State<ProduitsPage>
                         child: AnimatedContainer(
                           duration: Duration(milliseconds: 200),
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? color.shade100
-                                : Colors.white,
+                            color: isSelected ? color.shade100 : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isSelected
@@ -1298,12 +1394,12 @@ class _ProduitsPageState extends State<ProduitsPage>
                                     type == TypeProduit.recu
                                         ? Icons.local_shipping
                                         : type == TypeProduit.fini
-                                            ? Icons.shopping_cart
-                                            : type == TypeProduit.prepare
-                                                ? Icons.build
-                                                : type == TypeProduit.ouverture
-                                                    ? Icons.open_in_new
-                                                    : Icons.ac_unit,
+                                        ? Icons.shopping_cart
+                                        : type == TypeProduit.prepare
+                                        ? Icons.build
+                                        : type == TypeProduit.ouverture
+                                        ? Icons.open_in_new
+                                        : Icons.ac_unit,
                                     color: color.shade700,
                                     size: 24,
                                   ),
@@ -1319,12 +1415,12 @@ class _ProduitsPageState extends State<ProduitsPage>
                                         type == TypeProduit.recu
                                             ? 'Produit reçu'
                                             : type == TypeProduit.fini
-                                                ? 'Produit fini'
-                                                : type == TypeProduit.prepare
-                                                    ? 'Produit préparé'
-                                                    : type == TypeProduit.ouverture
-                                                        ? 'Ouverture'
-                                                        : 'Décongélation',
+                                            ? 'Produit fini'
+                                            : type == TypeProduit.prepare
+                                            ? 'Produit préparé'
+                                            : type == TypeProduit.ouverture
+                                            ? 'Ouverture'
+                                            : 'Décongélation',
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
@@ -1425,7 +1521,7 @@ class _ProduitsPageState extends State<ProduitsPage>
                     ),
                     maxLines: 2,
                     inputFormatters: [
-                      DescriptionInputFormatter(maxLength: 200)
+                      DescriptionInputFormatter(maxLength: 200),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -1457,7 +1553,7 @@ class _ProduitsPageState extends State<ProduitsPage>
                       helperText: 'Ex: gluten, lait, œufs, etc.',
                     ),
                     inputFormatters: [
-                      DescriptionInputFormatter(maxLength: 100)
+                      DescriptionInputFormatter(maxLength: 100),
                     ],
                   ),
                 ],
@@ -1477,16 +1573,19 @@ class _ProduitsPageState extends State<ProduitsPage>
                   final dlcSurgelation =
                       int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
                   // Validate supplier for "reçu" products
-                  if (localSelectedType == TypeProduit.recu && localSelectedSupplierId == null) {
+                  if (localSelectedType == TypeProduit.recu &&
+                      localSelectedSupplierId == null) {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(
-                        content: Text('Veuillez sélectionner un fournisseur pour un produit reçu'),
+                        content: Text(
+                          'Veuillez sélectionner un fournisseur pour un produit reçu',
+                        ),
                         backgroundColor: Colors.orange,
                       ),
                     );
                     return;
                   }
-                  
+
                   Navigator.pop(context, {
                     'nom': _newProduitController.text.trim(),
                     'typeProduit': localSelectedType,
@@ -1501,8 +1600,8 @@ class _ProduitsPageState extends State<ProduitsPage>
                         : null,
                     'origineViande':
                         _origineViandeController.text.trim().isNotEmpty
-                            ? _origineViandeController.text.trim()
-                            : null,
+                        ? _origineViandeController.text.trim()
+                        : null,
                     'allergenes': _allergenesController.text.trim().isNotEmpty
                         ? _allergenesController.text.trim()
                         : null,
@@ -1518,16 +1617,17 @@ class _ProduitsPageState extends State<ProduitsPage>
 
     if (result != null) {
       if (!_isOnline) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Network required')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Network required')));
         return;
       }
 
       try {
-        final typeProduit = result['typeProduit'] as TypeProduit? ?? TypeProduit.fini;
+        final typeProduit =
+            result['typeProduit'] as TypeProduit? ?? TypeProduit.fini;
         final supplierId = result['supplierId'] as String?;
-        
+
         final productData = await _productsRepo.createProduct(
           nom: result['nom']?.toString() ?? '',
           typeProduit: typeProduit.name,
@@ -1549,7 +1649,9 @@ class _ProduitsPageState extends State<ProduitsPage>
               supplierId: supplierId,
               productId: productData['id'] as String,
             );
-            debugPrint('[ProduitsPage] Linked product to supplier: $supplierId');
+            debugPrint(
+              '[ProduitsPage] Linked product to supplier: $supplierId',
+            );
           } catch (e) {
             debugPrint('[ProduitsPage] Error linking to supplier: $e');
             // Don't fail the creation if linking fails
@@ -1560,7 +1662,7 @@ class _ProduitsPageState extends State<ProduitsPage>
         try {
           final orgRepo = OrganizationRepository();
           final orgId = await orgRepo.getOrCreateOrganization();
-          
+
           await _auditLogRepo.create(
             organizationId: orgId,
             operationType: 'product',
@@ -1580,10 +1682,12 @@ class _ProduitsPageState extends State<ProduitsPage>
 
         // Wait a bit to ensure Supabase has processed the insert
         await Future.delayed(const Duration(milliseconds: 500));
-        
+
         await _loadProduits(forceRefresh: true);
-        
-        debugPrint('[ProduitsPage] After product creation, _produits.length = ${_produits.length}');
+
+        debugPrint(
+          '[ProduitsPage] After product creation, _produits.length = ${_produits.length}',
+        );
 
         _newProduitController.clear();
         _dlcJoursController.clear();

@@ -163,19 +163,25 @@ class _NCDetailPageState extends State<NCDetailPage> {
       _causes.clear();
       _causes.addAll(nc.causes ?? []);
       for (final cause in _causes) {
-        _causeControllers[cause.id] = TextEditingController(text: cause.causeText);
+        _causeControllers[cause.id] = TextEditingController(
+          text: cause.causeText,
+        );
       }
 
       _solutions.clear();
       _solutions.addAll(nc.solutions ?? []);
       for (final solution in _solutions) {
-        _solutionControllers[solution.id] = TextEditingController(text: solution.solutionText);
+        _solutionControllers[solution.id] = TextEditingController(
+          text: solution.solutionText,
+        );
       }
 
       _actions.clear();
       _actions.addAll(nc.actions ?? []);
       for (final action in _actions) {
-        _actionControllers[action.id] = TextEditingController(text: action.actionText);
+        _actionControllers[action.id] = TextEditingController(
+          text: action.actionText,
+        );
         _actionResponsibleIds[action.id] = action.responsibleEmployeeId;
         _actionTargetDates[action.id] = action.targetDate;
       }
@@ -183,8 +189,12 @@ class _NCDetailPageState extends State<NCDetailPage> {
       _verifications.clear();
       _verifications.addAll(nc.verifications ?? []);
       for (final verification in _verifications) {
-        _verificationControllers[verification.id] = TextEditingController(text: verification.actionVerified ?? '');
-        _verificationResultControllers[verification.id] = TextEditingController(text: verification.result ?? '');
+        _verificationControllers[verification.id] = TextEditingController(
+          text: verification.actionVerified ?? '',
+        );
+        _verificationResultControllers[verification.id] = TextEditingController(
+          text: verification.result ?? '',
+        );
       }
 
       _attachments.clear();
@@ -194,7 +204,9 @@ class _NCDetailPageState extends State<NCDetailPage> {
 
   void _applyPrefillData(Map<String, dynamic> prefill) {
     if (prefill['object_category'] != null) {
-      _objectCategory = NCObjectCategory.fromString(prefill['object_category'] as String);
+      _objectCategory = NCObjectCategory.fromString(
+        prefill['object_category'] as String,
+      );
     }
     if (prefill['description'] != null) {
       _descriptionController.text = prefill['description'] as String;
@@ -251,16 +263,20 @@ class _NCDetailPageState extends State<NCDetailPage> {
     setState(() => _isSaving = true);
     try {
       String ncId;
-      
+
       if (_nc == null) {
         // Create new NC
         final orgRepo = OrganizationRepository();
         final orgId = await orgRepo.getOrCreateOrganization();
 
         // Build source payload from prefill or empty
-        final sourcePayload = widget.prefillData?['source_payload'] as Map<String, dynamic>? ?? {};
+        final sourcePayload =
+            widget.prefillData?['source_payload'] as Map<String, dynamic>? ??
+            {};
         final sourceType = widget.prefillData?['source_type'] != null
-            ? NCSourceType.fromString(widget.prefillData!['source_type'] as String)
+            ? NCSourceType.fromString(
+                widget.prefillData!['source_type'] as String,
+              )
             : null;
         final sourceTable = widget.prefillData?['source_table'] as String?;
         final sourceId = widget.prefillData?['source_id'] as String?;
@@ -275,14 +291,15 @@ class _NCDetailPageState extends State<NCDetailPage> {
             'status': _status.value,
             'detection_date': _detectionDate.toIso8601String(),
             'opened_by_employee_id': _openedByEmployeeId,
-            'opened_by_role_service': _openedByRoleServiceController.text.isEmpty
+            'opened_by_role_service':
+                _openedByRoleServiceController.text.isEmpty
                 ? null
                 : _openedByRoleServiceController.text,
             'object_category': _objectCategory.value,
             'object_other': _objectCategory == NCObjectCategory.autre
                 ? _objectOtherController.text.isEmpty
-                    ? null
-                    : _objectOtherController.text
+                      ? null
+                      : _objectOtherController.text
                 : null,
             'product_id': _productId,
             'product_name': _productName,
@@ -292,11 +309,13 @@ class _NCDetailPageState extends State<NCDetailPage> {
                 ? null
                 : _sanitaryImpactController.text,
             'immediate_action_done': _immediateActionDone,
-            'immediate_action_detail': _immediateActionDetailController.text.isEmpty
+            'immediate_action_detail':
+                _immediateActionDetailController.text.isEmpty
                 ? null
                 : _immediateActionDetailController.text,
             'immediate_action_done_by': _immediateActionDoneBy,
-            'immediate_action_done_at': _immediateActionDoneAt?.toIso8601String(),
+            'immediate_action_done_at': _immediateActionDoneAt
+                ?.toIso8601String(),
             'rq_date': _rqDate?.toIso8601String(),
             'rq_classification': _rqClassificationController.text.isEmpty
                 ? null
@@ -316,8 +335,8 @@ class _NCDetailPageState extends State<NCDetailPage> {
           objectCategory: _objectCategory,
           objectOther: _objectCategory == NCObjectCategory.autre
               ? _objectOtherController.text.isEmpty
-                  ? null
-                  : _objectOtherController.text
+                    ? null
+                    : _objectOtherController.text
               : null,
           productId: _productId,
           productName: _productName,
@@ -443,7 +462,8 @@ class _NCDetailPageState extends State<NCDetailPage> {
       // Save verifications
       for (final verification in _verifications) {
         final actionController = _verificationControllers[verification.id];
-        final resultController = _verificationResultControllers[verification.id];
+        final resultController =
+            _verificationResultControllers[verification.id];
         if (actionController != null && actionController.text.isNotEmpty) {
           try {
             if (!verification.id.startsWith('temp_')) {
@@ -510,9 +530,9 @@ class _NCDetailPageState extends State<NCDetailPage> {
       final path = await exportService.exportSingleNcToPdf(_nc!);
       if (mounted) {
         await exportService.shareExport(path);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fiche exportée en PDF')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Fiche exportée en PDF')));
       }
     } catch (e) {
       if (mounted) ErrorHandler.showError(context, e);
@@ -639,11 +659,13 @@ class _NCDetailPageState extends State<NCDetailPage> {
                 border: OutlineInputBorder(),
               ),
               items: [
-                const DropdownMenuItem(value: null, child: Text('Sélectionner...')),
-                ..._employees.map((e) => DropdownMenuItem(
-                      value: e.id,
-                      child: Text(e.fullName),
-                    )),
+                const DropdownMenuItem(
+                  value: null,
+                  child: Text('Sélectionner...'),
+                ),
+                ..._employees.map(
+                  (e) => DropdownMenuItem(value: e.id, child: Text(e.fullName)),
+                ),
               ],
               onChanged: (value) => setState(() => _openedByEmployeeId = value),
             ),
@@ -666,7 +688,9 @@ class _NCDetailPageState extends State<NCDetailPage> {
             ),
             const SizedBox(height: 16),
             TextFormField(
-              initialValue: DateFormat('dd/MM/yyyy HH:mm').format(_detectionDate),
+              initialValue: DateFormat(
+                'dd/MM/yyyy HH:mm',
+              ).format(_detectionDate),
               decoration: const InputDecoration(
                 labelText: 'Date de détection',
                 border: OutlineInputBorder(),
@@ -680,10 +704,14 @@ class _NCDetailPageState extends State<NCDetailPage> {
                 labelText: 'Catégorie d\'objet *',
                 border: OutlineInputBorder(),
               ),
-              items: NCObjectCategory.values.map((cat) => DropdownMenuItem(
-                    value: cat,
-                    child: Text(cat.displayName),
-                  )).toList(),
+              items: NCObjectCategory.values
+                  .map(
+                    (cat) => DropdownMenuItem(
+                      value: cat,
+                      child: Text(cat.displayName),
+                    ),
+                  )
+                  .toList(),
               onChanged: (value) {
                 if (value != null) {
                   setState(() => _objectCategory = value);
@@ -733,10 +761,9 @@ class _NCDetailPageState extends State<NCDetailPage> {
               ),
               items: [
                 const DropdownMenuItem(value: null, child: Text('Aucun')),
-                ..._products.map((p) => DropdownMenuItem(
-                      value: p.id,
-                      child: Text(p.nom),
-                    )),
+                ..._products.map(
+                  (p) => DropdownMenuItem(value: p.id, child: Text(p.nom)),
+                ),
               ],
               onChanged: (value) {
                 setState(() {
@@ -803,7 +830,8 @@ class _NCDetailPageState extends State<NCDetailPage> {
             SwitchListTile(
               title: const Text('Action immédiate effectuée'),
               value: _immediateActionDone,
-              onChanged: (value) => setState(() => _immediateActionDone = value),
+              onChanged: (value) =>
+                  setState(() => _immediateActionDone = value),
             ),
             if (_immediateActionDone) ...[
               const SizedBox(height: 16),
@@ -823,13 +851,17 @@ class _NCDetailPageState extends State<NCDetailPage> {
                   border: OutlineInputBorder(),
                 ),
                 items: [
-                  const DropdownMenuItem(value: null, child: Text('Sélectionner...')),
-                  ..._employees.map((e) => DropdownMenuItem(
-                        value: e.id,
-                        child: Text(e.fullName),
-                      )),
+                  const DropdownMenuItem(
+                    value: null,
+                    child: Text('Sélectionner...'),
+                  ),
+                  ..._employees.map(
+                    (e) =>
+                        DropdownMenuItem(value: e.id, child: Text(e.fullName)),
+                  ),
                 ],
-                onChanged: (value) => setState(() => _immediateActionDoneBy = value),
+                onChanged: (value) =>
+                    setState(() => _immediateActionDoneBy = value),
               ),
             ],
           ],
@@ -863,9 +895,11 @@ class _NCDetailPageState extends State<NCDetailPage> {
                 }
               },
               icon: const Icon(Icons.calendar_today),
-              label: Text(_rqDate != null
-                  ? DateFormat('dd/MM/yyyy').format(_rqDate!)
-                  : 'Sélectionner la date RQ'),
+              label: Text(
+                _rqDate != null
+                    ? DateFormat('dd/MM/yyyy').format(_rqDate!)
+                    : 'Sélectionner la date RQ',
+              ),
             ),
             const SizedBox(height: 16),
             TextFormField(
@@ -894,10 +928,7 @@ class _NCDetailPageState extends State<NCDetailPage> {
       headerBuilder: (context, isExpanded) => ListTile(
         title: const Text('5. Analyse des causes (5M)'),
         leading: const Icon(Icons.search),
-        trailing: IconButton(
-          icon: const Icon(Icons.add),
-          onPressed: _addCause,
-        ),
+        trailing: IconButton(icon: const Icon(Icons.add), onPressed: _addCause),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16),
@@ -917,7 +948,8 @@ class _NCDetailPageState extends State<NCDetailPage> {
   }
 
   Widget _buildCauseItem(NCCause cause, int index) {
-    final controller = _causeControllers[cause.id] ??
+    final controller =
+        _causeControllers[cause.id] ??
         TextEditingController(text: cause.causeText);
     _causeControllers[cause.id] = controller;
 
@@ -938,14 +970,20 @@ class _NCDetailPageState extends State<NCDetailPage> {
                       border: OutlineInputBorder(),
                       isDense: true,
                     ),
-                    items: NCCauseCategory.values.map((cat) => DropdownMenuItem(
-                          value: cat,
-                          child: Text(cat.displayName),
-                        )).toList(),
+                    items: NCCauseCategory.values
+                        .map(
+                          (cat) => DropdownMenuItem(
+                            value: cat,
+                            child: Text(cat.displayName),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (value) {
                       if (value != null) {
                         setState(() {
-                          final idx = _causes.indexWhere((c) => c.id == cause.id);
+                          final idx = _causes.indexWhere(
+                            (c) => c.id == cause.id,
+                          );
                           if (idx != -1) {
                             _causes[idx] = NCCause(
                               id: cause.id,
@@ -1060,7 +1098,8 @@ class _NCDetailPageState extends State<NCDetailPage> {
   }
 
   Widget _buildSolutionItem(NCSolution solution, int index) {
-    final controller = _solutionControllers[solution.id] ??
+    final controller =
+        _solutionControllers[solution.id] ??
         TextEditingController(text: solution.solutionText);
     _solutionControllers[solution.id] = controller;
 
@@ -1155,7 +1194,8 @@ class _NCDetailPageState extends State<NCDetailPage> {
   }
 
   Widget _buildActionItem(NCAction action, int index) {
-    final controller = _actionControllers[action.id] ??
+    final controller =
+        _actionControllers[action.id] ??
         TextEditingController(text: action.actionText);
     _actionControllers[action.id] = controller;
 
@@ -1186,11 +1226,16 @@ class _NCDetailPageState extends State<NCDetailPage> {
                       isDense: true,
                     ),
                     items: [
-                      const DropdownMenuItem(value: null, child: Text('Sélectionner...')),
-                      ..._employees.map((e) => DropdownMenuItem(
-                            value: e.id,
-                            child: Text(e.fullName),
-                          )),
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('Sélectionner...'),
+                      ),
+                      ..._employees.map(
+                        (e) => DropdownMenuItem(
+                          value: e.id,
+                          child: Text(e.fullName),
+                        ),
+                      ),
                     ],
                     onChanged: (value) {
                       setState(() => _actionResponsibleIds[action.id] = value);
@@ -1203,7 +1248,8 @@ class _NCDetailPageState extends State<NCDetailPage> {
                     onPressed: () async {
                       final date = await showDatePicker(
                         context: context,
-                        initialDate: _actionTargetDates[action.id] ?? DateTime.now(),
+                        initialDate:
+                            _actionTargetDates[action.id] ?? DateTime.now(),
                         firstDate: DateTime.now(),
                         lastDate: DateTime.now().add(const Duration(days: 365)),
                       );
@@ -1214,7 +1260,9 @@ class _NCDetailPageState extends State<NCDetailPage> {
                     icon: const Icon(Icons.calendar_today, size: 18),
                     label: Text(
                       _actionTargetDates[action.id] != null
-                          ? DateFormat('dd/MM/yyyy').format(_actionTargetDates[action.id]!)
+                          ? DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(_actionTargetDates[action.id]!)
                           : 'Date cible',
                     ),
                   ),
@@ -1228,20 +1276,27 @@ class _NCDetailPageState extends State<NCDetailPage> {
                       border: OutlineInputBorder(),
                       isDense: true,
                     ),
-                    items: NCActionStatus.values.map((status) => DropdownMenuItem(
-                          value: status,
-                          child: Text(status.displayName),
-                        )).toList(),
+                    items: NCActionStatus.values
+                        .map(
+                          (status) => DropdownMenuItem(
+                            value: status,
+                            child: Text(status.displayName),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (value) {
                       if (value != null) {
                         setState(() {
-                          final idx = _actions.indexWhere((a) => a.id == action.id);
+                          final idx = _actions.indexWhere(
+                            (a) => a.id == action.id,
+                          );
                           if (idx != -1) {
                             _actions[idx] = NCAction(
                               id: action.id,
                               nonConformityId: action.nonConformityId,
                               actionText: action.actionText,
-                              responsibleEmployeeId: action.responsibleEmployeeId,
+                              responsibleEmployeeId:
+                                  action.responsibleEmployeeId,
                               targetDate: action.targetDate,
                               status: value,
                               createdAt: action.createdAt,
@@ -1336,14 +1391,16 @@ class _NCDetailPageState extends State<NCDetailPage> {
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
-              ..._attachments.map((att) => ListTile(
-                    leading: const Icon(Icons.attachment),
-                    title: Text(att.fileName),
-                    trailing: IconButton(
-                      icon: const Icon(Icons.delete, color: Colors.red),
-                      onPressed: () => _removeAttachment(att.id),
-                    ),
-                  )),
+              ..._attachments.map(
+                (att) => ListTile(
+                  leading: const Icon(Icons.attachment),
+                  title: Text(att.fileName),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete, color: Colors.red),
+                    onPressed: () => _removeAttachment(att.id),
+                  ),
+                ),
+              ),
             ],
           ],
         ),
@@ -1352,11 +1409,13 @@ class _NCDetailPageState extends State<NCDetailPage> {
   }
 
   Widget _buildVerificationItem(NCVerification verification, int index) {
-    final actionController = _verificationControllers[verification.id] ??
+    final actionController =
+        _verificationControllers[verification.id] ??
         TextEditingController(text: verification.actionVerified ?? '');
     _verificationControllers[verification.id] = actionController;
 
-    final resultController = _verificationResultControllers[verification.id] ??
+    final resultController =
+        _verificationResultControllers[verification.id] ??
         TextEditingController(text: verification.result ?? '');
     _verificationResultControllers[verification.id] = resultController;
 
@@ -1386,15 +1445,22 @@ class _NCDetailPageState extends State<NCDetailPage> {
                       isDense: true,
                     ),
                     items: [
-                      const DropdownMenuItem(value: null, child: Text('Sélectionner...')),
-                      ..._employees.map((e) => DropdownMenuItem(
-                            value: e.id,
-                            child: Text(e.fullName),
-                          )),
+                      const DropdownMenuItem(
+                        value: null,
+                        child: Text('Sélectionner...'),
+                      ),
+                      ..._employees.map(
+                        (e) => DropdownMenuItem(
+                          value: e.id,
+                          child: Text(e.fullName),
+                        ),
+                      ),
                     ],
                     onChanged: (value) {
                       setState(() {
-                        final idx = _verifications.indexWhere((v) => v.id == verification.id);
+                        final idx = _verifications.indexWhere(
+                          (v) => v.id == verification.id,
+                        );
                         if (idx != -1) {
                           _verifications[idx] = NCVerification(
                             id: verification.id,
@@ -1418,19 +1484,23 @@ class _NCDetailPageState extends State<NCDetailPage> {
                     onPressed: () async {
                       final date = await showDatePicker(
                         context: context,
-                        initialDate: verification.verificationDate ?? DateTime.now(),
+                        initialDate:
+                            verification.verificationDate ?? DateTime.now(),
                         firstDate: DateTime(2020),
                         lastDate: DateTime.now(),
                       );
                       if (date != null) {
                         setState(() {
-                          final idx = _verifications.indexWhere((v) => v.id == verification.id);
+                          final idx = _verifications.indexWhere(
+                            (v) => v.id == verification.id,
+                          );
                           if (idx != -1) {
                             _verifications[idx] = NCVerification(
                               id: verification.id,
                               nonConformityId: verification.nonConformityId,
                               actionVerified: verification.actionVerified,
-                              responsibleEmployeeId: verification.responsibleEmployeeId,
+                              responsibleEmployeeId:
+                                  verification.responsibleEmployeeId,
                               result: verification.result,
                               verificationDate: date,
                               createdAt: verification.createdAt,
@@ -1444,7 +1514,9 @@ class _NCDetailPageState extends State<NCDetailPage> {
                     icon: const Icon(Icons.calendar_today, size: 18),
                     label: Text(
                       verification.verificationDate != null
-                          ? DateFormat('dd/MM/yyyy').format(verification.verificationDate!)
+                          ? DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(verification.verificationDate!)
                           : 'Date',
                     ),
                   ),
@@ -1518,4 +1590,3 @@ class _NCDetailPageState extends State<NCDetailPage> {
     }
   }
 }
-

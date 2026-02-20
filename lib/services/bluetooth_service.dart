@@ -47,8 +47,10 @@ class BluetoothService {
   }
 
   /// Se connecte à un appareil avec gestion d'erreurs robuste
-  Future<bool> connectToDevice(BluetoothDevice device,
-      {BuildContext? context}) async {
+  Future<bool> connectToDevice(
+    BluetoothDevice device, {
+    BuildContext? context,
+  }) async {
     if (_isConnecting) {
       debugPrint('Connexion déjà en cours...');
       return false;
@@ -74,7 +76,8 @@ class BluetoothService {
       // Se connecter à l'appareil
       await bluetooth.connect(device);
       await Future.delayed(
-          const Duration(seconds: 2)); // Attendre la stabilisation
+        const Duration(seconds: 2),
+      ); // Attendre la stabilisation
 
       // Vérifier si la connexion a réussi
       if (await isConnected()) {
@@ -82,15 +85,19 @@ class BluetoothService {
 
         if (context != null) {
           _showSuccessMessage(
-              context, 'Connecté à ${device.name ?? 'l\'imprimante'}');
+            context,
+            'Connecté à ${device.name ?? 'l\'imprimante'}',
+          );
         }
 
         debugPrint('Connexion réussie à ${device.name}');
         return true;
       } else {
         if (context != null) {
-          _showErrorMessage(context,
-              'Échec de la connexion à ${device.name ?? 'l\'imprimante'}');
+          _showErrorMessage(
+            context,
+            'Échec de la connexion à ${device.name ?? 'l\'imprimante'}',
+          );
         }
         return false;
       }
@@ -164,8 +171,11 @@ class BluetoothService {
   }
 
   /// Imprime plusieurs étiquettes avec gestion de la connexion
-  Future<bool> printMultipleLabels(String label, int count,
-      {BuildContext? context}) async {
+  Future<bool> printMultipleLabels(
+    String label,
+    int count, {
+    BuildContext? context,
+  }) async {
     try {
       if (!await isConnected()) {
         if (context != null) {

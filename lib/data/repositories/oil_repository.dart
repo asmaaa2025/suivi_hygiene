@@ -13,7 +13,7 @@ import '../models/friteuse.dart';
 /// Stub implementation to satisfy compilation
 class OilRepository {
   OilRepository({SupabaseClient? client})
-      : _client = client ?? Supabase.instance.client;
+    : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
 
@@ -21,8 +21,9 @@ class OilRepository {
   Future<List<Friteuse>> getAllFriteuses() async {
     try {
       final response = await _client.from('friteuses').select().order('nom');
-      final List<Map<String, dynamic>> list =
-          List<Map<String, dynamic>>.from(response);
+      final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
+        response,
+      );
       return list.map((json) => Friteuse.fromJson(json)).toList();
     } catch (e) {
       // Return empty list on error to prevent crashes

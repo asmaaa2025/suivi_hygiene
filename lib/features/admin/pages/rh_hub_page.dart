@@ -30,9 +30,9 @@ class RhHubPage extends StatelessWidget {
               Text(
                 'Gestion RH',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 24,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 24,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
@@ -74,4 +74,3 @@ class RhHubPage extends StatelessWidget {
     );
   }
 }
-

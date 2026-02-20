@@ -91,8 +91,10 @@ class NettoyageRepository {
             'remarque': remarque,
             'photo_url': photoUrl,
             'owner_id': user.id,
-            'employee_first_name': employeeFirstName, // Employee who performed the action
-            'employee_last_name': employeeLastName, // Employee who performed the action
+            'employee_first_name':
+                employeeFirstName, // Employee who performed the action
+            'employee_last_name':
+                employeeLastName, // Employee who performed the action
             // Note: created_by is a legacy column and may not be accessible via RLS
             // owner_id will be set automatically by the database default
           })
@@ -143,7 +145,11 @@ class NettoyageRepository {
   }
 
   /// Get all completed nettoyages (history)
-  Future<List<Nettoyage>> getAllCompleted({int? limit, DateTime? startDate, DateTime? endDate}) async {
+  Future<List<Nettoyage>> getAllCompleted({
+    int? limit,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
       final user = _client.auth.currentUser;
       if (user == null) return [];
@@ -153,17 +159,28 @@ class NettoyageRepository {
           .select()
           .eq('owner_id', user.id)
           .eq('done', true);
-      
+
       // Apply date filters if provided
       if (startDate != null) {
-        final startOfDay = DateTime(startDate.year, startDate.month, startDate.day);
+        final startOfDay = DateTime(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+        );
         query = query.gte('done_at', startOfDay.toIso8601String());
       }
       if (endDate != null) {
-        final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+        final endOfDay = DateTime(
+          endDate.year,
+          endDate.month,
+          endDate.day,
+          23,
+          59,
+          59,
+        );
         query = query.lte('done_at', endOfDay.toIso8601String());
       }
-      
+
       // Apply ordering and limit
       var finalQuery = query.order('done_at', ascending: false);
       if (limit != null) {
@@ -191,4 +208,3 @@ class NettoyageRepository {
     }
   }
 }
-

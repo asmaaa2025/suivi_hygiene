@@ -21,7 +21,7 @@ import '../../../../shared/widgets/section_card.dart';
 /// Enhanced reception form with fixed 10:00 time, non-conformity check
 class ReceptionFormPage extends StatefulWidget {
   final String? receptionId;
-  
+
   const ReceptionFormPage({super.key, this.receptionId});
 
   @override
@@ -34,7 +34,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
   final _temperatureController = TextEditingController();
   final _remarqueController = TextEditingController();
   final _supplierNameController = TextEditingController(); // For quick-add
-  
+
   final _receptionRepo = ReceptionRepository();
   final _supplierRepo = SupplierRepository();
   final _produitRepo = ProduitRepository();
@@ -42,25 +42,28 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
   final _auditLogRepo = AuditLogRepository();
   final _supplierProductRepo = SupplierProductRepository();
   final _employeeSessionService = EmployeeSessionService();
-  
+
   List<Supplier> _suppliers = [];
   List<Produit> _products = [];
   String? _selectedSupplierId;
   String? _selectedProductId;
   DateTime? _selectedDluo;
-  TimeOfDay _receptionTime = const TimeOfDay(hour: 10, minute: 0); // Default 10:00
+  TimeOfDay _receptionTime = const TimeOfDay(
+    hour: 10,
+    minute: 0,
+  ); // Default 10:00
   double? _temperature;
   String? _photoPath;
   bool _isLoading = false;
   bool _isLoadingData = true;
-  
+
   // Conformity checklist
   bool _temperatureChecked = false;
   bool _packagingChecked = false;
   bool _labelChecked = false;
   bool _dluoChecked = false;
   bool _allConformityChecked = false;
-  
+
   // Non-conformity state
   bool _showNonConformity = false;
   bool _temperatureNonCompliant = false;
@@ -133,9 +136,9 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
         setState(() {
           _isLoadingData = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -174,9 +177,9 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -251,46 +254,55 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
 
   void _updateConformityStatus() {
     setState(() {
-      _allConformityChecked = _temperatureChecked && 
-                              _packagingChecked && 
-                              _labelChecked && 
-                              _dluoChecked;
+      _allConformityChecked =
+          _temperatureChecked &&
+          _packagingChecked &&
+          _labelChecked &&
+          _dluoChecked;
     });
   }
 
   Future<void> _loadSupplierProducts(String supplierId) async {
     try {
       debugPrint('[ReceptionForm] Loading products for supplier: $supplierId');
-      
+
       // Get products linked to this supplier (only "reçu" type products)
-      final supplierProducts = await _supplierProductRepo.getProductsBySupplier(supplierId);
-      
-      debugPrint('[ReceptionForm] Fetched ${supplierProducts.length} products from supplier_products');
-      
+      final supplierProducts = await _supplierProductRepo.getProductsBySupplier(
+        supplierId,
+      );
+
+      debugPrint(
+        '[ReceptionForm] Fetched ${supplierProducts.length} products from supplier_products',
+      );
+
       // Filter to only show "reçu" type products
       // Note: TypeProduit.recu.name returns "recu" (without accent)
       final recuProducts = supplierProducts.where((p) {
         final type = p.typeProduit?.toLowerCase()?.trim();
         // Accept: "recu", "reçu", "produit reçu", etc.
-        final isRecu = type != null && (
-          type == 'recu' || 
-          type == 'reçu' || 
-          type == 'reçu' ||
-          type.contains('recu') ||
-          type.contains('reçu')
+        final isRecu =
+            type != null &&
+            (type == 'recu' ||
+                type == 'reçu' ||
+                type == 'reçu' ||
+                type.contains('recu') ||
+                type.contains('reçu'));
+        debugPrint(
+          '[ReceptionForm] Product ${p.nom}: type="$type", isRecu=$isRecu',
         );
-        debugPrint('[ReceptionForm] Product ${p.nom}: type="$type", isRecu=$isRecu');
         return isRecu;
       }).toList();
-      
-      debugPrint('[ReceptionForm] Filtered to ${recuProducts.length} "reçu" products');
-      
+
+      debugPrint(
+        '[ReceptionForm] Filtered to ${recuProducts.length} "reçu" products',
+      );
+
       if (mounted) {
         setState(() {
           // Update products list to show only supplier's "reçu" products
           _products = recuProducts;
           _selectedProductId = null; // Reset selection
-          
+
           // If only one product, auto-select it
           if (recuProducts.length == 1) {
             _selectedProductId = recuProducts.first.id;
@@ -298,13 +310,17 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
           }
         });
       }
-      
+
       if (recuProducts.isEmpty) {
-        debugPrint('[ReceptionForm] ⚠️ No "reçu" products found for supplier $supplierId');
+        debugPrint(
+          '[ReceptionForm] ⚠️ No "reçu" products found for supplier $supplierId',
+        );
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Aucun produit "reçu" trouvé pour ce fournisseur. Créez d\'abord un produit de type "reçu" et liez-le au fournisseur.'),
+              content: Text(
+                'Aucun produit "reçu" trouvé pour ce fournisseur. Créez d\'abord un produit de type "reçu" et liez-le au fournisseur.',
+              ),
               backgroundColor: Colors.orange,
               duration: Duration(seconds: 5),
             ),
@@ -331,14 +347,15 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
         supplierId: supplierId,
         productId: product.id,
       );
-      
+
       if (mounted && details != null) {
         setState(() {
           // Pre-fill lot number if available
-          if (details['default_lot_number'] != null && _lotController.text.isEmpty) {
+          if (details['default_lot_number'] != null &&
+              _lotController.text.isEmpty) {
             _lotController.text = details['default_lot_number'] as String;
           }
-          
+
           // Pre-fill DLUO if available (calculate from default_dluo_days)
           if (details['default_dluo_days'] != null && _selectedDluo == null) {
             final dluoDays = details['default_dluo_days'] as int;
@@ -353,12 +370,12 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
 
   void _checkNonConformity() {
     final temp = double.tryParse(_temperatureController.text);
-    final hasRefusal = 
+    final hasRefusal =
         (temp != null && (temp > 7 || temp < -18)) || // Temperature criteria
         _packagingOpened ||
         _packagingWet ||
         _labelMissing;
-    
+
     setState(() {
       _showNonConformity = hasRefusal;
       if (temp != null) {
@@ -381,7 +398,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
       );
       return;
     }
-    
+
     // Check if all conformity items are checked
     if (!_allConformityChecked) {
       final confirmed = await showDialog<bool>(
@@ -413,7 +430,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
 
     try {
       final temperature = double.parse(_temperatureController.text);
-      
+
       // TODO: Upload photo to Supabase Storage if _photoPath is not null
       String? photoUrl;
       if (_photoPath != null) {
@@ -424,7 +441,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
       // Mark as non-conformant if checklist is incomplete
       // Employee name is automatically retrieved by repository from current session
       final isNonConformant = !_allConformityChecked;
-      
+
       Reception reception;
       if (widget.receptionId != null) {
         // Update existing reception
@@ -433,22 +450,24 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
           lot: _lotController.text.isEmpty ? null : _lotController.text,
           dluo: _selectedDluo,
           temperature: temperature,
-          remarque: _remarqueController.text.isEmpty ? null : _remarqueController.text,
+          remarque: _remarqueController.text.isEmpty
+              ? null
+              : _remarqueController.text,
           photoUrl: photoUrl,
         );
       } else {
         // Create new reception
         await _employeeSessionService.initialize();
         final currentEmployee = _employeeSessionService.currentEmployee;
-        
+
         reception = await _receptionRepo.create(
           produitId: _selectedProductId!,
           supplierId: _selectedSupplierId!,
           lot: _lotController.text.isEmpty ? null : _lotController.text,
           dluo: _selectedDluo,
           temperature: temperature,
-          remarque: _remarqueController.text.isEmpty 
-              ? null 
+          remarque: _remarqueController.text.isEmpty
+              ? null
               : _remarqueController.text,
           photoUrl: photoUrl,
           receptionHour: _receptionTime.hour,
@@ -460,9 +479,11 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
 
       // Create non-conformity if needed
       String? nonConformityId;
-      if (_showNonConformity && 
-          (_temperatureNonCompliant || _packagingOpened || 
-           _packagingWet || _labelMissing)) {
+      if (_showNonConformity &&
+          (_temperatureNonCompliant ||
+              _packagingOpened ||
+              _packagingWet ||
+              _labelMissing)) {
         final nonConformity = await _nonConformityRepo.create(
           receptionId: reception.id,
           temperatureNonCompliant: _temperatureNonCompliant,
@@ -475,7 +496,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
           photoUrls: _nonConformityPhotos,
         );
         nonConformityId = nonConformity.id;
-        
+
         // Update reception with non-conformity link
         await _receptionRepo.update(
           id: reception.id,
@@ -487,19 +508,21 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
       try {
         final orgRepo = OrganizationRepository();
         final orgId = await orgRepo.getOrCreateOrganization();
-        
+
         await _auditLogRepo.create(
           organizationId: orgId,
           operationType: 'reception',
           operationId: reception.id,
           action: widget.receptionId != null ? 'update' : 'create',
-          description: 'Réception de ${_products.firstWhere((p) => p.id == _selectedProductId).nom}',
+          description:
+              'Réception de ${_products.firstWhere((p) => p.id == _selectedProductId).nom}',
           metadata: {
             'supplier_id': _selectedSupplierId,
             'product_id': _selectedProductId,
             'temperature': temperature,
             'has_non_conformity': nonConformityId != null,
-            'is_non_conformant': isNonConformant, // Flag for incomplete checklist
+            'is_non_conformant':
+                isNonConformant, // Flag for incomplete checklist
             'checklist_complete': _allConformityChecked,
           },
         );
@@ -525,22 +548,26 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
-    
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.receptionId != null 
-            ? 'Modifier la réception' 
-            : 'Nouvelle réception'),
+        title: Text(
+          widget.receptionId != null
+              ? 'Modifier la réception'
+              : 'Nouvelle réception',
+        ),
         leading: isAdminRoute
             ? IconButton(
                 icon: const Icon(Icons.arrow_back),
@@ -574,9 +601,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                                 ),
                                 Text(
                                   '${_receptionTime.hour.toString().padLeft(2, '0')}:${_receptionTime.minute.toString().padLeft(2, '0')}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
+                                  style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(
                                         fontWeight: FontWeight.bold,
                                         color: AppTheme.statusInfo,
@@ -585,7 +610,11 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                               ],
                             ),
                           ),
-                          Icon(Icons.edit, color: AppTheme.primaryBlue, size: 20),
+                          Icon(
+                            Icons.edit,
+                            color: AppTheme.primaryBlue,
+                            size: 20,
+                          ),
                         ],
                       ),
                     ),
@@ -603,16 +632,17 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                             const SizedBox(width: 8),
                             Text(
                               'Checklist de conformité',
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                         const SizedBox(height: 12),
                         CheckboxListTile(
                           title: const Text('Température conforme'),
-                          subtitle: const Text('Température entre -18°C et +7°C'),
+                          subtitle: const Text(
+                            'Température entre -18°C et +7°C',
+                          ),
                           value: _temperatureChecked,
                           onChanged: (value) {
                             setState(() {
@@ -624,7 +654,9 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                         ),
                         CheckboxListTile(
                           title: const Text('Emballage conforme'),
-                          subtitle: const Text('Emballage intact, non ouvert, non mouillé'),
+                          subtitle: const Text(
+                            'Emballage intact, non ouvert, non mouillé',
+                          ),
                           value: _packagingChecked,
                           onChanged: (value) {
                             setState(() {
@@ -648,7 +680,9 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                         ),
                         CheckboxListTile(
                           title: const Text('DLUO vérifiée'),
-                          subtitle: const Text('Date limite d\'utilisation optimale vérifiée'),
+                          subtitle: const Text(
+                            'Date limite d\'utilisation optimale vérifiée',
+                          ),
                           value: _dluoChecked,
                           onChanged: (value) {
                             setState(() {
@@ -669,7 +703,10 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.check_circle, color: AppTheme.statusOk),
+                                Icon(
+                                  Icons.check_circle,
+                                  color: AppTheme.statusOk,
+                                ),
                                 const SizedBox(width: 8),
                                 Text(
                                   'Tous les critères de conformité sont validés',
@@ -718,9 +755,10 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                     onChanged: (value) async {
                       setState(() {
                         _selectedSupplierId = value;
-                        _selectedProductId = null; // Reset product when supplier changes
+                        _selectedProductId =
+                            null; // Reset product when supplier changes
                       });
-                      
+
                       // Load products for this supplier and pre-fill fields
                       if (value != null) {
                         await _loadSupplierProducts(value);
@@ -734,7 +772,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                     },
                   ),
                   const SizedBox(height: 8),
-                  
+
                   // Quick add supplier button
                   if (!_showQuickAddSupplier)
                     TextButton.icon(
@@ -800,10 +838,12 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                       setState(() {
                         _selectedProductId = value;
                       });
-                      
+
                       // Pre-fill fields when product is selected
                       if (value != null && _selectedSupplierId != null) {
-                        final product = _products.firstWhere((p) => p.id == value);
+                        final product = _products.firstWhere(
+                          (p) => p.id == value,
+                        );
                         _prefillProductFields(product, _selectedSupplierId!);
                       }
                     },
@@ -853,7 +893,9 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.thermostat),
                     ),
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez saisir une température';
@@ -941,13 +983,14 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                         children: [
                           Row(
                             children: [
-                              Icon(Icons.warning, color: AppTheme.statusCritical),
+                              Icon(
+                                Icons.warning,
+                                color: AppTheme.statusCritical,
+                              ),
                               const SizedBox(width: 8),
                               Text(
                                 'Non-conformité détectée',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
+                                style: Theme.of(context).textTheme.titleMedium
                                     ?.copyWith(
                                       fontWeight: FontWeight.bold,
                                       color: AppTheme.statusCritical,
@@ -962,7 +1005,9 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                           ),
                           const SizedBox(height: 8),
                           CheckboxListTile(
-                            title: const Text('Température non conforme (>7°C ou <-18°C)'),
+                            title: const Text(
+                              'Température non conforme (>7°C ou <-18°C)',
+                            ),
                             value: _temperatureNonCompliant,
                             onChanged: (value) {
                               setState(() {
@@ -1025,25 +1070,36 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                                 return Stack(
                                   children: [
                                     InkWell(
-                                      onTap: () => _showPhotoDialog(context, path),
+                                      onTap: () =>
+                                          _showPhotoDialog(context, path),
                                       child: Container(
                                         width: 80,
                                         height: 80,
                                         decoration: BoxDecoration(
                                           color: Colors.grey[200],
-                                          borderRadius: BorderRadius.circular(8),
-                                          border: Border.all(color: Colors.grey[300]!),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          border: Border.all(
+                                            color: Colors.grey[300]!,
+                                          ),
                                         ),
                                         child: ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                           child: Image.file(
                                             File(path),
                                             fit: BoxFit.cover,
-                                            errorBuilder: (context, error, stackTrace) {
-                                              return const Center(
-                                                child: Icon(Icons.broken_image, size: 32),
-                                              );
-                                            },
+                                            errorBuilder:
+                                                (context, error, stackTrace) {
+                                                  return const Center(
+                                                    child: Icon(
+                                                      Icons.broken_image,
+                                                      size: 32,
+                                                    ),
+                                                  );
+                                                },
                                           ),
                                         ),
                                       ),
@@ -1123,7 +1179,11 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                       child: const Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.broken_image, size: 64, color: Colors.white),
+                          Icon(
+                            Icons.broken_image,
+                            size: 64,
+                            color: Colors.white,
+                          ),
                           SizedBox(height: 16),
                           Text(
                             'Impossible de charger l\'image',
@@ -1142,9 +1202,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => Navigator.of(context).pop(),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.black54,
-                ),
+                style: IconButton.styleFrom(backgroundColor: Colors.black54),
               ),
             ),
           ],

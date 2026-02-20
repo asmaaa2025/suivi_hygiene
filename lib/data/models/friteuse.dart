@@ -4,11 +4,7 @@ class Friteuse {
   final String nom;
   final DateTime createdAt;
 
-  Friteuse({
-    required this.id,
-    required this.nom,
-    required this.createdAt,
-  });
+  Friteuse({required this.id, required this.nom, required this.createdAt});
 
   factory Friteuse.fromJson(Map<String, dynamic> json) {
     return Friteuse(
@@ -21,10 +17,6 @@ class Friteuse {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'nom': nom,
-      'created_at': createdAt.toIso8601String(),
-    };
+    return {'id': id, 'nom': nom, 'created_at': createdAt.toIso8601String()};
   }
 }

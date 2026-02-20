@@ -60,7 +60,9 @@ class _EmployeesListPageState extends State<EmployeesListPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Supprimer'),
-        content: Text('Êtes-vous sûr de vouloir supprimer ${employee.fullName} ?'),
+        content: Text(
+          'Êtes-vous sûr de vouloir supprimer ${employee.fullName} ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -79,15 +81,15 @@ class _EmployeesListPageState extends State<EmployeesListPage> {
         await _employeeRepo.delete(employee.id);
         await _loadData();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Employé supprimé')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Employé supprimé')));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         }
       }
     }
@@ -141,90 +143,90 @@ class _EmployeesListPageState extends State<EmployeesListPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? ErrorState(message: _error!, onRetry: _loadData)
-                    : _employees.isEmpty
-                        ? const EmptyState(
-                            title: 'Aucun employé',
-                            message: 'Ajoutez votre premier employé',
-                            icon: Icons.person_add,
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadData,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _employees.length,
-                              itemBuilder: (context, index) {
-                                final employee = _employees[index];
-                                return SectionCard(
-                                  child: Row(
-                                    children: [
-                                      CircleAvatar(
-                                        backgroundColor: AppTheme.primaryBlue.withOpacity(0.1),
-                                        child: Text(
-                                          employee.firstName[0].toUpperCase(),
-                                          style: TextStyle(
-                                            color: AppTheme.primaryBlue,
+                ? ErrorState(message: _error!, onRetry: _loadData)
+                : _employees.isEmpty
+                ? const EmptyState(
+                    title: 'Aucun employé',
+                    message: 'Ajoutez votre premier employé',
+                    icon: Icons.person_add,
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _employees.length,
+                      itemBuilder: (context, index) {
+                        final employee = _employees[index];
+                        return SectionCard(
+                          child: Row(
+                            children: [
+                              CircleAvatar(
+                                backgroundColor: AppTheme.primaryBlue
+                                    .withOpacity(0.1),
+                                child: Text(
+                                  employee.firstName[0].toUpperCase(),
+                                  style: TextStyle(
+                                    color: AppTheme.primaryBlue,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      employee.fullName,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
                                             fontWeight: FontWeight.bold,
                                           ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              employee.fullName,
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .titleMedium
-                                                  ?.copyWith(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      employee.role,
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                    if (!employee.isActive) ...[
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        'Inactif',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: Colors.grey,
+                                              fontStyle: FontStyle.italic,
                                             ),
-                                            const SizedBox(height: 4),
-                                            Text(
-                                              employee.role,
-                                              style: Theme.of(context).textTheme.bodySmall,
-                                            ),
-                                            if (!employee.isActive) ...[
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                'Inactif',
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .bodySmall
-                                                    ?.copyWith(
-                                                      color: Colors.grey,
-                                                      fontStyle: FontStyle.italic,
-                                                    ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.edit),
-                                        onPressed: () => context.push(
-                                          '/admin/employees/${employee.id}',
-                                        ),
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete_outline),
-                                        onPressed: () => _deleteEmployee(employee),
                                       ),
                                     ],
-                                  ),
-                                );
-                              },
-                            ),
+                                  ],
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.edit),
+                                onPressed: () => context.push(
+                                  '/admin/employees/${employee.id}',
+                                ),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline),
+                                onPressed: () => _deleteEmployee(employee),
+                              ),
+                            ],
                           ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
     );
   }
 }
-
-
-

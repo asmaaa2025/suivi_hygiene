@@ -6,7 +6,8 @@ import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 /// The ZPL must already be correctly formatted (portrait 5x10 cm).
 class ZebraPrinterService {
   static ZebraPrinterService? _instance;
-  factory ZebraPrinterService() => _instance ??= ZebraPrinterService._internal();
+  factory ZebraPrinterService() =>
+      _instance ??= ZebraPrinterService._internal();
   ZebraPrinterService._internal();
 
   final BlueThermalPrinter _bt = BlueThermalPrinter.instance;

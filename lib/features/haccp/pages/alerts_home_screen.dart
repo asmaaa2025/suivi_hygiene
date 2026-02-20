@@ -32,7 +32,10 @@ class _AlertsHomeScreenState extends State<AlertsHomeScreen> {
       await _exportService.shareExport(path, isPdf: true);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Export créé'), backgroundColor: Colors.green),
+        const SnackBar(
+          content: Text('Export créé'),
+          backgroundColor: Colors.green,
+        ),
       );
     } catch (e) {
       if (!mounted) return;
@@ -46,7 +49,9 @@ class _AlertsHomeScreenState extends State<AlertsHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
     final prefix = isAdminRoute ? '/admin' : '/app';
 
     return Scaffold(
@@ -65,7 +70,10 @@ class _AlertsHomeScreenState extends State<AlertsHomeScreen> {
                 ? const SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Icon(Icons.download),
             tooltip: 'Exporter NC et rappels',
@@ -82,16 +90,16 @@ class _AlertsHomeScreenState extends State<AlertsHomeScreen> {
               Text(
                 'Que souhaitez-vous faire ?',
                 style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                  fontWeight: FontWeight.bold,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 8),
               Text(
                 'Choisissez une action ci-dessous',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 24),
@@ -140,6 +148,3 @@ class _AlertsHomeScreenState extends State<AlertsHomeScreen> {
     );
   }
 }
-
-
-

@@ -38,7 +38,8 @@ class Rappel {
       fournisseur: json['fournisseur'] as String?,
       motif: json['motif'] as String? ?? '',
       dateDetection: json['date_detection'] != null
-          ? DateTime.tryParse(json['date_detection'].toString()) ?? DateTime.now()
+          ? DateTime.tryParse(json['date_detection'].toString()) ??
+                DateTime.now()
           : DateTime.now(),
       statut: RappelStatut.fromString(json['statut'] as String?),
       actionsPrises: json['actions_prises'] as String?,

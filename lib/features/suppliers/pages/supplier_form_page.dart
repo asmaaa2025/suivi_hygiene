@@ -19,7 +19,7 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _contactController = TextEditingController();
-  
+
   final _supplierRepo = SupplierRepository();
   bool _isLoading = false;
   bool _isLoadingData = true;
@@ -70,9 +70,9 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
         setState(() {
           _isLoadingData = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -90,8 +90,8 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
         await _supplierRepo.update(
           id: widget.supplierId!,
           name: _nameController.text,
-          contactInfo: _contactController.text.isEmpty 
-              ? null 
+          contactInfo: _contactController.text.isEmpty
+              ? null
               : _contactController.text,
           isOccasional: _isOccasional,
         );
@@ -100,23 +100,27 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
         try {
           final orgRepo = OrganizationRepository();
           final orgId = await orgRepo.getOrCreateOrganization();
-          
+
           debugPrint('[SupplierForm] Using organization ID: $orgId');
-          
+
           await _supplierRepo.create(
             organizationId: orgId,
             name: _nameController.text,
-            contactInfo: _contactController.text.isEmpty 
-                ? null 
+            contactInfo: _contactController.text.isEmpty
+                ? null
                 : _contactController.text,
             isOccasional: _isOccasional,
           );
         } catch (e) {
-          debugPrint('[SupplierForm] ❌ Error creating organization or supplier: $e');
+          debugPrint(
+            '[SupplierForm] ❌ Error creating organization or supplier: $e',
+          );
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('Erreur: Impossible de créer le fournisseur. Vérifiez que l\'organisation existe dans la base de données.'),
+                content: Text(
+                  'Erreur: Impossible de créer le fournisseur. Vérifiez que l\'organisation existe dans la base de données.',
+                ),
                 backgroundColor: Colors.red,
                 duration: const Duration(seconds: 5),
               ),
@@ -143,9 +147,9 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -154,9 +158,11 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.supplierId != null 
-            ? 'Modifier le fournisseur' 
-            : 'Nouveau fournisseur'),
+        title: Text(
+          widget.supplierId != null
+              ? 'Modifier le fournisseur'
+              : 'Nouveau fournisseur',
+        ),
       ),
       body: _isLoadingData
           ? const Center(child: CircularProgressIndicator())
@@ -226,4 +232,3 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
     );
   }
 }
-

@@ -23,7 +23,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
   final _roleController = TextEditingController();
   final _adminCodeController = TextEditingController();
   final _adminEmailController = TextEditingController();
-  
+
   final _employeeRepo = EmployeeRepository();
   bool _isLoading = false;
   bool _isLoadingData = true;
@@ -31,12 +31,13 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
   bool _isActive = true;
   bool _isAdmin = false;
 
-
   Future<bool> _verifyAdminCreation() async {
     final currentUser = Supabase.instance.client.auth.currentUser;
     if (currentUser == null || currentUser.email == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Vous devez être connecté pour créer un admin')),
+        const SnackBar(
+          content: Text('Vous devez être connecté pour créer un admin'),
+        ),
       );
       return false;
     }
@@ -44,9 +45,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
     final result = await showDialog<bool>(
       context: context,
       barrierDismissible: false,
-      builder: (context) => _AdminVerificationDialog(
-        userEmail: currentUser.email!,
-      ),
+      builder: (context) =>
+          _AdminVerificationDialog(userEmail: currentUser.email!),
     );
 
     return result ?? false;
@@ -75,7 +75,10 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
   Future<void> _loadEmployee() async {
     try {
       // Use checkCreatedBy: false to allow editing employees from same organization
-      final employee = await _employeeRepo.getById(widget.employeeId!, checkCreatedBy: false);
+      final employee = await _employeeRepo.getById(
+        widget.employeeId!,
+        checkCreatedBy: false,
+      );
       if (employee != null && mounted) {
         setState(() {
           _employee = employee;
@@ -97,9 +100,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
           setState(() {
             _isLoadingData = false;
           });
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Employé introuvable')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Employé introuvable')));
           context.pop();
         }
       }
@@ -108,9 +111,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
         setState(() {
           _isLoadingData = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -128,14 +131,14 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
         // For admin update, verify that current user email exists
         String? adminEmail;
         String? adminCode;
-        
+
         if (_isAdmin) {
           // Use the email entered by the user
           final enteredEmail = _adminEmailController.text.trim();
           if (enteredEmail.isEmpty) {
             throw Exception('L\'email est requis pour modifier un admin');
           }
-          
+
           // Verify that the email matches the logged-in user's email
           final currentUser = Supabase.instance.client.auth.currentUser;
           final userEmail = currentUser?.email;
@@ -143,19 +146,23 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
             throw Exception('Vous devez être connecté pour modifier un admin');
           }
           if (enteredEmail.toLowerCase() != userEmail.toLowerCase()) {
-            throw Exception('L\'email doit correspondre à votre email de connexion');
+            throw Exception(
+              'L\'email doit correspondre à votre email de connexion',
+            );
           }
-          
+
           adminEmail = enteredEmail; // Required by database constraint
-          
+
           // Validate admin code
           final trimmedCode = _adminCodeController.text.trim();
           if (trimmedCode.isEmpty || trimmedCode.length != 4) {
-            throw Exception('Le code administrateur doit contenir exactement 4 chiffres');
+            throw Exception(
+              'Le code administrateur doit contenir exactement 4 chiffres',
+            );
           }
           adminCode = trimmedCode;
         }
-        
+
         await _employeeRepo.update(
           id: widget.employeeId!,
           firstName: _firstNameController.text,
@@ -171,14 +178,14 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
         // For admin creation, verify that current user email exists
         String? adminEmail;
         String? adminCode;
-        
+
         if (_isAdmin) {
           // Use the email entered by the user
           final enteredEmail = _adminEmailController.text.trim();
           if (enteredEmail.isEmpty) {
             throw Exception('L\'email est requis pour créer un admin');
           }
-          
+
           // Verify that the email matches the logged-in user's email
           final currentUser = Supabase.instance.client.auth.currentUser;
           final userEmail = currentUser?.email;
@@ -186,19 +193,23 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
             throw Exception('Vous devez être connecté pour créer un admin');
           }
           if (enteredEmail.toLowerCase() != userEmail.toLowerCase()) {
-            throw Exception('L\'email doit correspondre à votre email de connexion');
+            throw Exception(
+              'L\'email doit correspondre à votre email de connexion',
+            );
           }
-          
+
           adminEmail = enteredEmail; // Required by database constraint
-          
+
           // Validate admin code
           final trimmedCode = _adminCodeController.text.trim();
           if (trimmedCode.isEmpty || trimmedCode.length != 4) {
-            throw Exception('Le code administrateur doit contenir exactement 4 chiffres');
+            throw Exception(
+              'Le code administrateur doit contenir exactement 4 chiffres',
+            );
           }
           adminCode = trimmedCode;
         }
-        
+
         await _employeeRepo.create(
           firstName: _firstNameController.text,
           lastName: _lastNameController.text,
@@ -213,9 +224,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.employeeId != null
-                  ? 'Employé modifié'
-                  : 'Employé créé',
+              widget.employeeId != null ? 'Employé modifié' : 'Employé créé',
             ),
             backgroundColor: Colors.green,
           ),
@@ -240,9 +249,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -251,9 +260,9 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.employeeId != null 
-            ? 'Modifier l\'employé' 
-            : 'Nouvel employé'),
+        title: Text(
+          widget.employeeId != null ? 'Modifier l\'employé' : 'Nouvel employé',
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
@@ -333,7 +342,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
                           return; // Don't enable if verification failed
                         }
                         // Pre-fill with current user's email
-                        final currentUser = Supabase.instance.client.auth.currentUser;
+                        final currentUser =
+                            Supabase.instance.client.auth.currentUser;
                         final userEmail = currentUser?.email ?? '';
                         _adminEmailController.text = userEmail;
                       }
@@ -358,7 +368,8 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
                         labelText: 'Votre email (pour vérification) *',
                         border: OutlineInputBorder(),
                         prefixIcon: Icon(Icons.email),
-                        helperText: 'Saisissez votre email pour confirmer la création d\'un admin',
+                        helperText:
+                            'Saisissez votre email pour confirmer la création d\'un admin',
                       ),
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
@@ -370,9 +381,12 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
                             return 'Veuillez saisir un email valide';
                           }
                           // Verify that the email matches the logged-in user's email
-                          final currentUser = Supabase.instance.client.auth.currentUser;
+                          final currentUser =
+                              Supabase.instance.client.auth.currentUser;
                           final userEmail = currentUser?.email;
-                          if (userEmail != null && value.trim().toLowerCase() != userEmail.toLowerCase()) {
+                          if (userEmail != null &&
+                              value.trim().toLowerCase() !=
+                                  userEmail.toLowerCase()) {
                             return 'L\'email doit correspondre à votre email de connexion';
                           }
                         }
@@ -390,9 +404,7 @@ class _EmployeeFormPageState extends State<EmployeeFormPage> {
                       ),
                       keyboardType: TextInputType.number,
                       maxLength: 4,
-                      inputFormatters: [
-                        FilteringTextInputFormatter.digitsOnly,
-                      ],
+                      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                       validator: (value) {
                         if (_isAdmin) {
                           if (value == null || value.isEmpty) {
@@ -450,7 +462,8 @@ class _AdminVerificationDialog extends StatefulWidget {
   const _AdminVerificationDialog({required this.userEmail});
 
   @override
-  State<_AdminVerificationDialog> createState() => _AdminVerificationDialogState();
+  State<_AdminVerificationDialog> createState() =>
+      _AdminVerificationDialogState();
 }
 
 class _AdminVerificationDialogState extends State<_AdminVerificationDialog> {
@@ -508,7 +521,7 @@ class _AdminVerificationDialogState extends State<_AdminVerificationDialog> {
     } on AuthException catch (e) {
       // Handle authentication errors
       String errorMsg = 'Erreur de vérification';
-      if (e.message.contains('Invalid login credentials') || 
+      if (e.message.contains('Invalid login credentials') ||
           e.message.contains('Invalid password') ||
           e.message.contains('Wrong password')) {
         errorMsg = 'Mot de passe incorrect';
@@ -575,7 +588,9 @@ class _AdminVerificationDialogState extends State<_AdminVerificationDialog> {
                   prefixIcon: const Icon(Icons.lock),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                      _obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off,
                     ),
                     onPressed: () {
                       setState(() {
@@ -612,12 +627,19 @@ class _AdminVerificationDialogState extends State<_AdminVerificationDialog> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.error_outline, color: Colors.red.shade700, size: 20),
+                      Icon(
+                        Icons.error_outline,
+                        color: Colors.red.shade700,
+                        size: 20,
+                      ),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           _errorMessage!,
-                          style: TextStyle(color: Colors.red.shade700, fontSize: 12),
+                          style: TextStyle(
+                            color: Colors.red.shade700,
+                            fontSize: 12,
+                          ),
                         ),
                       ),
                     ],
@@ -647,4 +669,3 @@ class _AdminVerificationDialogState extends State<_AdminVerificationDialog> {
     );
   }
 }
-

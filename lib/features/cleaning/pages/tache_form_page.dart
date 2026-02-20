@@ -36,16 +36,16 @@ class _TacheFormPageState extends State<TacheFormPage> {
     'Jeudi',
     'Vendredi',
     'Samedi',
-    'Dimanche'
+    'Dimanche',
   ];
 
   @override
   void initState() {
     super.initState();
     _isEditMode = widget.tacheId != null;
-    _timeController.text = DateFormat('HH:mm').format(
-      DateTime(2000, 1, 1, _timeOfDay.hour, _timeOfDay.minute),
-    );
+    _timeController.text = DateFormat(
+      'HH:mm',
+    ).format(DateTime(2000, 1, 1, _timeOfDay.hour, _timeOfDay.minute));
     if (_isEditMode) {
       _loadTache();
     }
@@ -82,9 +82,9 @@ class _TacheFormPageState extends State<TacheFormPage> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         context.pop();
       }
     }
@@ -110,7 +110,8 @@ class _TacheFormPageState extends State<TacheFormPage> {
     if (_recurrenceType == 'weekly' && _selectedWeekdays.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Sélectionnez au moins un jour de la semaine')),
+          content: Text('Sélectionnez au moins un jour de la semaine'),
+        ),
       );
       return;
     }
@@ -159,9 +160,9 @@ class _TacheFormPageState extends State<TacheFormPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     } finally {
       if (mounted) {
@@ -205,11 +206,17 @@ class _TacheFormPageState extends State<TacheFormPage> {
                     ),
                     items: const [
                       DropdownMenuItem(
-                          value: 'daily', child: Text('Quotidien')),
+                        value: 'daily',
+                        child: Text('Quotidien'),
+                      ),
                       DropdownMenuItem(
-                          value: 'weekly', child: Text('Hebdomadaire')),
+                        value: 'weekly',
+                        child: Text('Hebdomadaire'),
+                      ),
                       DropdownMenuItem(
-                          value: 'monthly', child: Text('Mensuel')),
+                        value: 'monthly',
+                        child: Text('Mensuel'),
+                      ),
                     ],
                     onChanged: (value) =>
                         setState(() => _recurrenceType = value!),
@@ -237,8 +244,8 @@ class _TacheFormPageState extends State<TacheFormPage> {
                           _recurrenceType == 'daily'
                               ? 'jour(s)'
                               : _recurrenceType == 'weekly'
-                                  ? 'semaine(s)'
-                                  : 'mois',
+                              ? 'semaine(s)'
+                              : 'mois',
                           style: Theme.of(context).textTheme.bodyLarge,
                         ),
                       ),
@@ -305,7 +312,8 @@ class _TacheFormPageState extends State<TacheFormPage> {
                   SwitchListTile(
                     title: const Text('Tâche active'),
                     subtitle: const Text(
-                        'Les tâches inactives ne seront pas affichées dans la todo list'),
+                      'Les tâches inactives ne seront pas affichées dans la todo list',
+                    ),
                     value: _isActive,
                     onChanged: (value) => setState(() => _isActive = value),
                   ),

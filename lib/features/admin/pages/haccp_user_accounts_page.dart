@@ -87,9 +87,9 @@ class _HaccpUserAccountsPageState extends State<HaccpUserAccountsPage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         }
       }
     }
@@ -121,78 +121,93 @@ class _HaccpUserAccountsPageState extends State<HaccpUserAccountsPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? ErrorState(
-                  message: _error!,
-                  onRetry: _loadData,
-                )
-              : _accounts.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const EmptyState(
-                              icon: Icons.person_add,
-                              title: 'Aucun compte',
-                              message: 'Les comptes HACCPilot permettent de se connecter à l\'app.\n'
-                                  'Ils sont distincts du registre du personnel.',
-                            ),
-                            const SizedBox(height: 24),
-                            ElevatedButton.icon(
-                              onPressed: () async {
-                                final result = await context.push('/admin/rh/accounts/new');
-                                if (result == true && mounted) _loadData();
-                              },
-                              icon: const Icon(Icons.add),
-                              label: const Text('Créer un compte'),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppTheme.primaryBlue,
-                                foregroundColor: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadData,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _accounts.length,
-                        itemBuilder: (context, index) {
-                          final a = _accounts[index];
-                          return Card(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            child: ListTile(
-                              leading: CircleAvatar(
-                                backgroundColor: AppTheme.primaryBlue.withOpacity(0.2),
-                                child: Icon(Icons.person, color: AppTheme.primaryBlue),
-                              ),
-                              title: Text(
-                                a.displayLabel,
-                                style: const TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              subtitle: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(a.email, style: TextStyle(fontSize: 13, color: Colors.grey[600])),
-                                  Text('Créé le ${_df.format(a.createdAt)}', style: TextStyle(fontSize: 12, color: Colors.grey[500])),
-                                ],
-                              ),
-                              trailing: PopupMenuButton<String>(
-                                onSelected: (v) {
-                                  if (v == 'delete') _deleteAccount(a);
-                                },
-                                itemBuilder: (ctx) => [
-                                  const PopupMenuItem(value: 'delete', child: Text('Retirer de la liste')),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
+          ? ErrorState(message: _error!, onRetry: _loadData)
+          : _accounts.isEmpty
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const EmptyState(
+                      icon: Icons.person_add,
+                      title: 'Aucun compte',
+                      message:
+                          'Les comptes HACCPilot permettent de se connecter à l\'app.\n'
+                          'Ils sont distincts du registre du personnel.',
+                    ),
+                    const SizedBox(height: 24),
+                    ElevatedButton.icon(
+                      onPressed: () async {
+                        final result = await context.push(
+                          '/admin/rh/accounts/new',
+                        );
+                        if (result == true && mounted) _loadData();
+                      },
+                      icon: const Icon(Icons.add),
+                      label: const Text('Créer un compte'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryBlue,
+                        foregroundColor: Colors.white,
                       ),
                     ),
+                  ],
+                ),
+              ),
+            )
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _accounts.length,
+                itemBuilder: (context, index) {
+                  final a = _accounts[index];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: ListTile(
+                      leading: CircleAvatar(
+                        backgroundColor: AppTheme.primaryBlue.withOpacity(0.2),
+                        child: Icon(Icons.person, color: AppTheme.primaryBlue),
+                      ),
+                      title: Text(
+                        a.displayLabel,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            a.email,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                          Text(
+                            'Créé le ${_df.format(a.createdAt)}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey[500],
+                            ),
+                          ),
+                        ],
+                      ),
+                      trailing: PopupMenuButton<String>(
+                        onSelected: (v) {
+                          if (v == 'delete') _deleteAccount(a);
+                        },
+                        itemBuilder: (ctx) => [
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Text('Retirer de la liste'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
 }

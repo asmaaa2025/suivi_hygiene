@@ -34,23 +34,18 @@ class OptimizedLoginService {
       print('🔐 Début de la connexion optimisée pour: $username');
 
       // 1. Connexion via l'API avec timeout
-      final apiResult = await ApiService.login(username, password)
-          .timeout(const Duration(seconds: 15));
+      final apiResult = await ApiService.login(
+        username,
+        password,
+      ).timeout(const Duration(seconds: 15));
 
       if (!apiResult['success']) {
-        return {
-          'success': false,
-          'error': apiResult['error'],
-          'user': null,
-        };
+        return {'success': false, 'error': apiResult['error'], 'user': null};
       }
 
       // 2. Sauvegarder l'utilisateur en local avec gestion d'erreur
       try {
-        await _dbHelper.saveUser(
-          username: username,
-          token: apiResult['token'],
-        );
+        await _dbHelper.saveUser(username: username, token: apiResult['token']);
         print('✅ Utilisateur sauvegardé en local');
       } catch (e) {
         print('⚠️ Erreur lors de la sauvegarde locale: $e');

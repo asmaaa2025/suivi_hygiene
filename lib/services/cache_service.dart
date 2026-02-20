@@ -23,15 +23,15 @@ class CacheService {
   }
 
   /// Cache data with TTL (default 10 minutes)
-  Future<void> set(String key, dynamic value,
-      {Duration ttl = const Duration(minutes: 10)}) async {
+  Future<void> set(
+    String key,
+    dynamic value, {
+    Duration ttl = const Duration(minutes: 10),
+  }) async {
     if (!_initialized) await initialize();
 
     final expiry = DateTime.now().add(ttl);
-    await _box?.put(key, {
-      'value': value,
-      'expiry': expiry.toIso8601String(),
-    });
+    await _box?.put(key, {'value': value, 'expiry': expiry.toIso8601String()});
     debugPrint('[Cache] Set $key (expires ${expiry.toIso8601String()})');
   }
 
@@ -76,7 +76,8 @@ class CacheService {
   /// Clear cache for a table/collection
   Future<void> clearTable(String tableName) async {
     if (!_initialized) return;
-    final keys = _box?.keys
+    final keys =
+        _box?.keys
             .where((k) => k.toString().startsWith('${tableName}_'))
             .toList() ??
         [];

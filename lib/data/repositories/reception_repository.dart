@@ -7,12 +7,15 @@ import 'supplier_repository.dart';
 /// Repository for receptions
 class ReceptionRepository {
   final SupabaseClient _client = Supabase.instance.client;
-  
+
   // Expose client for audit log creation
   SupabaseClient get client => _client;
 
   /// Get all receptions
-  Future<List<Reception>> getAll({DateTime? startDate, DateTime? endDate}) async {
+  Future<List<Reception>> getAll({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
       final user = _client.auth.currentUser;
       if (user == null) {
@@ -21,23 +24,31 @@ class ReceptionRepository {
       }
 
       debugPrint('[ReceptionRepo] Fetching receptions, user: ${user.id}');
-      var query = _client
-          .from('receptions')
-          .select()
-          .eq('owner_id', user.id);
-      
+      var query = _client.from('receptions').select().eq('owner_id', user.id);
+
       // Apply date filters if provided
       if (startDate != null) {
-        final startOfDay = DateTime(startDate.year, startDate.month, startDate.day);
+        final startOfDay = DateTime(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+        );
         query = query.gte('received_at', startOfDay.toIso8601String());
       }
       if (endDate != null) {
-        final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+        final endOfDay = DateTime(
+          endDate.year,
+          endDate.month,
+          endDate.day,
+          23,
+          59,
+          59,
+        );
         query = query.lte('received_at', endOfDay.toIso8601String());
       }
-      
+
       final response = await query.order('received_at', ascending: false);
-      
+
       final receptions = (response as List)
           .map((json) => Reception.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -100,7 +111,8 @@ class ReceptionRepository {
       final currentEmployee = employeeSessionService.currentEmployee;
       final employeeFirstName = currentEmployee?.firstName;
       final employeeLastName = currentEmployee?.lastName;
-      final actualPerformedByEmployeeId = performedByEmployeeId ?? currentEmployee?.id;
+      final actualPerformedByEmployeeId =
+          performedByEmployeeId ?? currentEmployee?.id;
 
       // Reception time (defaults to 10:00 if not provided)
       final hour = receptionHour ?? 10;
@@ -131,23 +143,27 @@ class ReceptionRepository {
           .from('receptions')
           .insert({
             'produit_id': produitId,
-            'fournisseur': supplierName, // Store supplier name as TEXT (schema column)
+            'fournisseur':
+                supplierName, // Store supplier name as TEXT (schema column)
             'lot': lot,
             'dluo': dluo?.toIso8601String(),
             'temperature': temperature,
             'remarque': remarque,
             'photo_url': photoUrl,
             'received_at': receptionDateTime.toIso8601String(),
-            'reception_time': '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:00',
+            'reception_time':
+                '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:00',
             'non_conformity_id': nonConformityId,
             'performed_by_employee_id': actualPerformedByEmployeeId,
-            'employee_first_name': employeeFirstName, // Automatically retrieved from session
-            'employee_last_name': employeeLastName, // Automatically retrieved from session
+            'employee_first_name':
+                employeeFirstName, // Automatically retrieved from session
+            'employee_last_name':
+                employeeLastName, // Automatically retrieved from session
             'owner_id': user.id,
           })
           .select()
           .single();
-      
+
       return Reception.fromJson(response);
     } catch (e) {
       debugPrint('[ReceptionRepo] ❌ Error creating reception: $e');

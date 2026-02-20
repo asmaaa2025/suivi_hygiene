@@ -9,7 +9,8 @@ class HaccpUserAccountFormPage extends StatefulWidget {
   const HaccpUserAccountFormPage({super.key});
 
   @override
-  State<HaccpUserAccountFormPage> createState() => _HaccpUserAccountFormPageState();
+  State<HaccpUserAccountFormPage> createState() =>
+      _HaccpUserAccountFormPageState();
 }
 
 class _HaccpUserAccountFormPageState extends State<HaccpUserAccountFormPage> {
@@ -44,7 +45,12 @@ class _HaccpUserAccountFormPageState extends State<HaccpUserAccountFormPage> {
       if (mounted) {
         setState(() {
           _personnelOptions = list
-              .map((p) => {'id': p.id, 'label': '${p.fullName} (${p.contractType.displayName})'})
+              .map(
+                (p) => {
+                  'id': p.id,
+                  'label': '${p.fullName} (${p.contractType.displayName})',
+                },
+              )
               .toList();
         });
       }
@@ -60,8 +66,12 @@ class _HaccpUserAccountFormPageState extends State<HaccpUserAccountFormPage> {
       await _repo.create(
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        displayName: _displayNameController.text.trim().isEmpty ? null : _displayNameController.text.trim(),
-        personnelId: _selectedPersonnelId?.isEmpty == true ? null : _selectedPersonnelId,
+        displayName: _displayNameController.text.trim().isEmpty
+            ? null
+            : _displayNameController.text.trim(),
+        personnelId: _selectedPersonnelId?.isEmpty == true
+            ? null
+            : _selectedPersonnelId,
       );
 
       if (mounted) {
@@ -76,9 +86,9 @@ class _HaccpUserAccountFormPageState extends State<HaccpUserAccountFormPage> {
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -110,9 +120,9 @@ class _HaccpUserAccountFormPageState extends State<HaccpUserAccountFormPage> {
                     Text(
                       'Compte de connexion à l\'app',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.primaryBlue,
-                          ),
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.primaryBlue,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
@@ -137,7 +147,8 @@ class _HaccpUserAccountFormPageState extends State<HaccpUserAccountFormPage> {
               autocorrect: false,
               validator: (v) {
                 if (v == null || v.trim().isEmpty) return 'Email requis';
-                if (!v.contains('@') || !v.contains('.')) return 'Email invalide';
+                if (!v.contains('@') || !v.contains('.'))
+                  return 'Email invalide';
                 return null;
               },
             ),
@@ -148,8 +159,11 @@ class _HaccpUserAccountFormPageState extends State<HaccpUserAccountFormPage> {
                 labelText: 'Mot de passe *',
                 prefixIcon: const Icon(Icons.lock),
                 suffixIcon: IconButton(
-                  icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
-                  onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                  icon: Icon(
+                    _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
                 ),
                 border: const OutlineInputBorder(),
               ),
@@ -181,7 +195,12 @@ class _HaccpUserAccountFormPageState extends State<HaccpUserAccountFormPage> {
                 ),
                 items: [
                   const DropdownMenuItem(value: null, child: Text('Aucun')),
-                  ..._personnelOptions.map((p) => DropdownMenuItem(value: p['id'], child: Text(p['label']!))),
+                  ..._personnelOptions.map(
+                    (p) => DropdownMenuItem(
+                      value: p['id'],
+                      child: Text(p['label']!),
+                    ),
+                  ),
                 ],
                 onChanged: (v) => setState(() => _selectedPersonnelId = v),
               ),
@@ -204,7 +223,10 @@ class _HaccpUserAccountFormPageState extends State<HaccpUserAccountFormPage> {
                   ? const SizedBox(
                       height: 24,
                       width: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Text('Créer le compte'),
             ),

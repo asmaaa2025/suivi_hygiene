@@ -9,11 +9,7 @@ class AdminShell extends StatefulWidget {
   final Widget child;
   final String location;
 
-  const AdminShell({
-    super.key,
-    required this.child,
-    required this.location,
-  });
+  const AdminShell({super.key, required this.child, required this.location});
 
   @override
   State<AdminShell> createState() => _AdminShellState();
@@ -31,17 +27,25 @@ class _AdminShellState extends State<AdminShell> {
   void _updateSelectedIndex() {
     final location = widget.location;
     // Normal shell routes
-    if (location.startsWith('/app/home') || location == '/app' || location.startsWith('/admin/home') || location == '/admin') {
+    if (location.startsWith('/app/home') ||
+        location == '/app' ||
+        location.startsWith('/admin/home') ||
+        location == '/admin') {
       _currentIndex = 0;
-    } else if (location.startsWith('/app/clock') || location.startsWith('/admin/clock')) {
+    } else if (location.startsWith('/app/clock') ||
+        location.startsWith('/admin/clock')) {
       _currentIndex = 1;
-    } else if (location.startsWith('/app/temperatures') || location.startsWith('/admin/temperatures')) {
+    } else if (location.startsWith('/app/temperatures') ||
+        location.startsWith('/admin/temperatures')) {
       _currentIndex = 2;
-    } else if (location.startsWith('/app/receptions') || location.startsWith('/admin/receptions')) {
+    } else if (location.startsWith('/app/receptions') ||
+        location.startsWith('/admin/receptions')) {
       _currentIndex = 3;
-    } else if (location.startsWith('/app/cleaning') || location.startsWith('/admin/cleaning')) {
+    } else if (location.startsWith('/app/cleaning') ||
+        location.startsWith('/admin/cleaning')) {
       _currentIndex = 4;
-    } else if (location.startsWith('/app/history') || location.startsWith('/admin/history')) {
+    } else if (location.startsWith('/app/history') ||
+        location.startsWith('/admin/history')) {
       _currentIndex = 5;
     }
     // Admin-specific routes (not in bottom nav, accessed via menu)
@@ -87,10 +91,7 @@ class _AdminShellState extends State<AdminShell> {
         unselectedItemColor: Colors.grey,
         items: const [
           // Normal shell items
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Accueil',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
           BottomNavigationBarItem(
             icon: Icon(Icons.access_time),
             label: 'Pointage',

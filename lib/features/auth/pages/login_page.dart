@@ -36,7 +36,8 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       debugPrint(
-          '[Login] Attempting login for: ${_emailController.text.trim()}');
+        '[Login] Attempting login for: ${_emailController.text.trim()}',
+      );
       final response = await Supabase.instance.client.auth.signInWithPassword(
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -44,7 +45,8 @@ class _LoginPageState extends State<LoginPage> {
 
       debugPrint('[Login] ✅ Login successful! User: ${response.user?.email}');
       debugPrint(
-          '[Login] Session exists: ${Supabase.instance.client.auth.currentSession != null}');
+        '[Login] Session exists: ${Supabase.instance.client.auth.currentSession != null}',
+      );
 
       // Seed default friteuses after login
       try {
@@ -154,14 +156,18 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.error_outline,
-                                color: AppTheme.statusCritical, size: 20),
+                            Icon(
+                              Icons.error_outline,
+                              color: AppTheme.statusCritical,
+                              size: 20,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _errorMessage!,
-                                style:
-                                    TextStyle(color: AppTheme.statusCritical),
+                                style: TextStyle(
+                                  color: AppTheme.statusCritical,
+                                ),
                               ),
                             ),
                           ],

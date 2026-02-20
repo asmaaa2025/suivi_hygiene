@@ -31,7 +31,7 @@ class _DashboardPageState extends State<DashboardPage> {
       if (mounted) {
         setState(() {
           final employee = _sessionService.currentEmployee;
-          _greeting = employee != null 
+          _greeting = employee != null
               ? 'Bonjour, ${employee.firstName}'
               : 'Bonjour';
         });
@@ -62,7 +62,10 @@ class _DashboardPageState extends State<DashboardPage> {
             if (_greeting != null)
               Text(
                 _greeting!,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
               )
             else
               const Text('Suivi HACCP'),
@@ -91,7 +94,10 @@ class _DashboardPageState extends State<DashboardPage> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [AppTheme.primaryBlue, AppTheme.primaryBlue.withOpacity(0.8)],
+                  colors: [
+                    AppTheme.primaryBlue,
+                    AppTheme.primaryBlue.withOpacity(0.8),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -105,7 +111,11 @@ class _DashboardPageState extends State<DashboardPage> {
                       color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.swap_horiz, color: Colors.white, size: 28),
+                    child: const Icon(
+                      Icons.swap_horiz,
+                      color: Colors.white,
+                      size: 28,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -114,7 +124,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       children: [
                         Text(
                           'Changer d\'employé',
-                          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          style: Theme.of(context).textTheme.titleLarge
+                              ?.copyWith(
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
@@ -122,9 +133,8 @@ class _DashboardPageState extends State<DashboardPage> {
                         const SizedBox(height: 4),
                         Text(
                           'Sélectionner un autre compte employé',
-                          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                                color: Colors.white.withOpacity(0.9),
-                              ),
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(color: Colors.white.withOpacity(0.9)),
                         ),
                       ],
                     ),
@@ -136,11 +146,17 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
           const SizedBox(height: 24),
           // Section Saisie Rapide
-          _buildSectionHeader(context, 'Saisie rapide', Icons.add_circle_outline),
+          _buildSectionHeader(
+            context,
+            'Saisie rapide',
+            Icons.add_circle_outline,
+          ),
           const SizedBox(height: 8),
           SectionCard(
             onTap: () {
-              final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+              final isAdminRoute = GoRouterState.of(
+                context,
+              ).matchedLocation.startsWith('/admin');
               context.push(isAdminRoute ? '/admin/entry' : '/app/entry');
             },
             child: Row(
@@ -151,8 +167,11 @@ class _DashboardPageState extends State<DashboardPage> {
                     color: AppTheme.primaryBlue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.add_circle,
-                      color: AppTheme.primaryBlue, size: 28),
+                  child: Icon(
+                    Icons.add_circle,
+                    color: AppTheme.primaryBlue,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -162,8 +181,8 @@ class _DashboardPageState extends State<DashboardPage> {
                       Text(
                         'Nouvelle saisie',
                         style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -332,7 +351,11 @@ class _DashboardPageState extends State<DashboardPage> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title, IconData icon) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title,
+    IconData icon,
+  ) {
     return Row(
       children: [
         Icon(icon, color: AppTheme.primaryBlue, size: 20),
@@ -340,9 +363,9 @@ class _DashboardPageState extends State<DashboardPage> {
         Text(
           title,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: AppTheme.primaryBlue,
-              ),
+            fontWeight: FontWeight.bold,
+            color: AppTheme.primaryBlue,
+          ),
         ),
       ],
     );
@@ -370,15 +393,9 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
+              Text(title, style: Theme.of(context).textTheme.titleMedium),
               const SizedBox(height: 4),
-              Text(
-                subtitle,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+              Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
             ],
           ),
         ),

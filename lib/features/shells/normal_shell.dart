@@ -8,11 +8,7 @@ class NormalShell extends StatefulWidget {
   final Widget child;
   final String location;
 
-  const NormalShell({
-    super.key,
-    required this.child,
-    required this.location,
-  });
+  const NormalShell({super.key, required this.child, required this.location});
 
   @override
   State<NormalShell> createState() => _NormalShellState();
@@ -82,10 +78,7 @@ class _NormalShellState extends State<NormalShell> {
         selectedItemColor: AppTheme.primaryBlue,
         unselectedItemColor: Colors.grey,
         items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Accueil',
-          ),
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Accueil'),
           BottomNavigationBarItem(
             icon: Icon(Icons.access_time),
             label: 'Pointage',
@@ -111,4 +104,3 @@ class _NormalShellState extends State<NormalShell> {
     );
   }
 }
-

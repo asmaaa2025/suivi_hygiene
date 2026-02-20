@@ -43,11 +43,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: EmptyState(
-              title: 'T',
-              message: 'M',
-              icon: Icons.check,
-            ),
+            body: EmptyState(title: 'T', message: 'M', icon: Icons.check),
           ),
         ),
       );

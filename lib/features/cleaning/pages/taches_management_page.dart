@@ -63,8 +63,10 @@ class _TachesManagementPageState extends State<TachesManagementPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Supprimer',
-                style: TextStyle(color: AppTheme.statusCritical)),
+            child: Text(
+              'Supprimer',
+              style: TextStyle(color: AppTheme.statusCritical),
+            ),
           ),
         ],
       ),
@@ -76,9 +78,9 @@ class _TachesManagementPageState extends State<TachesManagementPage> {
         _loadData();
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         }
       }
     }
@@ -122,146 +124,146 @@ class _TachesManagementPageState extends State<TachesManagementPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? ErrorState(message: _error!, onRetry: _loadData)
-              : _taches.isEmpty
-                  ? const EmptyState(
-                      title: 'Aucune tâche',
-                      message: 'Créez votre première tâche de nettoyage',
-                      icon: Icons.cleaning_services,
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadData,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _taches.length,
-                        itemBuilder: (context, index) {
-                          final tache = _taches[index];
+          ? ErrorState(message: _error!, onRetry: _loadData)
+          : _taches.isEmpty
+          ? const EmptyState(
+              title: 'Aucune tâche',
+              message: 'Créez votre première tâche de nettoyage',
+              icon: Icons.cleaning_services,
+            )
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _taches.length,
+                itemBuilder: (context, index) {
+                  final tache = _taches[index];
 
-                          return SectionCard(
-                            color:
-                                !tache.isActive ? Colors.grey.shade300 : null,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            tache.nom,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium
-                                                ?.copyWith(
-                                                  decoration: !tache.isActive
-                                                      ? TextDecoration
-                                                          .lineThrough
-                                                      : null,
-                                                ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            _getRecurrenceSummary(tache),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall,
-                                          ),
-                                        ],
+                  return SectionCard(
+                    color: !tache.isActive ? Colors.grey.shade300 : null,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    tache.nom,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(
+                                          decoration: !tache.isActive
+                                              ? TextDecoration.lineThrough
+                                              : null,
+                                        ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _getRecurrenceSummary(tache),
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            HaccpBadge(
+                              status: tache.isActive
+                                  ? HaccpStatus.ok
+                                  : HaccpStatus.warning,
+                              label: tache.isActive ? 'Actif' : 'Inactif',
+                            ),
+                            PopupMenuButton(
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.edit,
+                                        color: AppTheme.primaryBlue,
                                       ),
-                                    ),
-                                    HaccpBadge(
-                                      status: tache.isActive
-                                          ? HaccpStatus.ok
-                                          : HaccpStatus.warning,
-                                      label:
-                                          tache.isActive ? 'Actif' : 'Inactif',
-                                    ),
-                                    PopupMenuButton(
-                                      itemBuilder: (context) => [
-                                        PopupMenuItem(
-                                          value: 'edit',
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.edit,
-                                                  color: AppTheme.primaryBlue),
-                                              const SizedBox(width: 8),
-                                              const Text('Modifier'),
-                                            ],
-                                          ),
-                                        ),
-                                        PopupMenuItem(
-                                          value: 'toggle',
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                tache.isActive
-                                                    ? Icons.block
-                                                    : Icons.check,
-                                                color: tache.isActive
-                                                    ? AppTheme.statusWarn
-                                                    : AppTheme.statusOk,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(tache.isActive
-                                                  ? 'Désactiver'
-                                                  : 'Activer'),
-                                            ],
-                                          ),
-                                        ),
-                                        PopupMenuItem(
-                                          value: 'delete',
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.delete,
-                                                  color:
-                                                      AppTheme.statusCritical),
-                                              const SizedBox(width: 8),
-                                              const Text('Supprimer'),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                      onSelected: (value) async {
-                                        if (value == 'edit') {
-                                          final result = await context.push(
-                                            '/app/cleaning/taches/${tache.id}',
-                                          );
-                                          if (result == true) {
-                                            _loadData();
-                                          }
-                                        } else if (value == 'toggle') {
-                                          try {
-                                            await _tacheRepo.update(
-                                              id: tache.id,
-                                              isActive: !tache.isActive,
-                                            );
-                                            _loadData();
-                                          } catch (e) {
-                                            if (mounted) {
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                    content:
-                                                        Text('Erreur: $e')),
-                                              );
-                                            }
-                                          }
-                                        } else if (value == 'delete') {
-                                          _deleteTache(tache.id);
-                                        }
-                                      },
-                                    ),
-                                  ],
+                                      const SizedBox(width: 8),
+                                      const Text('Modifier'),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'toggle',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        tache.isActive
+                                            ? Icons.block
+                                            : Icons.check,
+                                        color: tache.isActive
+                                            ? AppTheme.statusWarn
+                                            : AppTheme.statusOk,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        tache.isActive
+                                            ? 'Désactiver'
+                                            : 'Activer',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete,
+                                        color: AppTheme.statusCritical,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Supprimer'),
+                                    ],
+                                  ),
                                 ),
                               ],
+                              onSelected: (value) async {
+                                if (value == 'edit') {
+                                  final result = await context.push(
+                                    '/app/cleaning/taches/${tache.id}',
+                                  );
+                                  if (result == true) {
+                                    _loadData();
+                                  }
+                                } else if (value == 'toggle') {
+                                  try {
+                                    await _tacheRepo.update(
+                                      id: tache.id,
+                                      isActive: !tache.isActive,
+                                    );
+                                    _loadData();
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(content: Text('Erreur: $e')),
+                                      );
+                                    }
+                                  }
+                                } else if (value == 'delete') {
+                                  _deleteTache(tache.id);
+                                }
+                              },
                             ),
-                          );
-                        },
-                      ),
+                          ],
+                        ),
+                      ],
                     ),
+                  );
+                },
+              ),
+            ),
       floatingActionButton: FloatingActionButton(
         onPressed: () async {
           final result = await context.push('/app/cleaning/taches/new');

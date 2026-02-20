@@ -27,10 +27,10 @@ class Temperature {
     final appareilIdValue = json['appareil_id'] ?? json['appareil'];
     final appareilId = appareilIdValue != null
         ? (appareilIdValue is String
-            ? appareilIdValue
-            : appareilIdValue.toString())
+              ? appareilIdValue
+              : appareilIdValue.toString())
         : '';
-    
+
     // Ensure id is never null
     final id = json['id']?.toString() ?? '';
 
@@ -39,15 +39,17 @@ class Temperature {
       appareilId: appareilId,
       temperature: (json['temperature'] as num?)?.toDouble() ?? 0.0,
       remarque: json['remarque'] as String?,
-      photoUrl: (json['photo_url'] as String?) ?? (json['photo_path'] as String?),
+      photoUrl:
+          (json['photo_url'] as String?) ?? (json['photo_path'] as String?),
       createdAt: json['created_at'] != null
-          ? (DateTime.tryParse(json['created_at'].toString()) ?? 
-             (json['date'] != null 
-               ? (DateTime.tryParse(json['date'].toString()) ?? DateTime.now())
-               : DateTime.now()))
-          : (json['date'] != null 
-              ? (DateTime.tryParse(json['date'].toString()) ?? DateTime.now())
-              : DateTime.now()),
+          ? (DateTime.tryParse(json['created_at'].toString()) ??
+                (json['date'] != null
+                    ? (DateTime.tryParse(json['date'].toString()) ??
+                          DateTime.now())
+                    : DateTime.now()))
+          : (json['date'] != null
+                ? (DateTime.tryParse(json['date'].toString()) ?? DateTime.now())
+                : DateTime.now()),
       createdBy: json['created_by'] as String?,
       employeeFirstName: json['employee_first_name'] as String?,
       employeeLastName: json['employee_last_name'] as String?,

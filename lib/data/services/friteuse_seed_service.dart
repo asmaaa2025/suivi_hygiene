@@ -38,7 +38,8 @@ class FriteuseSeedService {
       }
 
       debugPrint(
-          '[FriteuseSeed] Creating ${toCreate.length} default friteuses');
+        '[FriteuseSeed] Creating ${toCreate.length} default friteuses',
+      );
 
       // Create missing friteuses
       for (final nom in toCreate) {

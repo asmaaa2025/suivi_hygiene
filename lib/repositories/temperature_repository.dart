@@ -21,7 +21,8 @@ class TemperatureRepository extends BaseRepository {
   Future<List<Map<String, dynamic>>> getDevices() async {
     try {
       debugPrint(
-          '[appareils] [GET_DEVICES] ========================================');
+        '[appareils] [GET_DEVICES] ========================================',
+      );
       debugPrint('[appareils] [GET_DEVICES] Starting fetch');
       debugPrint('[appareils] [GET_DEVICES] userId: $userId');
       debugPrint('[appareils] [GET_DEVICES] tableName: $tableName');
@@ -29,60 +30,80 @@ class TemperatureRepository extends BaseRepository {
       // Check if user is authenticated
       if (userId.isEmpty) {
         debugPrint(
-            '[appareils] [GET_DEVICES] ❌ No user ID - user not authenticated');
+          '[appareils] [GET_DEVICES] ❌ No user ID - user not authenticated',
+        );
         throw SupabaseException('User not authenticated. Please login first.');
       }
 
       // Try with user_id filter first
       try {
         debugPrint(
-            '[appareils] [GET_DEVICES] Attempting fetch with user_id filter...');
-        final result =
-            await fetchList(cacheKey: 'devices', filterByUserId: true);
+          '[appareils] [GET_DEVICES] Attempting fetch with user_id filter...',
+        );
+        final result = await fetchList(
+          cacheKey: 'devices',
+          filterByUserId: true,
+        );
         debugPrint(
-            '[appareils] [GET_DEVICES] ✅ Success with user_id filter: ${result.length} devices');
+          '[appareils] [GET_DEVICES] ✅ Success with user_id filter: ${result.length} devices',
+        );
         return result;
       } catch (e) {
         debugPrint('[appareils] [GET_DEVICES] ⚠️ Failed with user_id filter');
         _logSupabaseErrorForTable('appareils', e, 'getDevices (with user_id)');
 
         // Check if it's a column error
-        final isColumnError = e is PostgrestException &&
+        final isColumnError =
+            e is PostgrestException &&
             (e.message.toLowerCase().contains('column') ||
                 e.message.toLowerCase().contains('user_id') ||
-                e.code == '42703' // PostgreSQL error code for undefined column
-            );
+                e.code ==
+                    '42703' // PostgreSQL error code for undefined column
+                    );
 
         // Check if it's a table not found error
-        final isTableError = e is PostgrestException &&
+        final isTableError =
+            e is PostgrestException &&
             (e.message.toLowerCase().contains('relation') ||
                 e.message.toLowerCase().contains('does not exist') ||
-                e.code == '42P01' // PostgreSQL error code for undefined table
-            );
+                e.code ==
+                    '42P01' // PostgreSQL error code for undefined table
+                    );
 
         if (isTableError) {
           debugPrint(
-              '[appareils] [GET_DEVICES] ❌ Table "appareils" does not exist in Supabase!');
+            '[appareils] [GET_DEVICES] ❌ Table "appareils" does not exist in Supabase!',
+          );
           debugPrint(
-              '[appareils] [GET_DEVICES] Please run supabase_schema.sql to create the table.');
+            '[appareils] [GET_DEVICES] Please run supabase_schema.sql to create the table.',
+          );
           throw SupabaseException(
-              'Table "appareils" does not exist. Please create it in Supabase first.');
+            'Table "appareils" does not exist. Please create it in Supabase first.',
+          );
         }
 
         if (isColumnError) {
           debugPrint(
-              '[appareils] [GET_DEVICES] ⚠️ Column user_id may not exist, retrying without filter...');
+            '[appareils] [GET_DEVICES] ⚠️ Column user_id may not exist, retrying without filter...',
+          );
           try {
-            final result =
-                await fetchList(cacheKey: 'devices', filterByUserId: false);
+            final result = await fetchList(
+              cacheKey: 'devices',
+              filterByUserId: false,
+            );
             debugPrint(
-                '[appareils] [GET_DEVICES] ✅ Success without user_id filter: ${result.length} devices');
+              '[appareils] [GET_DEVICES] ✅ Success without user_id filter: ${result.length} devices',
+            );
             return result;
           } catch (e2) {
             debugPrint(
-                '[appareils] [GET_DEVICES] ❌ Also failed without user_id filter');
+              '[appareils] [GET_DEVICES] ❌ Also failed without user_id filter',
+            );
             _logSupabaseErrorForTable(
-                'appareils', e2, 'getDevices (without user_id)');
+              'appareils',
+              e2,
+              'getDevices (without user_id)',
+            );
             rethrow;
           }
         }
@@ -101,29 +122,41 @@ class TemperatureRepository extends BaseRepository {
 
   /// Log Supabase errors for a specific table
   void _logSupabaseErrorForTable(
-      String table, dynamic error, String operation) {
+    String table,
+    dynamic error,
+    String operation,
+  ) {
     debugPrint(
-        '[$table] [${operation.toUpperCase()}] ========== ERROR DETAILS ==========');
+      '[$table] [${operation.toUpperCase()}] ========== ERROR DETAILS ==========',
+    );
     debugPrint(
-        '[$table] [${operation.toUpperCase()}] Error type: ${error.runtimeType}');
+      '[$table] [${operation.toUpperCase()}] Error type: ${error.runtimeType}',
+    );
     debugPrint(
-        '[$table] [${operation.toUpperCase()}] Error message: ${error.toString()}');
+      '[$table] [${operation.toUpperCase()}] Error message: ${error.toString()}',
+    );
 
     if (error is PostgrestException) {
       debugPrint(
-          '[$table] [${operation.toUpperCase()}] PostgrestException details:');
+        '[$table] [${operation.toUpperCase()}] PostgrestException details:',
+      );
       debugPrint(
-          '[$table] [${operation.toUpperCase()}]   - code: ${error.code}');
+        '[$table] [${operation.toUpperCase()}]   - code: ${error.code}',
+      );
       debugPrint(
-          '[$table] [${operation.toUpperCase()}]   - message: ${error.message}');
+        '[$table] [${operation.toUpperCase()}]   - message: ${error.message}',
+      );
       debugPrint(
-          '[$table] [${operation.toUpperCase()}]   - details: ${error.details}');
+        '[$table] [${operation.toUpperCase()}]   - details: ${error.details}',
+      );
       debugPrint(
-          '[$table] [${operation.toUpperCase()}]   - hint: ${error.hint}');
+        '[$table] [${operation.toUpperCase()}]   - hint: ${error.hint}',
+      );
     }
 
     debugPrint(
-        '[$table] [${operation.toUpperCase()}] ====================================');
+      '[$table] [${operation.toUpperCase()}] ====================================',
+    );
   }
 
   /// Get temperature logs for a device
@@ -146,44 +179,56 @@ class TemperatureRepository extends BaseRepository {
           .eq('user_id', userId) // Filter by user_id
           .order('date', ascending: false);
 
-      final List<Map<String, dynamic>> list =
-          List<Map<String, dynamic>>.from(data);
+      final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
+        data,
+      );
       debugPrint(
-          '[$_logsTable] [GET_LOGS] ✅ Success: Fetched ${list.length} logs for device $deviceId');
+        '[$_logsTable] [GET_LOGS] ✅ Success: Fetched ${list.length} logs for device $deviceId',
+      );
       return list;
     } catch (e) {
       debugPrint('[$_logsTable] [GET_LOGS] ❌ Error: ${e.toString()}');
       _logSupabaseError(e, 'getLogs');
       if (e is NetworkException) rethrow;
       throw SupabaseException(
-          'Failed to fetch temperature logs: ${e.toString()}');
+        'Failed to fetch temperature logs: ${e.toString()}',
+      );
     }
   }
 
   /// Log Supabase errors with full details
   void _logSupabaseError(dynamic error, String operation) {
     debugPrint(
-        '[$_logsTable] [${operation.toUpperCase()}] ========== ERROR DETAILS ==========');
+      '[$_logsTable] [${operation.toUpperCase()}] ========== ERROR DETAILS ==========',
+    );
     debugPrint(
-        '[$_logsTable] [${operation.toUpperCase()}] Error type: ${error.runtimeType}');
+      '[$_logsTable] [${operation.toUpperCase()}] Error type: ${error.runtimeType}',
+    );
     debugPrint(
-        '[$_logsTable] [${operation.toUpperCase()}] Error message: ${error.toString()}');
+      '[$_logsTable] [${operation.toUpperCase()}] Error message: ${error.toString()}',
+    );
 
     if (error is PostgrestException) {
       debugPrint(
-          '[$_logsTable] [${operation.toUpperCase()}] PostgrestException details:');
+        '[$_logsTable] [${operation.toUpperCase()}] PostgrestException details:',
+      );
       debugPrint(
-          '[$_logsTable] [${operation.toUpperCase()}]   - code: ${error.code}');
+        '[$_logsTable] [${operation.toUpperCase()}]   - code: ${error.code}',
+      );
       debugPrint(
-          '[$_logsTable] [${operation.toUpperCase()}]   - message: ${error.message}');
+        '[$_logsTable] [${operation.toUpperCase()}]   - message: ${error.message}',
+      );
       debugPrint(
-          '[$_logsTable] [${operation.toUpperCase()}]   - details: ${error.details}');
+        '[$_logsTable] [${operation.toUpperCase()}]   - details: ${error.details}',
+      );
       debugPrint(
-          '[$_logsTable] [${operation.toUpperCase()}]   - hint: ${error.hint}');
+        '[$_logsTable] [${operation.toUpperCase()}]   - hint: ${error.hint}',
+      );
     }
 
     debugPrint(
-        '[$_logsTable] [${operation.toUpperCase()}] ====================================');
+      '[$_logsTable] [${operation.toUpperCase()}] ====================================',
+    );
   }
 
   /// Create device
@@ -192,11 +237,7 @@ class TemperatureRepository extends BaseRepository {
     double? tempMin,
     double? tempMax,
   }) async {
-    return await create({
-      'nom': nom,
-      'temp_min': tempMin,
-      'temp_max': tempMax,
-    });
+    return await create({'nom': nom, 'temp_min': tempMin, 'temp_max': tempMax});
   }
 
   /// Create temperature log
@@ -235,7 +276,8 @@ class TemperatureRepository extends BaseRepository {
         // Photo upload logic will be handled separately
         // For now, just store the path
         debugPrint(
-            '[$_logsTable] [CREATE_LOG] Photo path provided: $photoPath');
+          '[$_logsTable] [CREATE_LOG] Photo path provided: $photoPath',
+        );
       }
 
       final result = await _supabase.client
@@ -246,7 +288,8 @@ class TemperatureRepository extends BaseRepository {
 
       await _cache.clearTable(_logsTable);
       debugPrint(
-          '[$_logsTable] [CREATE_LOG] ✅ Success: Created log ${result['id']}');
+        '[$_logsTable] [CREATE_LOG] ✅ Success: Created log ${result['id']}',
+      );
       debugPrint('[$_logsTable] [CREATE_LOG] Result: $result');
       return result;
     } catch (e) {
@@ -254,7 +297,8 @@ class TemperatureRepository extends BaseRepository {
       _logSupabaseError(e, 'createLog');
       if (e is NetworkException) rethrow;
       throw SupabaseException(
-          'Failed to create temperature log: ${e.toString()}');
+        'Failed to create temperature log: ${e.toString()}',
+      );
     }
   }
 
@@ -284,7 +328,8 @@ class TemperatureRepository extends BaseRepository {
       _logSupabaseError(e, 'deleteLog');
       if (e is NetworkException) rethrow;
       throw SupabaseException(
-          'Failed to delete temperature log: ${e.toString()}');
+        'Failed to delete temperature log: ${e.toString()}',
+      );
     }
   }
 

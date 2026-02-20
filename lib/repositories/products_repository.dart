@@ -26,8 +26,9 @@ class ProductsRepository {
           .select()
           .eq('owner_id', user.id)
           .order('nom');
-      final List<Map<String, dynamic>> list =
-          List<Map<String, dynamic>>.from(response);
+      final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
+        response,
+      );
       debugPrint('[ProductsRepo] ✅ Fetched ${list.length} products');
       return list;
     } catch (e) {
@@ -69,15 +70,19 @@ class ProductsRepository {
         'quantite': quantite,
         'origine_viande': origineViande,
         'allergenes': allergenes,
-        'date_fabrication': dateFabrication?.toIso8601String() ??
+        'date_fabrication':
+            dateFabrication?.toIso8601String() ??
             DateTime.now().toIso8601String(),
         'date_modification': DateTime.now().toIso8601String(),
         'surgelagable': (surgelagable ?? false) ? 1 : 0,
         'actif': true,
       };
 
-      final result =
-          await client.from(tableName).insert(record).select().single();
+      final result = await client
+          .from(tableName)
+          .insert(record)
+          .select()
+          .single();
 
       debugPrint('[ProductsRepo] ✅ Created product ${result['id']}');
       return result;
@@ -175,8 +180,11 @@ class ProductsRepository {
   /// Get product by ID
   Future<Map<String, dynamic>> getById(String id) async {
     try {
-      final response =
-          await client.from(tableName).select().eq('id', id).single();
+      final response = await client
+          .from(tableName)
+          .select()
+          .eq('id', id)
+          .single();
       return response as Map<String, dynamic>;
     } catch (e) {
       throw SupabaseException('Failed to fetch product: $e');

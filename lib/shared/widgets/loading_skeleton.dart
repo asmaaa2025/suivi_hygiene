@@ -39,7 +39,10 @@ class ListItemSkeleton extends StatelessWidget {
         child: Row(
           children: [
             LoadingSkeleton(
-                width: 48, height: 48, borderRadius: BorderRadius.circular(8)),
+              width: 48,
+              height: 48,
+              borderRadius: BorderRadius.circular(8),
+            ),
             const SizedBox(width: 16),
             Expanded(
               child: Column(

@@ -2,10 +2,10 @@
 enum UserRole {
   /// Regular employee - can clock in/out and perform HACCP operations
   employee,
-  
+
   /// Manager - same as employee + can manage employees (future)
   manager,
-  
+
   /// Admin - access to admin shell with HR, clock history, and correlation
   admin;
 
@@ -48,4 +48,3 @@ enum UserRole {
   /// Check if role can access admin shell
   bool get canAccessAdminShell => this == UserRole.admin;
 }
-

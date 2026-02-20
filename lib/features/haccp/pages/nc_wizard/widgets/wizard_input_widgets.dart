@@ -1,5 +1,5 @@
 /// Reusable Input Widgets for NC Wizard
-/// 
+///
 /// Common input components for consistent UI across wizard steps
 
 import 'package:flutter/material.dart';
@@ -39,24 +39,21 @@ class WizardTextInput extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
             if (required)
-              Text(
-                ' *',
-                style: TextStyle(color: Colors.red, fontSize: 18),
-              ),
+              Text(' *', style: TextStyle(color: Colors.red, fontSize: 18)),
           ],
         ),
         if (helperText != null) ...[
           const SizedBox(height: 4),
           Text(
             helperText!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
         ],
         const SizedBox(height: 8),
@@ -65,14 +62,13 @@ class WizardTextInput extends StatelessWidget {
           onChanged: onChanged,
           maxLines: maxLines,
           keyboardType: keyboardType,
-          validator: validator ??
+          validator:
+              validator ??
               (required
                   ? (v) => v == null || v.isEmpty ? 'Ce champ est requis' : null
                   : null),
           decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
@@ -96,6 +92,7 @@ class WizardDropdown<T> extends StatelessWidget {
   final ValueChanged<T?>? onChanged;
   final bool required;
   final String? Function(T?)? validator;
+
   /// Texte affiché quand aucune valeur n'est sélectionnée
   final String? hintText;
 
@@ -121,40 +118,38 @@ class WizardDropdown<T> extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
             if (required)
-              Text(
-                ' *',
-                style: TextStyle(color: Colors.red, fontSize: 18),
-              ),
+              Text(' *', style: TextStyle(color: Colors.red, fontSize: 18)),
           ],
         ),
         if (helperText != null) ...[
           const SizedBox(height: 4),
           Text(
             helperText!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
         ],
         const SizedBox(height: 8),
         DropdownButtonFormField<T>(
           value: value,
-          hint: hintText != null ? Text(hintText!, style: TextStyle(color: Colors.grey[600])) : null,
+          hint: hintText != null
+              ? Text(hintText!, style: TextStyle(color: Colors.grey[600]))
+              : null,
           items: items,
           onChanged: onChanged,
-          validator: validator ??
+          validator:
+              validator ??
               (required
                   ? (v) => v == null ? 'Ce champ est requis' : null
                   : null),
           decoration: InputDecoration(
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 16,
@@ -162,10 +157,7 @@ class WizardDropdown<T> extends StatelessWidget {
             filled: true,
             fillColor: Colors.grey[50],
           ),
-          style: const TextStyle(
-            fontSize: 16,
-            color: Colors.black87,
-          ),
+          style: const TextStyle(fontSize: 16, color: Colors.black87),
           dropdownColor: Colors.white,
           iconEnabledColor: Colors.black87,
         ),
@@ -233,24 +225,21 @@ class WizardDatePicker extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
             if (required)
-              Text(
-                ' *',
-                style: TextStyle(color: Colors.red, fontSize: 18),
-              ),
+              Text(' *', style: TextStyle(color: Colors.red, fontSize: 18)),
           ],
         ),
         if (helperText != null) ...[
           const SizedBox(height: 4),
           Text(
             helperText!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
         ],
         const SizedBox(height: 8),
@@ -267,7 +256,9 @@ class WizardDatePicker extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  value != null ? dateFormat.format(value!) : 'Sélectionner une date',
+                  value != null
+                      ? dateFormat.format(value!)
+                      : 'Sélectionner une date',
                   style: TextStyle(
                     fontSize: 16,
                     color: value != null ? Colors.black87 : Colors.grey[600],
@@ -349,7 +340,7 @@ class WizardDateTimePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     // Use simple date format without locale to avoid errors
     final dateFormat = DateFormat('dd/MM/yyyy HH:mm');
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -358,24 +349,21 @@ class WizardDateTimePicker extends StatelessWidget {
             Text(
               label,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 18,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
             ),
             if (required)
-              Text(
-                ' *',
-                style: TextStyle(color: Colors.red, fontSize: 18),
-              ),
+              Text(' *', style: TextStyle(color: Colors.red, fontSize: 18)),
           ],
         ),
         if (helperText != null) ...[
           const SizedBox(height: 4),
           Text(
             helperText!,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Colors.grey[600],
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
           ),
         ],
         const SizedBox(height: 8),
@@ -384,7 +372,9 @@ class WizardDateTimePicker extends StatelessWidget {
             try {
               await _selectDateTime(context);
             } catch (e) {
-              debugPrint('[WizardDateTimePicker] Error selecting date/time: $e');
+              debugPrint(
+                '[WizardDateTimePicker] Error selecting date/time: $e',
+              );
               // Show error to user
               if (context.mounted) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -404,8 +394,8 @@ class WizardDateTimePicker extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  value != null 
-                      ? dateFormat.format(value!) 
+                  value != null
+                      ? dateFormat.format(value!)
                       : 'Sélectionner date/heure',
                   style: TextStyle(
                     fontSize: 16,
@@ -457,46 +447,54 @@ class WizardActionButton extends StatelessWidget {
 
     final button = icon != null
         ? (isPrimary
-            ? ElevatedButton.icon(
-                onPressed: onPressed,
-                style: buttonStyle as ButtonStyle,
-                icon: Icon(icon),
-                label: Text(
-                  label,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              )
-            : OutlinedButton.icon(
-                onPressed: onPressed,
-                style: buttonStyle as ButtonStyle,
-                icon: Icon(icon),
-                label: Text(
-                  label,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ))
+              ? ElevatedButton.icon(
+                  onPressed: onPressed,
+                  style: buttonStyle as ButtonStyle,
+                  icon: Icon(icon),
+                  label: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              : OutlinedButton.icon(
+                  onPressed: onPressed,
+                  style: buttonStyle as ButtonStyle,
+                  icon: Icon(icon),
+                  label: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ))
         : (isPrimary
-            ? ElevatedButton(
-                onPressed: onPressed,
-                style: buttonStyle as ButtonStyle,
-                child: Text(
-                  label,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              )
-            : OutlinedButton(
-                onPressed: onPressed,
-                style: buttonStyle as ButtonStyle,
-                child: Text(
-                  label,
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ));
+              ? ElevatedButton(
+                  onPressed: onPressed,
+                  style: buttonStyle as ButtonStyle,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                )
+              : OutlinedButton(
+                  onPressed: onPressed,
+                  style: buttonStyle as ButtonStyle,
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ));
 
-    return SizedBox(
-      width: double.infinity,
-      child: button,
-    );
+    return SizedBox(width: double.infinity, child: button);
   }
 }
-

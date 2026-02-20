@@ -43,11 +43,7 @@ class AppareilRepository {
     try {
       final response = await _client
           .from('appareils')
-          .insert({
-            'nom': nom,
-            'temp_min': tempMin,
-            'temp_max': tempMax,
-          })
+          .insert({'nom': nom, 'temp_min': tempMin, 'temp_max': tempMax})
           .select()
           .single();
       return Appareil.fromJson(response);

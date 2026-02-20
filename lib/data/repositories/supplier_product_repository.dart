@@ -15,8 +15,10 @@ class SupplierProductRepository {
         return [];
       }
 
-      debugPrint('[SupplierProductRepo] Fetching products for supplier: $supplierId');
-      
+      debugPrint(
+        '[SupplierProductRepo] Fetching products for supplier: $supplierId',
+      );
+
       // First, get product IDs linked to this supplier
       final linkResponse = await _client
           .from('supplier_products')
@@ -32,7 +34,9 @@ class SupplierProductRepository {
           .map((item) => item['product_id'] as String)
           .toList();
 
-      debugPrint('[SupplierProductRepo] Found ${productIds.length} linked product IDs');
+      debugPrint(
+        '[SupplierProductRepo] Found ${productIds.length} linked product IDs',
+      );
 
       // Then, fetch the actual products
       final productsResponse = await _client
@@ -41,18 +45,19 @@ class SupplierProductRepository {
           .inFilter('id', productIds)
           .eq('owner_id', user.id);
 
-      final products = (productsResponse as List)
-          .map((json) {
-            // Map categorie to category for the model
-            final productJson = Map<String, dynamic>.from(json);
-            if (productJson.containsKey('categorie') && !productJson.containsKey('category')) {
-              productJson['category'] = productJson['categorie'];
-            }
-            return Produit.fromJson(productJson);
-          })
-          .toList();
+      final products = (productsResponse as List).map((json) {
+        // Map categorie to category for the model
+        final productJson = Map<String, dynamic>.from(json);
+        if (productJson.containsKey('categorie') &&
+            !productJson.containsKey('category')) {
+          productJson['category'] = productJson['categorie'];
+        }
+        return Produit.fromJson(productJson);
+      }).toList();
 
-      debugPrint('[SupplierProductRepo] ✅ Fetched ${products.length} products for supplier');
+      debugPrint(
+        '[SupplierProductRepo] ✅ Fetched ${products.length} products for supplier',
+      );
       return products;
     } catch (e) {
       debugPrint('[SupplierProductRepo] ❌ Error: $e');
@@ -92,8 +97,10 @@ class SupplierProductRepository {
     int? defaultDluoDays,
   }) async {
     try {
-      debugPrint('[SupplierProductRepo] [LINK] Linking product $productId to supplier $supplierId');
-      
+      debugPrint(
+        '[SupplierProductRepo] [LINK] Linking product $productId to supplier $supplierId',
+      );
+
       // Check if link already exists
       final existing = await _client
           .from('supplier_products')
@@ -101,21 +108,23 @@ class SupplierProductRepository {
           .eq('supplier_id', supplierId)
           .eq('product_id', productId)
           .maybeSingle();
-      
+
       if (existing != null) {
-        debugPrint('[SupplierProductRepo] [LINK] ⚠️ Link already exists, skipping');
+        debugPrint(
+          '[SupplierProductRepo] [LINK] ⚠️ Link already exists, skipping',
+        );
         return;
       }
-      
+
       final insertData = {
         'supplier_id': supplierId,
         'product_id': productId,
         if (defaultLotNumber != null) 'default_lot_number': defaultLotNumber,
         if (defaultDluoDays != null) 'default_dluo_days': defaultDluoDays,
       };
-      
+
       debugPrint('[SupplierProductRepo] [LINK] Insert data: $insertData');
-      
+
       await _client.from('supplier_products').insert(insertData);
       debugPrint('[SupplierProductRepo] ✅ Linked product to supplier');
     } on PostgrestException catch (e) {
@@ -131,6 +140,3 @@ class SupplierProductRepository {
     }
   }
 }
-
-
-

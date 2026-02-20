@@ -25,8 +25,9 @@ class NetworkService {
   Stream<ConnectivityResult> get connectivityStream {
     return _connectivity.onConnectivityChanged.map((results) {
       // Return the first non-none result, or none if all are none
-      final nonNone =
-          results.where((r) => r != ConnectivityResult.none).toList();
+      final nonNone = results
+          .where((r) => r != ConnectivityResult.none)
+          .toList();
       return nonNone.isNotEmpty ? nonNone.first : ConnectivityResult.none;
     });
   }
@@ -36,8 +37,9 @@ class NetworkService {
     try {
       final results = await _connectivity.checkConnectivity();
       // Return the first non-none result, or none if all are none
-      final nonNone =
-          results.where((r) => r != ConnectivityResult.none).toList();
+      final nonNone = results
+          .where((r) => r != ConnectivityResult.none)
+          .toList();
       return nonNone.isNotEmpty ? nonNone.first : ConnectivityResult.none;
     } catch (e) {
       debugPrint('[Network] Error getting status: $e');

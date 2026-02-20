@@ -47,8 +47,11 @@ void main() {
       expect(app.tempMin, 2.0);
       expect(app.tempMax, 4.0);
       // Manual check: 3.0 is between 2 and 4
-      expect(3.0 >= (app.tempMin ?? double.negativeInfinity) &&
-          3.0 <= (app.tempMax ?? double.infinity), true);
+      expect(
+        3.0 >= (app.tempMin ?? double.negativeInfinity) &&
+            3.0 <= (app.tempMax ?? double.infinity),
+        true,
+      );
     });
 
     test('toJson produces valid Map', () {

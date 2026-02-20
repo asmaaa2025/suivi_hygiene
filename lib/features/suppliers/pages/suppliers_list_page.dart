@@ -78,15 +78,15 @@ class _SuppliersListPageState extends State<SuppliersListPage> {
         await _supplierRepo.delete(supplier.id);
         await _loadData();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Fournisseur supprimé')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Fournisseur supprimé')));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         }
       }
     }
@@ -108,89 +108,83 @@ class _SuppliersListPageState extends State<SuppliersListPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? ErrorState(message: _error!, onRetry: _loadData)
-              : _suppliers.isEmpty
-                  ? const EmptyState(
-                      title: 'Aucun fournisseur',
-                      message: 'Ajoutez votre premier fournisseur',
-                      icon: Icons.local_shipping,
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadData,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _suppliers.length,
-                        itemBuilder: (context, index) {
-                          final supplier = _suppliers[index];
-                          return SectionCard(
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Text(
-                                            supplier.name,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium
-                                                ?.copyWith(
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                          ),
-                                          if (supplier.isOccasional) ...[
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 6,
-                                                vertical: 2,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.orange.shade100,
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: Text(
-                                                'Occasionnel',
-                                                style: TextStyle(
-                                                  fontSize: 10,
-                                                  color: Colors.orange.shade800,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ],
+          ? ErrorState(message: _error!, onRetry: _loadData)
+          : _suppliers.isEmpty
+          ? const EmptyState(
+              title: 'Aucun fournisseur',
+              message: 'Ajoutez votre premier fournisseur',
+              icon: Icons.local_shipping,
+            )
+          : RefreshIndicator(
+              onRefresh: _loadData,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _suppliers.length,
+                itemBuilder: (context, index) {
+                  final supplier = _suppliers[index];
+                  return SectionCard(
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    supplier.name,
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .titleMedium
+                                        ?.copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  if (supplier.isOccasional) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 6,
+                                        vertical: 2,
                                       ),
-                                      if (supplier.contactInfo != null) ...[
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          supplier.contactInfo!,
-                                          style: Theme.of(context).textTheme.bodySmall,
+                                      decoration: BoxDecoration(
+                                        color: Colors.orange.shade100,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        'Occasionnel',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.orange.shade800,
                                         ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.edit),
-                                  onPressed: () => context.push(
-                                    '/suppliers/${supplier.id}',
-                                  ),
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline),
-                                  onPressed: () => _deleteSupplier(supplier),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                              if (supplier.contactInfo != null) ...[
+                                const SizedBox(height: 4),
+                                Text(
+                                  supplier.contactInfo!,
+                                  style: Theme.of(context).textTheme.bodySmall,
                                 ),
                               ],
-                            ),
-                          );
-                        },
-                      ),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.edit),
+                          onPressed: () =>
+                              context.push('/suppliers/${supplier.id}'),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline),
+                          onPressed: () => _deleteSupplier(supplier),
+                        ),
+                      ],
                     ),
+                  );
+                },
+              ),
+            ),
     );
   }
 }
-
-
-

@@ -37,8 +37,8 @@ class AdminDashboardPage extends StatelessWidget {
                   Text(
                     'Bienvenue, Administrateur',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -53,9 +53,9 @@ class AdminDashboardPage extends StatelessWidget {
           // Quick actions
           Text(
             'Actions rapides',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 12),
           GridView.count(
@@ -115,9 +115,9 @@ class AdminDashboardPage extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 title,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                 textAlign: TextAlign.center,
               ),
             ],
@@ -127,4 +127,3 @@ class AdminDashboardPage extends StatelessWidget {
     );
   }
 }
-

@@ -1,5 +1,5 @@
 /// HACCP Alert Detail Page
-/// 
+///
 /// Displays alert details with evidence, recommended actions, and resolution options
 
 import 'package:flutter/material.dart';
@@ -13,10 +13,7 @@ import '../../../core/theme/app_theme.dart';
 class AlertDetailPage extends StatefulWidget {
   final Alert alert;
 
-  const AlertDetailPage({
-    super.key,
-    required this.alert,
-  });
+  const AlertDetailPage({super.key, required this.alert});
 
   @override
   State<AlertDetailPage> createState() => _AlertDetailPageState();
@@ -38,7 +35,9 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Résoudre l\'alerte'),
-        content: const Text('Êtes-vous sûr de vouloir marquer cette alerte comme résolue ?'),
+        content: const Text(
+          'Êtes-vous sûr de vouloir marquer cette alerte comme résolue ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -64,17 +63,17 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
           _isLoading = false;
         });
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Alerte résolue')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Alerte résolue')));
           Navigator.pop(context, true);
         }
       } catch (e) {
         setState(() => _isLoading = false);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         }
       }
     }
@@ -89,16 +88,16 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
         _isLoading = false;
       });
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Alerte acquittée')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Alerte acquittée')));
       }
     } catch (e) {
       setState(() => _isLoading = false);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -106,7 +105,9 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
   void _createCorrectiveAction() {
     // TODO: Navigate to corrective action form
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Fonctionnalité à venir: Créer une action corrective')),
+      const SnackBar(
+        content: Text('Fonctionnalité à venir: Créer une action corrective'),
+      ),
     );
   }
 
@@ -144,7 +145,9 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide(
-                        color: _alert.blocking ? severityColor : Colors.transparent,
+                        color: _alert.blocking
+                            ? severityColor
+                            : Colors.transparent,
                         width: _alert.blocking ? 2 : 0,
                       ),
                     ),
@@ -161,7 +164,11 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
                                   color: severityColor.withOpacity(0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
-                                child: Icon(severityIcon, color: severityColor, size: 32),
+                                child: Icon(
+                                  severityIcon,
+                                  color: severityColor,
+                                  size: 32,
+                                ),
                               ),
                               const SizedBox(width: 16),
                               Expanded(
@@ -189,7 +196,10 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
                               ),
                               if (_alert.blocking)
                                 Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: Colors.red,
                                     borderRadius: BorderRadius.circular(16),
@@ -236,13 +246,17 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
                           const Divider(),
                           _buildInfoRow(
                             'Date de création',
-                            DateFormat('dd/MM/yyyy HH:mm').format(_alert.createdAt),
+                            DateFormat(
+                              'dd/MM/yyyy HH:mm',
+                            ).format(_alert.createdAt),
                           ),
                           if (_alert.resolvedAt != null) ...[
                             const Divider(),
                             _buildInfoRow(
                               'Date de résolution',
-                              DateFormat('dd/MM/yyyy HH:mm').format(_alert.resolvedAt!),
+                              DateFormat(
+                                'dd/MM/yyyy HH:mm',
+                              ).format(_alert.resolvedAt!),
                             ),
                           ],
                           const Divider(),
@@ -251,8 +265,8 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
                             _alert.status == AlertStatus.active
                                 ? 'Actif'
                                 : _alert.status == AlertStatus.resolved
-                                    ? 'Résolu'
-                                    : 'Acquitté',
+                                ? 'Résolu'
+                                : 'Acquitté',
                           ),
                         ],
                       ),
@@ -282,29 +296,34 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
                               ],
                             ),
                             const SizedBox(height: 12),
-                            ..._alert.recommendedActions.map((action) => Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Container(
-                                        margin: const EdgeInsets.only(top: 6, right: 12),
-                                        width: 6,
-                                        height: 6,
-                                        decoration: BoxDecoration(
-                                          color: Colors.blue,
-                                          shape: BoxShape.circle,
-                                        ),
+                            ..._alert.recommendedActions.map(
+                              (action) => Padding(
+                                padding: const EdgeInsets.only(bottom: 8),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      margin: const EdgeInsets.only(
+                                        top: 6,
+                                        right: 12,
                                       ),
-                                      Expanded(
-                                        child: Text(
-                                          action,
-                                          style: const TextStyle(fontSize: 14),
-                                        ),
+                                      width: 6,
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        shape: BoxShape.circle,
                                       ),
-                                    ],
-                                  ),
-                                )),
+                                    ),
+                                    Expanded(
+                                      child: Text(
+                                        action,
+                                        style: const TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -420,10 +439,7 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -444,9 +460,8 @@ class _AlertDetailPageState extends State<AlertDetailPage> {
         }
       });
     }
+
     formatMap(snapshot);
     return buffer.toString();
   }
 }
-
-

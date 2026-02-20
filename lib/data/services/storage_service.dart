@@ -9,8 +9,11 @@ class StorageService {
 
   /// Upload a photo file to Supabase Storage
   /// Returns the public URL of the uploaded file
-  Future<String> uploadPhoto(File file,
-      {String? fileName, String? bucket}) async {
+  Future<String> uploadPhoto(
+    File file, {
+    String? fileName,
+    String? bucket,
+  }) async {
     try {
       final userId = _client.auth.currentUser?.id ?? 'anonymous';
       final timestamp = DateTime.now().millisecondsSinceEpoch;
@@ -19,16 +22,16 @@ class StorageService {
       final bucketName = bucket ?? SupabaseConfig.photosBucket;
 
       debugPrint(
-          '[StorageService] Uploading to bucket: $bucketName, path: $path');
+        '[StorageService] Uploading to bucket: $bucketName, path: $path',
+      );
 
       // Upload file to Supabase Storage
-      await _client.storage.from(bucketName).upload(
+      await _client.storage
+          .from(bucketName)
+          .upload(
             path,
             file,
-            fileOptions: const FileOptions(
-              cacheControl: '3600',
-              upsert: false,
-            ),
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
           );
 
       // Get public URL - Supabase getPublicUrl() returns the full URL
@@ -81,18 +84,20 @@ class StorageService {
   Future<String?> migrateLocalPhotoToStorage(String localPath) async {
     try {
       final file = File(localPath);
-      
+
       // Check if file exists
       if (!await file.exists()) {
         debugPrint('[StorageService] ⚠️ Local file does not exist: $localPath');
         return null;
       }
 
-      debugPrint('[StorageService] Migrating local photo to Supabase Storage: $localPath');
-      
+      debugPrint(
+        '[StorageService] Migrating local photo to Supabase Storage: $localPath',
+      );
+
       // Upload to Supabase Storage
       final publicUrl = await uploadPhoto(file);
-      
+
       debugPrint('[StorageService] ✅ Migration successful: $publicUrl');
       return publicUrl;
     } catch (e) {
@@ -104,25 +109,25 @@ class StorageService {
   /// Check if a photo URL is a valid Supabase Storage URL
   bool isValidStorageUrl(String? url) {
     if (url == null || url.isEmpty) return false;
-    
+
     // Check if it's a valid HTTP/HTTPS URL
     if (url.startsWith('http://') || url.startsWith('https://')) {
       // Check if it's a Supabase Storage URL
-      return url.contains('/storage/v1/object/public/') || 
-             url.contains('supabase.co/storage/') ||
-             url.contains('supabase.in/storage/');
+      return url.contains('/storage/v1/object/public/') ||
+          url.contains('supabase.co/storage/') ||
+          url.contains('supabase.in/storage/');
     }
-    
+
     return false;
   }
 
   /// Check if a photo URL is a local file path
   bool isLocalPath(String? url) {
     if (url == null || url.isEmpty) return false;
-    
+
     // Check if it looks like a local file path (not starting with http)
-    return !url.startsWith('http://') && 
-           !url.startsWith('https://') &&
-           !url.startsWith('/storage/');
+    return !url.startsWith('http://') &&
+        !url.startsWith('https://') &&
+        !url.startsWith('/storage/');
   }
 }

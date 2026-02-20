@@ -55,7 +55,7 @@ class NonConformityRepository {
           })
           .select()
           .single();
-      
+
       return NonConformity.fromJson(response);
     } catch (e) {
       debugPrint('[NonConformityRepo] ❌ Error creating non-conformity: $e');
@@ -75,11 +75,14 @@ class NonConformityRepository {
   }) async {
     try {
       final updates = <String, dynamic>{};
-      if (temperatureNonCompliant != null) updates['temperature_non_compliant'] = temperatureNonCompliant;
-      if (packagingOpened != null) updates['packaging_opened'] = packagingOpened;
+      if (temperatureNonCompliant != null)
+        updates['temperature_non_compliant'] = temperatureNonCompliant;
+      if (packagingOpened != null)
+        updates['packaging_opened'] = packagingOpened;
       if (packagingWet != null) updates['packaging_wet'] = packagingWet;
       if (labelMissing != null) updates['label_missing'] = labelMissing;
-      if (declarationText != null) updates['declaration_text'] = declarationText;
+      if (declarationText != null)
+        updates['declaration_text'] = declarationText;
       if (photoUrls != null) updates['photo_urls'] = photoUrls;
 
       final response = await _client
@@ -96,6 +99,3 @@ class NonConformityRepository {
     }
   }
 }
-
-
-

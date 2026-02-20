@@ -89,9 +89,7 @@ class SyncService {
   Future<bool> _checkNetworkConnectivity() async {
     try {
       final response = await http
-          .get(
-            Uri.parse('${ApiService.supabaseUrl}/health/'),
-          )
+          .get(Uri.parse('${ApiService.supabaseUrl}/health/'))
           .timeout(const Duration(seconds: 5));
 
       return response.statusCode == 200;
@@ -281,12 +279,14 @@ class SyncService {
           );
         } catch (e) {
           print(
-              '❌ Erreur lors de la synchronisation du relevé ${releve['id']}: $e');
+            '❌ Erreur lors de la synchronisation du relevé ${releve['id']}: $e',
+          );
         }
       }
 
       print(
-          '✅ Synchronisation locale terminée: ${unsyncedReleves.length} relevés');
+        '✅ Synchronisation locale terminée: ${unsyncedReleves.length} relevés',
+      );
     } catch (e) {
       print('❌ Erreur lors de la synchronisation locale: $e');
     }

@@ -13,13 +13,16 @@ class SyntheseHebdomadairePage extends StatefulWidget {
   const SyntheseHebdomadairePage({super.key});
 
   @override
-  State<SyntheseHebdomadairePage> createState() => _SyntheseHebdomadairePageState();
+  State<SyntheseHebdomadairePage> createState() =>
+      _SyntheseHebdomadairePageState();
 }
 
 class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
   final _exportService = HaccpExportService();
   DateTime _startDate = _getStartOfWeek(DateTime.now());
-  DateTime _endDate = _getStartOfWeek(DateTime.now()).add(const Duration(days: 6));
+  DateTime _endDate = _getStartOfWeek(
+    DateTime.now(),
+  ).add(const Duration(days: 6));
   bool _isExporting = false;
 
   static DateTime _getStartOfWeek(DateTime date) {
@@ -37,7 +40,11 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
 
   void _setPreset(int days) {
     setState(() {
-      _endDate = DateTime(_startDate.year, _startDate.month, _startDate.day + days - 1);
+      _endDate = DateTime(
+        _startDate.year,
+        _startDate.month,
+        _startDate.day + days - 1,
+      );
     });
   }
 
@@ -76,10 +83,7 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur: $e'),
-          backgroundColor: Colors.red,
-        ),
+        SnackBar(content: Text('Erreur: $e'), backgroundColor: Colors.red),
       );
     } finally {
       if (mounted) setState(() => _isExporting = false);
@@ -104,7 +108,10 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
                 ? const SizedBox(
                     width: 24,
                     height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Icon(Icons.download),
             tooltip: 'Exporter PDF',
@@ -119,16 +126,16 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
           children: [
             Text(
               'Synthèse hebdomadaire d\'autocontrôle',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(
               'Conforme au Plan de Maîtrise Sanitaire - Utilisable pour le classeur d\'autocontrôle',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 24),
             SectionCard(
@@ -137,13 +144,16 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
                 children: [
                   Row(
                     children: [
-                      Icon(Icons.calendar_month, size: 32, color: AppTheme.primaryBlue),
+                      Icon(
+                        Icons.calendar_month,
+                        size: 32,
+                        color: AppTheme.primaryBlue,
+                      ),
                       const SizedBox(width: 12),
                       Text(
                         'Période sélectionnée',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -160,7 +170,8 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
                       if (d != null && mounted) {
                         setState(() {
                           _startDate = d;
-                          if (_endDate.isBefore(_startDate)) _endDate = _startDate;
+                          if (_endDate.isBefore(_startDate))
+                            _endDate = _startDate;
                         });
                       }
                     },
@@ -174,7 +185,11 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const Spacer(),
-                        const Icon(Icons.edit_calendar, color: Colors.grey, size: 20),
+                        const Icon(
+                          Icons.edit_calendar,
+                          color: Colors.grey,
+                          size: 20,
+                        ),
                       ],
                     ),
                   ),
@@ -202,7 +217,11 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
                           style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                         const Spacer(),
-                        const Icon(Icons.edit_calendar, color: Colors.grey, size: 20),
+                        const Icon(
+                          Icons.edit_calendar,
+                          color: Colors.grey,
+                          size: 20,
+                        ),
                       ],
                     ),
                   ),
@@ -212,9 +231,9 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
                   Text(
                     'Presets rapides',
                     style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w600,
-                        ),
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Wrap(
@@ -232,9 +251,9 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
                   Text(
                     '$_totalDays jour(s)',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppTheme.primaryBlue,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      color: AppTheme.primaryBlue,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ],
               ),
@@ -250,9 +269,8 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
                       const SizedBox(width: 8),
                       Text(
                         'Contenu du classeur',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
@@ -265,9 +283,9 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
                   const SizedBox(height: 8),
                   Text(
                     'L\'export PDF regroupe toutes ces données pour la période choisie.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -275,8 +293,16 @@ class _SyntheseHebdomadairePageState extends State<SyntheseHebdomadairePage> {
             const SizedBox(height: 16),
             FilledButton.icon(
               onPressed: _isExporting ? null : _exportPdf,
-              icon: _isExporting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Icon(Icons.picture_as_pdf),
-              label: Text(_isExporting ? 'Génération...' : 'Exporter le classeur en PDF'),
+              icon: _isExporting
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.picture_as_pdf),
+              label: Text(
+                _isExporting ? 'Génération...' : 'Exporter le classeur en PDF',
+              ),
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.primaryBlue,
                 padding: const EdgeInsets.symmetric(vertical: 16),

@@ -28,18 +28,27 @@ class OilChangeRepository extends BaseRepository {
       var query = client.from(_fryersTable).select();
       try {
         final data = await query.eq('owner_id', currentUserId).order('nom');
-        final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(data);
-        debugPrint('[$_fryersTable] [GET_FRYERS] ✅ Success with owner_id: Fetched ${list.length} fryers');
+        final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
+          data,
+        );
+        debugPrint(
+          '[$_fryersTable] [GET_FRYERS] ✅ Success with owner_id: Fetched ${list.length} fryers',
+        );
         return list;
       } catch (e) {
-        debugPrint('[$_fryersTable] [GET_FRYERS] ⚠️ Failed with owner_id, trying user_id: $e');
+        debugPrint(
+          '[$_fryersTable] [GET_FRYERS] ⚠️ Failed with owner_id, trying user_id: $e',
+        );
         // Fallback to user_id for legacy support
         final data = await query.eq('user_id', currentUserId).order('nom');
-        final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(data);
-        debugPrint('[$_fryersTable] [GET_FRYERS] ✅ Success with user_id: Fetched ${list.length} fryers');
+        final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
+          data,
+        );
+        debugPrint(
+          '[$_fryersTable] [GET_FRYERS] ✅ Success with user_id: Fetched ${list.length} fryers',
+        );
         return list;
       }
-
     } catch (e) {
       debugPrint('[$_fryersTable] [GET_FRYERS] ❌ Error: ${e.toString()}');
       _logSupabaseError(e, 'getFryers');
@@ -51,22 +60,28 @@ class OilChangeRepository extends BaseRepository {
   /// Log Supabase errors with full details
   void _logSupabaseError(dynamic error, String operation) {
     debugPrint(
-        '[$_fryersTable] [${operation.toUpperCase()}] ========== ERROR DETAILS ==========');
+      '[$_fryersTable] [${operation.toUpperCase()}] ========== ERROR DETAILS ==========',
+    );
     debugPrint(
-        '[$_fryersTable] [${operation.toUpperCase()}] Error type: ${error.runtimeType}');
+      '[$_fryersTable] [${operation.toUpperCase()}] Error type: ${error.runtimeType}',
+    );
     debugPrint(
-        '[$_fryersTable] [${operation.toUpperCase()}] Error message: ${error.toString()}');
+      '[$_fryersTable] [${operation.toUpperCase()}] Error message: ${error.toString()}',
+    );
 
     final errorStr = error.toString();
     if (errorStr.contains('PostgrestException') || errorStr.contains('PGRST')) {
       debugPrint(
-          '[$_fryersTable] [${operation.toUpperCase()}] Supabase error details:');
+        '[$_fryersTable] [${operation.toUpperCase()}] Supabase error details:',
+      );
       debugPrint(
-          '[$_fryersTable] [${operation.toUpperCase()}]   - error: $errorStr');
+        '[$_fryersTable] [${operation.toUpperCase()}]   - error: $errorStr',
+      );
     }
 
     debugPrint(
-        '[$_fryersTable] [${operation.toUpperCase()}] ====================================');
+      '[$_fryersTable] [${operation.toUpperCase()}] ====================================',
+    );
   }
 
   /// Get all oil changes
@@ -101,8 +116,10 @@ class OilChangeRepository extends BaseRepository {
       'quantite': quantite,
       'remarque': remarque,
       'date': DateTime.now().toIso8601String(),
-      'employee_first_name': employeeFirstName, // Automatically retrieved from session
-      'employee_last_name': employeeLastName, // Automatically retrieved from session
+      'employee_first_name':
+          employeeFirstName, // Automatically retrieved from session
+      'employee_last_name':
+          employeeLastName, // Automatically retrieved from session
     });
   }
 

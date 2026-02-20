@@ -1,5 +1,5 @@
 /// HACCP Alert Engine
-/// 
+///
 /// Centralized alert evaluation engine that processes events against JSON rules
 /// and generates normalized alerts for "100% Crousty Sevran".
 
@@ -18,12 +18,13 @@ class AlertEngine {
   Future<void> loadRules(String jsonString) async {
     try {
       final json = jsonDecode(jsonString) as Map<String, dynamic>;
-      
+
       // Load defaults
       _defaults.clear();
       if (json['defaults'] != null) {
         _defaults.addAll(json['defaults'] as Map<String, dynamic>);
-        _dedupeWindowMinutes = _defaults['dedupe_window_minutes'] as int? ?? 180;
+        _dedupeWindowMinutes =
+            _defaults['dedupe_window_minutes'] as int? ?? 180;
       }
 
       // Load alert types
@@ -46,7 +47,9 @@ class AlertEngine {
         }
       }
 
-      debugPrint('[AlertEngine] Loaded ${_alertTypes.length} alert types and ${_rules.length} rules');
+      debugPrint(
+        '[AlertEngine] Loaded ${_alertTypes.length} alert types and ${_rules.length} rules',
+      );
     } catch (e, stackTrace) {
       debugPrint('[AlertEngine] Error loading rules: $e');
       debugPrint('[AlertEngine] Stack trace: $stackTrace');
@@ -60,10 +63,14 @@ class AlertEngine {
 
     try {
       // Find rules matching this event type
-      final matchingRules = _rules.where((r) => r.eventType == event.eventType).toList();
+      final matchingRules = _rules
+          .where((r) => r.eventType == event.eventType)
+          .toList();
 
       if (matchingRules.isEmpty) {
-        debugPrint('[AlertEngine] No rules found for event type: ${event.eventType}');
+        debugPrint(
+          '[AlertEngine] No rules found for event type: ${event.eventType}',
+        );
         return alerts;
       }
 
@@ -77,16 +84,24 @@ class AlertEngine {
           for (final alertCode in rule.alertCodes) {
             final alertType = _alertTypes[alertCode];
             if (alertType == null) {
-              debugPrint('[AlertEngine] Warning: Alert type not found: $alertCode');
+              debugPrint(
+                '[AlertEngine] Warning: Alert type not found: $alertCode',
+              );
               continue;
             }
 
             // Generate alert message from template
-            final message = _interpolateTemplate(alertType.messageTemplate, normalizedPayload);
-            
+            final message = _interpolateTemplate(
+              alertType.messageTemplate,
+              normalizedPayload,
+            );
+
             // Generate dedupe key
             final dedupeKey = alertType.dedupeKeyTemplate != null
-                ? _interpolateTemplate(alertType.dedupeKeyTemplate!, normalizedPayload)
+                ? _interpolateTemplate(
+                    alertType.dedupeKeyTemplate!,
+                    normalizedPayload,
+                  )
                 : null;
 
             // Create alert
@@ -111,7 +126,9 @@ class AlertEngine {
         }
       }
 
-      debugPrint('[AlertEngine] Generated ${alerts.length} alerts for event ${event.eventType}');
+      debugPrint(
+        '[AlertEngine] Generated ${alerts.length} alerts for event ${event.eventType}',
+      );
     } catch (e, stackTrace) {
       debugPrint('[AlertEngine] Error evaluating event: $e');
       debugPrint('[AlertEngine] Stack trace: $stackTrace');
@@ -121,9 +138,12 @@ class AlertEngine {
   }
 
   /// Normalize event payload to include computed fields
-  Map<String, dynamic> _normalizePayload(Map<String, dynamic> payload, AlertEvent event) {
+  Map<String, dynamic> _normalizePayload(
+    Map<String, dynamic> payload,
+    AlertEvent event,
+  ) {
     final normalized = Map<String, dynamic>.from(payload);
-    
+
     // Add common fields
     normalized['event_type'] = event.eventType;
     normalized['organization_id'] = event.organizationId;
@@ -133,31 +153,41 @@ class AlertEngine {
 
     // Temperature-specific normalization
     if (event.eventType == 'temperature.logged') {
-      final tempC = _getValue(payload, 'temperature_c') ?? 
-                    _getValue(payload, 'temperature') as num?;
-      final deviceId = _getValue(payload, 'device_id') ?? 
-                       _getValue(payload, 'appareil_id') as String?;
+      final tempC =
+          _getValue(payload, 'temperature_c') ??
+          _getValue(payload, 'temperature') as num?;
+      final deviceId =
+          _getValue(payload, 'device_id') ??
+          _getValue(payload, 'appareil_id') as String?;
       final tempMin = _getValue(payload, 'device_temp_min') as num?;
       final tempMax = _getValue(payload, 'device_temp_max') as num?;
 
       normalized['temperature_c'] = tempC;
       normalized['device_id'] = deviceId;
-      normalized['device_name'] = _getValue(payload, 'device_name') ?? 
-                                   _getValue(payload, 'appareil_nom') as String?;
+      normalized['device_name'] =
+          _getValue(payload, 'device_name') ??
+          _getValue(payload, 'appareil_nom') as String?;
 
       // Check if device_id exists
-      normalized['device_id_exists'] = deviceId != null && deviceId.toString().isNotEmpty;
+      normalized['device_id_exists'] =
+          deviceId != null && deviceId.toString().isNotEmpty;
 
       // Check if thresholds are missing
       final thresholdsMissing = (tempMin == null || tempMax == null);
       normalized['device_thresholds_missing'] = thresholdsMissing;
 
       // Use defaults if thresholds missing
-      final min = tempMin?.toDouble() ?? 
-                  (_defaults['temperature'] as Map<String, dynamic>?)?['fallback_min_c'] as double? ?? 0.0;
-      final max = tempMax?.toDouble() ?? 
-                  (_defaults['temperature'] as Map<String, dynamic>?)?['fallback_max_c'] as double? ?? 4.0;
-      
+      final min =
+          tempMin?.toDouble() ??
+          (_defaults['temperature'] as Map<String, dynamic>?)?['fallback_min_c']
+              as double? ??
+          0.0;
+      final max =
+          tempMax?.toDouble() ??
+          (_defaults['temperature'] as Map<String, dynamic>?)?['fallback_max_c']
+              as double? ??
+          4.0;
+
       normalized['temp_min'] = min;
       normalized['temp_max'] = max;
 
@@ -168,11 +198,14 @@ class AlertEngine {
         normalized['temp_out_of_range'] = outOfRange;
 
         // Check if critical (beyond critical margin)
-        final criticalMargin = (_defaults['temperature'] as Map<String, dynamic>?)?['critical_margin_c'] as double? ?? 2.0;
-        final isCritical = outOfRange && (
-          temp < (min - criticalMargin) || 
-          temp > (max + criticalMargin)
-        );
+        final criticalMargin =
+            (_defaults['temperature']
+                    as Map<String, dynamic>?)?['critical_margin_c']
+                as double? ??
+            2.0;
+        final isCritical =
+            outOfRange &&
+            (temp < (min - criticalMargin) || temp > (max + criticalMargin));
         normalized['temp_is_critical'] = isCritical;
         normalized['critical_margin'] = criticalMargin;
       }
@@ -180,14 +213,17 @@ class AlertEngine {
 
     // Reception-specific normalization
     if (event.eventType == 'reception.checked') {
-      final packaging = _getValue(payload, 'packaging') as Map<String, dynamic>? ?? {};
+      final packaging =
+          _getValue(payload, 'packaging') as Map<String, dynamic>? ?? {};
       final label = _getValue(payload, 'label') as Map<String, dynamic>? ?? {};
       final temp = _getValue(payload, 'temperature') as num?;
-      final productName = _getValue(payload, 'product_name') ?? 
-                          _getValue(payload, 'produit_nom') as String?;
+      final productName =
+          _getValue(payload, 'product_name') ??
+          _getValue(payload, 'produit_nom') as String?;
       final supplierId = _getValue(payload, 'supplier_id') as String?;
-      final productId = _getValue(payload, 'product_id') ?? 
-                        _getValue(payload, 'produit_id') as String?;
+      final productId =
+          _getValue(payload, 'product_id') ??
+          _getValue(payload, 'produit_id') as String?;
       final lot = _getValue(payload, 'lot') as String?;
 
       normalized['packaging'] = packaging;
@@ -202,19 +238,24 @@ class AlertEngine {
       final missingFields = <String>[];
       if (_getValue(label, 'dlc') == null) missingFields.add('DLC');
       if (_getValue(label, 'lot') == null) missingFields.add('Lot');
-      if (_getValue(label, 'supplier') == null) missingFields.add('Fournisseur');
-      if (_getValue(label, 'product_name') == null) missingFields.add('Nom produit');
-      
+      if (_getValue(label, 'supplier') == null)
+        missingFields.add('Fournisseur');
+      if (_getValue(label, 'product_name') == null)
+        missingFields.add('Nom produit');
+
       normalized['label.missing_fields_count'] = missingFields.length;
       normalized['label.missing_fields'] = missingFields.join(', ');
     }
 
     // Oil-specific normalization
-    if (event.eventType == 'oil.check_logged' || event.eventType == 'oil.change_logged') {
-      final fryerId = _getValue(payload, 'fryer_id') ?? 
-                      _getValue(payload, 'friteuse_id') as String?;
-      final fryerName = _getValue(payload, 'fryer_name') ?? 
-                        _getValue(payload, 'friteuse_nom') as String?;
+    if (event.eventType == 'oil.check_logged' ||
+        event.eventType == 'oil.change_logged') {
+      final fryerId =
+          _getValue(payload, 'fryer_id') ??
+          _getValue(payload, 'friteuse_id') as String?;
+      final fryerName =
+          _getValue(payload, 'fryer_name') ??
+          _getValue(payload, 'friteuse_nom') as String?;
       final oilState = _getValue(payload, 'oil_state') as String?;
       final daysSinceChange = _getValue(payload, 'days_since_change') as int?;
       final cycles = _getValue(payload, 'cycles') as int?;
@@ -251,10 +292,11 @@ class AlertEngine {
       normalized['days_until_due'] = daysUntilDue;
       normalized['days_overdue'] = daysOverdue;
       normalized['grace_days'] = graceDays;
-      
+
       // Add date field for deduplication (current date as YYYY-MM-DD)
       final now = DateTime.now();
-      normalized['date'] = '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      normalized['date'] =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
     }
 
     return normalized;
@@ -272,9 +314,12 @@ class AlertEngine {
   }
 
   /// Evaluate a single condition
-  bool _evaluateCondition(AlertRuleCondition condition, Map<String, dynamic> payload) {
+  bool _evaluateCondition(
+    AlertRuleCondition condition,
+    Map<String, dynamic> payload,
+  ) {
     final pathValue = _getValue(payload, condition.path);
-    
+
     switch (condition.op) {
       case 'eq':
         return pathValue == condition.value;
@@ -347,7 +392,7 @@ class AlertEngine {
   dynamic _getValue(Map<String, dynamic> map, String path) {
     final parts = path.split('.');
     dynamic current = map;
-    
+
     for (final part in parts) {
       if (current is Map<String, dynamic>) {
         current = current[part];
@@ -355,14 +400,14 @@ class AlertEngine {
         return null;
       }
     }
-    
+
     return current;
   }
 
   /// Interpolate template string with values from payload
   String _interpolateTemplate(String template, Map<String, dynamic> payload) {
     String result = template;
-    
+
     // Replace {key} with value from payload
     final regex = RegExp(r'\{([^}]+)\}');
     result = result.replaceAllMapped(regex, (match) {
@@ -370,12 +415,10 @@ class AlertEngine {
       final value = _getValue(payload, key) ?? payload[key];
       return value?.toString() ?? '';
     });
-    
+
     return result;
   }
 
   /// Get dedupe window in minutes
   int get dedupeWindowMinutes => _dedupeWindowMinutes;
 }
-
-

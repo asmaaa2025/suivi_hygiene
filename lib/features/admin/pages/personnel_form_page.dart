@@ -21,7 +21,7 @@ class _PersonnelFormPageState extends State<PersonnelFormPage> {
   final _lastNameController = TextEditingController();
   final _permitTypeController = TextEditingController();
   final _permitNumberController = TextEditingController();
-  
+
   DateTime? _startDate;
   DateTime? _endDate;
   ContractType _contractType = ContractType.cdi;
@@ -61,15 +61,16 @@ class _PersonnelFormPageState extends State<PersonnelFormPage> {
           _contractType = personnel.contractType;
           _isForeignWorker = personnel.isForeignWorker;
           _permitTypeController.text = personnel.foreignWorkPermitType ?? '';
-          _permitNumberController.text = personnel.foreignWorkPermitNumber ?? '';
+          _permitNumberController.text =
+              personnel.foreignWorkPermitNumber ?? '';
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         Navigator.of(context).pop();
       }
     }
@@ -96,10 +97,12 @@ class _PersonnelFormPageState extends State<PersonnelFormPage> {
           endDate: _endDate,
           contractType: _contractType,
           isForeignWorker: _isForeignWorker,
-          foreignWorkPermitType:
-              _isForeignWorker ? _permitTypeController.text.trim() : null,
-          foreignWorkPermitNumber:
-              _isForeignWorker ? _permitNumberController.text.trim() : null,
+          foreignWorkPermitType: _isForeignWorker
+              ? _permitTypeController.text.trim()
+              : null,
+          foreignWorkPermitNumber: _isForeignWorker
+              ? _permitNumberController.text.trim()
+              : null,
         );
       } else {
         await _personnelRepo.create(
@@ -109,10 +112,12 @@ class _PersonnelFormPageState extends State<PersonnelFormPage> {
           endDate: _endDate,
           contractType: _contractType,
           isForeignWorker: _isForeignWorker,
-          foreignWorkPermitType:
-              _isForeignWorker ? _permitTypeController.text.trim() : null,
-          foreignWorkPermitNumber:
-              _isForeignWorker ? _permitNumberController.text.trim() : null,
+          foreignWorkPermitType: _isForeignWorker
+              ? _permitTypeController.text.trim()
+              : null,
+          foreignWorkPermitNumber: _isForeignWorker
+              ? _permitNumberController.text.trim()
+              : null,
         );
       }
 
@@ -127,9 +132,9 @@ class _PersonnelFormPageState extends State<PersonnelFormPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     } finally {
       if (mounted) {
@@ -138,10 +143,7 @@ class _PersonnelFormPageState extends State<PersonnelFormPage> {
     }
   }
 
-  Future<void> _selectDate(
-    BuildContext context,
-    bool isStartDate,
-  ) async {
+  Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final picked = await showDatePicker(
       context: context,
       initialDate: isStartDate
@@ -175,7 +177,9 @@ class _PersonnelFormPageState extends State<PersonnelFormPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.personnelId != null ? 'Modifier' : 'Nouveau personnel'),
+        title: Text(
+          widget.personnelId != null ? 'Modifier' : 'Nouveau personnel',
+        ),
         actions: [
           IconButton(
             icon: _isSaving
@@ -265,10 +269,12 @@ class _PersonnelFormPageState extends State<PersonnelFormPage> {
               ),
               items: ContractType.values
                   .where((e) => !e.toString().endsWith('En'))
-                  .map((type) => DropdownMenuItem(
-                        value: type,
-                        child: Text(type.displayName),
-                      ))
+                  .map(
+                    (type) => DropdownMenuItem(
+                      value: type,
+                      child: Text(type.displayName),
+                    ),
+                  )
                   .toList(),
               onChanged: (value) {
                 if (value != null) {
@@ -333,4 +339,3 @@ class _PersonnelFormPageState extends State<PersonnelFormPage> {
     );
   }
 }
-

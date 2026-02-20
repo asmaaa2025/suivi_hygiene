@@ -21,7 +21,7 @@ class OilChangesHistoryPage extends StatefulWidget {
 
 class _OilChangesHistoryPageState extends State<OilChangesHistoryPage> {
   final _oilChangeRepo = OilChangeRepository();
-  
+
   List<OilChange> _oilChanges = [];
   List<Map<String, dynamic>> _fryers = [];
   bool _isLoading = true;
@@ -46,7 +46,11 @@ class _OilChangesHistoryPageState extends State<OilChangesHistoryPage> {
         break;
       case 'week':
         _startDate = now.subtract(Duration(days: now.weekday - 1));
-        _startDate = DateTime(_startDate!.year, _startDate!.month, _startDate!.day);
+        _startDate = DateTime(
+          _startDate!.year,
+          _startDate!.month,
+          _startDate!.day,
+        );
         _endDate = now;
         break;
       case 'all':
@@ -78,25 +82,34 @@ class _OilChangesHistoryPageState extends State<OilChangesHistoryPage> {
 
       // Load all oil changes
       final allChangesData = await _oilChangeRepo.getAll();
-      
+
       // Filter by date if needed
       final filteredChanges = allChangesData.where((data) {
         final changedAt = data['changed_at'] != null
             ? DateTime.tryParse(data['changed_at'].toString())
             : (data['created_at'] != null
-                ? DateTime.tryParse(data['created_at'].toString())
-                : null);
+                  ? DateTime.tryParse(data['created_at'].toString())
+                  : null);
         if (changedAt == null) return false;
         if (_startDate != null && changedAt.isBefore(_startDate!)) return false;
         if (_endDate != null) {
-          final endOfDay = DateTime(_endDate!.year, _endDate!.month, _endDate!.day, 23, 59, 59);
+          final endOfDay = DateTime(
+            _endDate!.year,
+            _endDate!.month,
+            _endDate!.day,
+            23,
+            59,
+            59,
+          );
           if (changedAt.isAfter(endOfDay)) return false;
         }
         return true;
       }).toList();
 
-      final oilChanges = filteredChanges.map((data) => OilChange.fromJson(data)).toList();
-      
+      final oilChanges = filteredChanges
+          .map((data) => OilChange.fromJson(data))
+          .toList();
+
       // Sort by date (newest first)
       oilChanges.sort((a, b) => b.changedAt.compareTo(a.changedAt));
 
@@ -119,11 +132,13 @@ class _OilChangesHistoryPageState extends State<OilChangesHistoryPage> {
   }
 
   String _getMachineName(OilChange change) {
-    return change.friteuseNom ?? 
+    return change.friteuseNom ??
         (_fryers.firstWhere(
-          (f) => f['id'] == change.friteuseId,
-          orElse: () => <String, dynamic>{},
-        )['nom'] as String? ?? 'Machine inconnue');
+                  (f) => f['id'] == change.friteuseId,
+                  orElse: () => <String, dynamic>{},
+                )['nom']
+                as String? ??
+            'Machine inconnue');
   }
 
   Future<void> _deleteOilChange(OilChange change) async {
@@ -131,7 +146,9 @@ class _OilChangesHistoryPageState extends State<OilChangesHistoryPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Supprimer'),
-        content: const Text('Êtes-vous sûr de vouloir supprimer ce changement d\'huile ?'),
+        content: const Text(
+          'Êtes-vous sûr de vouloir supprimer ce changement d\'huile ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -161,7 +178,9 @@ class _OilChangesHistoryPageState extends State<OilChangesHistoryPage> {
   }
 
   void _editOilChange(OilChange change) {
-    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
     final routePrefix = isAdminRoute ? '/admin' : '/app';
     // Navigate to edit form (we'll need to create this or use the existing form)
     // For now, show a dialog to edit
@@ -169,8 +188,12 @@ class _OilChangesHistoryPageState extends State<OilChangesHistoryPage> {
   }
 
   void _showEditDialog(OilChange change) {
-    final quantiteController = TextEditingController(text: change.quantite.toString());
-    final remarqueController = TextEditingController(text: change.remarque ?? '');
+    final quantiteController = TextEditingController(
+      text: change.quantite.toString(),
+    );
+    final remarqueController = TextEditingController(
+      text: change.remarque ?? '',
+    );
     final formKey = GlobalKey<FormState>();
 
     showDialog(
@@ -190,7 +213,9 @@ class _OilChangesHistoryPageState extends State<OilChangesHistoryPage> {
                     border: OutlineInputBorder(),
                     prefixIcon: Icon(Icons.opacity),
                   ),
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
                       return 'Veuillez saisir une quantité';
@@ -228,14 +253,17 @@ class _OilChangesHistoryPageState extends State<OilChangesHistoryPage> {
                   await _oilChangeRepo.updateOilChange(
                     id: change.id,
                     quantite: double.parse(quantiteController.text),
-                    remarque: remarqueController.text.trim().isEmpty 
-                        ? null 
+                    remarque: remarqueController.text.trim().isEmpty
+                        ? null
                         : remarqueController.text.trim(),
                   );
                   Navigator.pop(context);
                   await _loadData();
                   if (mounted) {
-                    ErrorHandler.showSuccess(context, 'Changement d\'huile modifié');
+                    ErrorHandler.showSuccess(
+                      context,
+                      'Changement d\'huile modifié',
+                    );
                   }
                 } catch (e) {
                   if (mounted) {
@@ -329,115 +357,143 @@ class _OilChangesHistoryPageState extends State<OilChangesHistoryPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.error_outline, size: 48, color: Colors.red),
-                            const SizedBox(height: 16),
-                            Text('Erreur: $_error'),
-                            const SizedBox(height: 16),
-                            ElevatedButton(
-                              onPressed: _loadData,
-                              child: const Text('Réessayer'),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(
+                          Icons.error_outline,
+                          size: 48,
+                          color: Colors.red,
                         ),
-                      )
-                    : _oilChanges.isEmpty
-                        ? const EmptyState(
-                            icon: Icons.oil_barrel,
-                            title: 'Aucun changement d\'huile',
-                            message: 'Aucun changement d\'huile trouvé pour cette période',
-                          )
-                        : ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: _oilChanges.length,
-                            itemBuilder: (context, index) {
-                              final change = _oilChanges[index];
-                              final machineName = _getMachineName(change);
-                              final employeeName = change.employeeFirstName != null && change.employeeLastName != null
-                                  ? '${change.employeeFirstName} ${change.employeeLastName}'
-                                  : 'Non spécifié';
+                        const SizedBox(height: 16),
+                        Text('Erreur: $_error'),
+                        const SizedBox(height: 16),
+                        ElevatedButton(
+                          onPressed: _loadData,
+                          child: const Text('Réessayer'),
+                        ),
+                      ],
+                    ),
+                  )
+                : _oilChanges.isEmpty
+                ? const EmptyState(
+                    icon: Icons.oil_barrel,
+                    title: 'Aucun changement d\'huile',
+                    message:
+                        'Aucun changement d\'huile trouvé pour cette période',
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _oilChanges.length,
+                    itemBuilder: (context, index) {
+                      final change = _oilChanges[index];
+                      final machineName = _getMachineName(change);
+                      final employeeName =
+                          change.employeeFirstName != null &&
+                              change.employeeLastName != null
+                          ? '${change.employeeFirstName} ${change.employeeLastName}'
+                          : 'Non spécifié';
 
-                              return SectionCard(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      children: [
-                                        Icon(Icons.oil_barrel, color: AppTheme.statusWarn, size: 24),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                machineName,
-                                                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                              ),
-                                              const SizedBox(height: 4),
-                                              Text(
-                                                '${change.quantite}L',
-                                                style: Theme.of(context).textTheme.bodyMedium,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.edit, size: 20),
-                                          color: AppTheme.primaryBlue,
-                                          onPressed: () => _editOilChange(change),
-                                          tooltip: 'Modifier',
-                                        ),
-                                        IconButton(
-                                          icon: const Icon(Icons.delete_outline, size: 20),
-                                          color: AppTheme.statusCritical,
-                                          onPressed: () => _deleteOilChange(change),
-                                          tooltip: 'Supprimer',
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Icon(Icons.person, size: 16, color: Colors.grey[600]),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          employeeName,
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                color: Colors.grey[600],
-                                              ),
-                                        ),
-                                        const Spacer(),
-                                        Icon(Icons.access_time, size: 16, color: Colors.grey[600]),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          DateFormat('dd/MM/yyyy à HH:mm').format(change.changedAt),
-                                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                                color: Colors.grey[600],
-                                              ),
-                                        ),
-                                      ],
-                                    ),
-                                    if (change.remarque != null && change.remarque!.isNotEmpty) ...[
-                                      const SizedBox(height: 8),
+                      return SectionCard(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.oil_barrel,
+                                  color: AppTheme.statusWarn,
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
                                       Text(
-                                        change.remarque!,
-                                        style: Theme.of(context).textTheme.bodyMedium,
+                                        machineName,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleMedium
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${change.quantite}L',
+                                        style: Theme.of(
+                                          context,
+                                        ).textTheme.bodyMedium,
                                       ),
                                     ],
-                                  ],
+                                  ),
                                 ),
-                              );
-                            },
-                          ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit, size: 20),
+                                  color: AppTheme.primaryBlue,
+                                  onPressed: () => _editOilChange(change),
+                                  tooltip: 'Modifier',
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.delete_outline,
+                                    size: 20,
+                                  ),
+                                  color: AppTheme.statusCritical,
+                                  onPressed: () => _deleteOilChange(change),
+                                  tooltip: 'Supprimer',
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  employeeName,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: Colors.grey[600]),
+                                ),
+                                const Spacer(),
+                                Icon(
+                                  Icons.access_time,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  DateFormat(
+                                    'dd/MM/yyyy à HH:mm',
+                                  ).format(change.changedAt),
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(color: Colors.grey[600]),
+                                ),
+                              ],
+                            ),
+                            if (change.remarque != null &&
+                                change.remarque!.isNotEmpty) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                change.remarque!,
+                                style: Theme.of(context).textTheme.bodyMedium,
+                              ),
+                            ],
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
 }
-

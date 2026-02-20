@@ -5,11 +5,7 @@ class ErrorState extends StatelessWidget {
   final String message;
   final VoidCallback? onRetry;
 
-  const ErrorState({
-    super.key,
-    required this.message,
-    this.onRetry,
-  });
+  const ErrorState({super.key, required this.message, this.onRetry});
 
   @override
   Widget build(BuildContext context) {
@@ -19,10 +15,7 @@ class ErrorState extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, size: 64, color: Colors.red),
           const SizedBox(height: 16),
-          Text(
-            'Erreur',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          Text('Erreur', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 8),
           Text(
             message,
@@ -31,10 +24,7 @@ class ErrorState extends StatelessWidget {
           ),
           if (onRetry != null) ...[
             const SizedBox(height: 16),
-            ElevatedButton(
-              onPressed: onRetry,
-              child: const Text('Réessayer'),
-            ),
+            ElevatedButton(onPressed: onRetry, child: const Text('Réessayer')),
           ],
         ],
       ),

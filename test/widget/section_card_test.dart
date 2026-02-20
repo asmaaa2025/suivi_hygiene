@@ -9,11 +9,7 @@ void main() {
     testWidgets('renders child content', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: SectionCard(
-              child: const Text('Card content'),
-            ),
-          ),
+          home: Scaffold(body: SectionCard(child: const Text('Card content'))),
         ),
       );
 
@@ -42,11 +38,7 @@ void main() {
     testWidgets('renders Card', (tester) async {
       await tester.pumpWidget(
         MaterialApp(
-          home: Scaffold(
-            body: SectionCard(
-              child: const SizedBox(),
-            ),
-          ),
+          home: Scaffold(body: SectionCard(child: const SizedBox())),
         ),
       );
 

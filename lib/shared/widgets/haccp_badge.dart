@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 
 /// HACCP status enum
-enum HaccpStatus {
-  ok,
-  warning,
-  critical,
-}
+enum HaccpStatus { ok, warning, critical }
 
 /// Badge widget for HACCP status
 class HaccpBadge extends StatelessWidget {

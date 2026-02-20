@@ -1,5 +1,5 @@
 /// HACCP Alert System Models
-/// 
+///
 /// This file contains all data models for the unified HACCP alert system
 /// for "100% Crousty Sevran".
 
@@ -112,7 +112,8 @@ class Alert {
       blocking: json['blocking'] as bool? ?? false,
       title: json['title'] as String,
       message: json['message'] as String,
-      recommendedActions: (json['recommended_actions'] as List<dynamic>?)
+      recommendedActions:
+          (json['recommended_actions'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -224,8 +225,10 @@ class AlertEvent {
 
 /// Alert rule condition for evaluating events
 class AlertRuleCondition {
-  final String path; // JSON path to value (e.g., "temperature_c", "packaging.issue")
-  final String op; // Operator: eq, ne, lt, lte, gt, gte, in, not_in, contains, exists, between, regex
+  final String
+  path; // JSON path to value (e.g., "temperature_c", "packaging.issue")
+  final String
+  op; // Operator: eq, ne, lt, lte, gt, gte, in, not_in, contains, exists, between, regex
   final dynamic value; // Comparison value
 
   AlertRuleCondition({
@@ -262,8 +265,11 @@ class AlertRule {
     return AlertRule(
       id: json['id'] as String,
       eventType: json['event_type'] as String,
-      conditions: (json['when'] as List<dynamic>?)
-              ?.map((e) => AlertRuleCondition.fromJson(e as Map<String, dynamic>))
+      conditions:
+          (json['when'] as List<dynamic>?)
+              ?.map(
+                (e) => AlertRuleCondition.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [],
       alertCodes: emitList
@@ -303,7 +309,8 @@ class AlertType {
       blocking: json['blocking'] as bool? ?? false,
       title: json['title'] as String,
       messageTemplate: json['message_template'] as String,
-      recommendedActions: (json['recommended_actions'] as List<dynamic>?)
+      recommendedActions:
+          (json['recommended_actions'] as List<dynamic>?)
               ?.map((e) => e.toString())
               .toList() ??
           [],
@@ -311,14 +318,3 @@ class AlertType {
     );
   }
 }
-
-
-
-
-
-
-
-
-
-
-

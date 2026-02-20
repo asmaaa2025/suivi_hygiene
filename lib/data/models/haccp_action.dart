@@ -6,7 +6,8 @@ class HaccpAction {
   final String userId; // Supabase auth user ID
   final HaccpActionType type;
   final DateTime occurredAt;
-  final Map<String, dynamic> payloadJson; // Flexible payload for different action types
+  final Map<String, dynamic>
+  payloadJson; // Flexible payload for different action types
   final DateTime createdAt;
 
   HaccpAction({
@@ -23,8 +24,8 @@ class HaccpAction {
     Map<String, dynamic> payload;
     if (json['payload_json'] is String) {
       try {
-        payload = jsonDecode(json['payload_json'] as String)
-            as Map<String, dynamic>;
+        payload =
+            jsonDecode(json['payload_json'] as String) as Map<String, dynamic>;
       } catch (e) {
         payload = {};
       }
@@ -168,4 +169,3 @@ enum HaccpActionType {
     }
   }
 }
-

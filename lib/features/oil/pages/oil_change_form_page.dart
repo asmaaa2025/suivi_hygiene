@@ -15,12 +15,8 @@ class OilChangeFormPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Changement d\'huile'),
-      ),
-      body: const Center(
-        child: Text('Formulaire de changement d\'huile'),
-      ),
+      appBar: AppBar(title: const Text('Changement d\'huile')),
+      body: const Center(child: Text('Formulaire de changement d\'huile')),
     );
   }
 }

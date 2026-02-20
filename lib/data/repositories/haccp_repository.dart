@@ -21,7 +21,9 @@ class HaccpRepository {
         'payload_json': payloadJson,
       };
 
-      debugPrint('[HaccpRepo] Creating action: ${type.toValue()} for user: $userId');
+      debugPrint(
+        '[HaccpRepo] Creating action: ${type.toValue()} for user: $userId',
+      );
       final response = await _client
           .from('haccp_actions')
           .insert(insertData)
@@ -62,13 +64,16 @@ class HaccpRepository {
       }
 
       final response = limit != null
-          ? await query.order('occurred_at', ascending: false).limit(limit) as List
+          ? await query.order('occurred_at', ascending: false).limit(limit)
+                as List
           : await query.order('occurred_at', ascending: false) as List;
       final actions = response
           .map((json) => HaccpAction.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      debugPrint('[HaccpRepo] ✅ Fetched ${actions.length} actions for user: $userId');
+      debugPrint(
+        '[HaccpRepo] ✅ Fetched ${actions.length} actions for user: $userId',
+      );
       return actions;
     } catch (e) {
       debugPrint('[HaccpRepo] ❌ Error getting actions: $e');
@@ -102,12 +107,15 @@ class HaccpRepository {
         query = query.eq('type', type.toValue());
       }
 
-      final response = await query.order('occurred_at', ascending: false) as List;
+      final response =
+          await query.order('occurred_at', ascending: false) as List;
       final actions = response
           .map((json) => HaccpAction.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      debugPrint('[HaccpRepo] ✅ Fetched ${actions.length} actions for ${userIds.length} users');
+      debugPrint(
+        '[HaccpRepo] ✅ Fetched ${actions.length} actions for ${userIds.length} users',
+      );
       return actions;
     } catch (e) {
       debugPrint('[HaccpRepo] ❌ Error getting actions: $e');
@@ -140,4 +148,3 @@ class HaccpRepository {
     }
   }
 }
-

@@ -5,7 +5,8 @@ import 'dart:convert';
 
 /// Service to manage the current employee session
 class EmployeeSessionService {
-  static final EmployeeSessionService _instance = EmployeeSessionService._internal();
+  static final EmployeeSessionService _instance =
+      EmployeeSessionService._internal();
   factory EmployeeSessionService() => _instance;
   EmployeeSessionService._internal();
 
@@ -29,16 +30,23 @@ class EmployeeSessionService {
       if (employeeJson != null) {
         final map = jsonDecode(employeeJson) as Map<String, dynamic>;
         _currentEmployee = Employee.fromJson(map);
-        
+
         // Validate that employee ID is correct (not organization_id)
         if (_currentEmployee != null) {
-          debugPrint('[EmployeeSession] Loaded employee: ${_currentEmployee!.fullName}');
+          debugPrint(
+            '[EmployeeSession] Loaded employee: ${_currentEmployee!.fullName}',
+          );
           debugPrint('[EmployeeSession] Employee ID: ${_currentEmployee!.id}');
-          debugPrint('[EmployeeSession] Organization ID: ${_currentEmployee!.organizationId}');
-          
+          debugPrint(
+            '[EmployeeSession] Organization ID: ${_currentEmployee!.organizationId}',
+          );
+
           // Safety check: if ID matches organization_id, clear it (invalid data)
-          if (_currentEmployee!.id == _currentEmployee!.organizationId || _currentEmployee!.id.isEmpty) {
-            debugPrint('[EmployeeSession] ❌ Invalid employee data detected (ID matches org ID or is empty). Clearing session.');
+          if (_currentEmployee!.id == _currentEmployee!.organizationId ||
+              _currentEmployee!.id.isEmpty) {
+            debugPrint(
+              '[EmployeeSession] ❌ Invalid employee data detected (ID matches org ID or is empty). Clearing session.',
+            );
             _currentEmployee = null;
             await clear();
           }
@@ -55,15 +63,21 @@ class EmployeeSessionService {
     try {
       // Validate employee ID before storing
       if (employee.id.isEmpty) {
-        debugPrint('[EmployeeSession] ❌ ERROR: Cannot set employee with empty ID!');
+        debugPrint(
+          '[EmployeeSession] ❌ ERROR: Cannot set employee with empty ID!',
+        );
         throw Exception('L\'ID de l\'employé est vide. Veuillez réessayer.');
       }
-      
+
       if (employee.id == employee.organizationId) {
-        debugPrint('[EmployeeSession] ❌ ERROR: Employee ID matches Organization ID!');
-        throw Exception('L\'ID de l\'employé est identique à l\'ID de l\'organisation. Données invalides.');
+        debugPrint(
+          '[EmployeeSession] ❌ ERROR: Employee ID matches Organization ID!',
+        );
+        throw Exception(
+          'L\'ID de l\'employé est identique à l\'ID de l\'organisation. Données invalides.',
+        );
       }
-      
+
       _currentEmployee = employee;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefsKey, jsonEncode(employee.toJson()));
@@ -89,4 +103,3 @@ class EmployeeSessionService {
     }
   }
 }
-

@@ -8,7 +8,10 @@ class TemperatureRepository {
   final SupabaseClient _client = Supabase.instance.client;
 
   /// Get all temperature readings
-  Future<List<Temperature>> getAll({DateTime? startDate, DateTime? endDate}) async {
+  Future<List<Temperature>> getAll({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) async {
     try {
       final user = _client.auth.currentUser;
       if (user == null) {
@@ -21,24 +24,37 @@ class TemperatureRepository {
           .from('temperatures')
           .select('*, photo_url')
           .eq('owner_id', user.id);
-      
+
       // Apply date filters if provided
       if (startDate != null) {
-        final startOfDay = DateTime(startDate.year, startDate.month, startDate.day);
+        final startOfDay = DateTime(
+          startDate.year,
+          startDate.month,
+          startDate.day,
+        );
         query = query.gte('date', startOfDay.toIso8601String());
       }
       if (endDate != null) {
-        final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+        final endOfDay = DateTime(
+          endDate.year,
+          endDate.month,
+          endDate.day,
+          23,
+          59,
+          59,
+        );
         query = query.lte('date', endOfDay.toIso8601String());
       }
-      
+
       final response = await query.order('date', ascending: false);
-      
+
       final temperatures = (response as List)
           .map((json) => Temperature.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      debugPrint('[TemperatureRepo] ✅ Fetched ${temperatures.length} temperatures');
+      debugPrint(
+        '[TemperatureRepo] ✅ Fetched ${temperatures.length} temperatures',
+      );
       return temperatures;
     } catch (e) {
       debugPrint('[TemperatureRepo] ❌ Error: $e');
@@ -81,7 +97,7 @@ class TemperatureRepository {
           .eq('appareil_id', appareilId)
           .eq('owner_id', user.id)
           .order('date', ascending: false);
-      
+
       return (response as List)
           .map((json) => Temperature.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -117,7 +133,9 @@ class TemperatureRepository {
       debugPrint('[TemperatureRepo] [CREATE] Starting create');
       debugPrint('[TemperatureRepo] [CREATE] userId: ${user.id}');
       debugPrint('[TemperatureRepo] [CREATE] employeeId: $employeeId');
-      debugPrint('[TemperatureRepo] [CREATE] employeeName: $employeeFirstName $employeeLastName');
+      debugPrint(
+        '[TemperatureRepo] [CREATE] employeeName: $employeeFirstName $employeeLastName',
+      );
       debugPrint('[TemperatureRepo] [CREATE] appareilId: $appareilId');
       debugPrint('[TemperatureRepo] [CREATE] temperature: $temperature');
 
@@ -132,10 +150,14 @@ class TemperatureRepository {
               .maybeSingle();
           if (appareilResponse != null) {
             appareilName = appareilResponse['nom'] as String?;
-            debugPrint('[TemperatureRepo] [CREATE] Fetched appareil name: $appareilName');
+            debugPrint(
+              '[TemperatureRepo] [CREATE] Fetched appareil name: $appareilName',
+            );
           }
         } catch (e) {
-          debugPrint('[TemperatureRepo] [CREATE] ⚠️ Could not fetch appareil name: $e');
+          debugPrint(
+            '[TemperatureRepo] [CREATE] ⚠️ Could not fetch appareil name: $e',
+          );
           // Continue without appareil name - will use appareilId as fallback
           appareilName = appareilId;
         }
@@ -149,8 +171,10 @@ class TemperatureRepository {
         'photo_url': photoUrl,
         'owner_id': user.id,
         'date': DateTime.now().toIso8601String(),
-        'employee_first_name': employeeFirstName, // Employee who performed the action
-        'employee_last_name': employeeLastName, // Employee who performed the action
+        'employee_first_name':
+            employeeFirstName, // Employee who performed the action
+        'employee_last_name':
+            employeeLastName, // Employee who performed the action
       };
 
       debugPrint('[TemperatureRepo] [CREATE] Insert data: $insertData');
@@ -160,11 +184,15 @@ class TemperatureRepository {
           .insert(insertData)
           .select()
           .single();
-      
-      debugPrint('[TemperatureRepo] ✅ Success: Created temperature ${response['id']}');
+
+      debugPrint(
+        '[TemperatureRepo] ✅ Success: Created temperature ${response['id']}',
+      );
       return Temperature.fromJson(response);
     } on PostgrestException catch (e) {
-      debugPrint('[TemperatureRepo] ❌ PostgrestException creating temperature:');
+      debugPrint(
+        '[TemperatureRepo] ❌ PostgrestException creating temperature:',
+      );
       debugPrint('[TemperatureRepo]   - code: ${e.code}');
       debugPrint('[TemperatureRepo]   - message: ${e.message}');
       debugPrint('[TemperatureRepo]   - details: ${e.details}');

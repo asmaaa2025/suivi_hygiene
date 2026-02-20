@@ -125,10 +125,7 @@ void main() {
     test('uses fallback thresholds when device thresholds missing', () async {
       final event = AlertEvent(
         eventType: 'temperature.logged',
-        payload: {
-          'temperature_c': 10.0,
-          'device_id': 'dev-1',
-        },
+        payload: {'temperature_c': 10.0, 'device_id': 'dev-1'},
         organizationId: 'org-1',
         employeeId: 'emp-1',
         timestamp: DateTime.now(),
@@ -136,7 +133,10 @@ void main() {
 
       final alerts = await engine.evaluate(event);
       expect(alerts, isNotEmpty);
-      expect(alerts.first.message, contains('10')); // temperature 10°C in message
+      expect(
+        alerts.first.message,
+        contains('10'),
+      ); // temperature 10°C in message
     });
   });
 

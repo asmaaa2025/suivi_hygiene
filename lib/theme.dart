@@ -23,9 +23,10 @@ ThemeData buildWowTheme() {
     textTheme: GoogleFonts.montserratTextTheme().copyWith(
       bodyMedium: TextStyle(fontSize: 14, color: Colors.grey.shade800),
       titleLarge: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-          color: Colors.grey.shade900),
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: Colors.grey.shade900,
+      ),
     ),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -60,9 +61,6 @@ ThemeData buildWowTheme() {
       backgroundColor: Colors.grey.shade900,
       contentTextStyle: TextStyle(color: Colors.white),
     ),
-    dividerTheme: DividerThemeData(
-      color: Colors.grey.shade300,
-      thickness: 1,
-    ),
+    dividerTheme: DividerThemeData(color: Colors.grey.shade300, thickness: 1),
   );
 }

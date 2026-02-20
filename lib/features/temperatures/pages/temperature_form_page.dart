@@ -16,7 +16,7 @@ import '../../../../shared/widgets/section_card.dart';
 /// Form page for temperature entry
 class TemperatureFormPage extends StatefulWidget {
   final String? temperatureId;
-  
+
   const TemperatureFormPage({super.key, this.temperatureId});
 
   @override
@@ -27,13 +27,13 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _temperatureController = TextEditingController();
   final _remarqueController = TextEditingController();
-  
+
   final _temperatureRepo = TemperatureRepository();
   final _appareilRepo = AppareilRepository();
   final _auditLogRepo = AuditLogRepository();
   final _orgRepo = OrganizationRepository();
   final _storageService = StorageService();
-  
+
   List<Appareil> _appareils = [];
   String? _selectedAppareilId;
   DateTime _selectedDate = DateTime.now();
@@ -95,9 +95,9 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
         setState(() {
           _isLoadingAppareils = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -152,18 +152,23 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
 
     try {
       final temperature = double.parse(_temperatureController.text);
-      
+
       // Upload photo to Supabase Storage if _photoPath is not null
       String? photoUrl;
       if (_photoPath != null) {
         try {
-          debugPrint('[TemperatureForm] Uploading photo to Supabase Storage...');
+          debugPrint(
+            '[TemperatureForm] Uploading photo to Supabase Storage...',
+          );
           final photoFile = File(_photoPath!);
           photoUrl = await _storageService.uploadPhoto(
             photoFile,
-            fileName: 'temperature_${DateTime.now().millisecondsSinceEpoch}.jpg',
+            fileName:
+                'temperature_${DateTime.now().millisecondsSinceEpoch}.jpg',
           );
-          debugPrint('[TemperatureForm] ✅ Photo uploaded successfully: $photoUrl');
+          debugPrint(
+            '[TemperatureForm] ✅ Photo uploaded successfully: $photoUrl',
+          );
         } catch (e) {
           debugPrint('[TemperatureForm] ❌ Error uploading photo: $e');
           if (mounted) {
@@ -179,8 +184,10 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
       }
 
       // Get appareil name for legacy column
-      final selectedAppareil = _appareils.firstWhere((a) => a.id == _selectedAppareilId!);
-      
+      final selectedAppareil = _appareils.firstWhere(
+        (a) => a.id == _selectedAppareilId!,
+      );
+
       Temperature? result;
       if (widget.temperatureId != null) {
         // Update existing temperature
@@ -188,7 +195,9 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
           id: widget.temperatureId!,
           appareilId: _selectedAppareilId,
           temperature: temperature,
-          remarque: _remarqueController.text.isEmpty ? null : _remarqueController.text,
+          remarque: _remarqueController.text.isEmpty
+              ? null
+              : _remarqueController.text,
           photoUrl: photoUrl,
         );
       } else {
@@ -196,33 +205,38 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
         result = await _temperatureRepo.create(
           appareilId: _selectedAppareilId!,
           temperature: temperature,
-          remarque: _remarqueController.text.isEmpty 
-              ? null 
+          remarque: _remarqueController.text.isEmpty
+              ? null
               : _remarqueController.text,
           photoUrl: photoUrl,
-          appareilNom: selectedAppareil.nom, // Pass appareil name for legacy column
+          appareilNom:
+              selectedAppareil.nom, // Pass appareil name for legacy column
         );
       }
-      
+
       final createdTemp = result;
 
       // Create audit log entry
       try {
         final orgId = await _orgRepo.getOrCreateOrganization();
-        final appareil = _appareils.firstWhere((a) => a.id == _selectedAppareilId!);
+        final appareil = _appareils.firstWhere(
+          (a) => a.id == _selectedAppareilId!,
+        );
         await _auditLogRepo.create(
           organizationId: orgId,
           operationType: 'temperature',
           operationId: createdTemp.id,
           action: widget.temperatureId != null ? 'update' : 'create',
-          description: widget.temperatureId != null 
+          description: widget.temperatureId != null
               ? 'Température modifiée: ${temperature}°C pour ${appareil.nom}'
               : 'Température ${temperature}°C pour ${appareil.nom}',
           metadata: {
             'appareil_id': _selectedAppareilId!,
             'appareil_nom': appareil.nom,
             'temperature': temperature,
-            'remarque': _remarqueController.text.isEmpty ? null : _remarqueController.text,
+            'remarque': _remarqueController.text.isEmpty
+                ? null
+                : _remarqueController.text,
           },
         );
       } catch (e) {
@@ -260,13 +274,17 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
-    
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.temperatureId != null 
-            ? 'Modifier la température' 
-            : 'Nouveau relevé de température'),
+        title: Text(
+          widget.temperatureId != null
+              ? 'Modifier la température'
+              : 'Nouveau relevé de température',
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => context.pop(),
@@ -306,7 +324,7 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Temperature
                   TextFormField(
                     controller: _temperatureController,
@@ -315,7 +333,9 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.thermostat),
                     ),
-                    keyboardType: TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez saisir une température';
@@ -328,7 +348,7 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
                     },
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Date
                   InkWell(
                     onTap: _selectDate,
@@ -344,7 +364,7 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Remarque
                   TextFormField(
                     controller: _remarqueController,
@@ -356,7 +376,7 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
                     maxLines: 3,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Photo
                   if (_photoPath != null)
                     SectionCard(
@@ -408,7 +428,7 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
                       label: const Text('Prendre une photo'),
                     ),
                   const SizedBox(height: 24),
-                  
+
                   // Submit button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _submit,
@@ -455,7 +475,11 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
                       child: const Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.broken_image, size: 64, color: Colors.white),
+                          Icon(
+                            Icons.broken_image,
+                            size: 64,
+                            color: Colors.white,
+                          ),
                           SizedBox(height: 16),
                           Text(
                             'Impossible de charger l\'image',
@@ -474,9 +498,7 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => Navigator.of(context).pop(),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.black54,
-                ),
+                style: IconButton.styleFrom(backgroundColor: Colors.black54),
               ),
             ),
           ],

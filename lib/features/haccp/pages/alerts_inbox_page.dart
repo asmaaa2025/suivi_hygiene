@@ -1,5 +1,5 @@
 /// HACCP Alerts Inbox Page
-/// 
+///
 /// Displays all HACCP alerts with filtering and status management
 
 import 'package:flutter/material.dart';
@@ -66,22 +66,51 @@ class _AlertsInboxPageState extends State<AlertsInboxPage> {
     }
     switch (_filter) {
       case InboxFilter.urgentes:
-        list = list.where((a) => AlertDisplayHelper.getPriority(a) == AlertPriority.urgent).toList();
+        list = list
+            .where(
+              (a) => AlertDisplayHelper.getPriority(a) == AlertPriority.urgent,
+            )
+            .toList();
         break;
       case InboxFilter.temperature:
-        list = list.where((a) => AlertDisplayHelper.getCategory(a) == AlertCategory.temperature).toList();
+        list = list
+            .where(
+              (a) =>
+                  AlertDisplayHelper.getCategory(a) ==
+                  AlertCategory.temperature,
+            )
+            .toList();
         break;
       case InboxFilter.reception:
-        list = list.where((a) => AlertDisplayHelper.getCategory(a) == AlertCategory.reception).toList();
+        list = list
+            .where(
+              (a) =>
+                  AlertDisplayHelper.getCategory(a) == AlertCategory.reception,
+            )
+            .toList();
         break;
       case InboxFilter.huile:
-        list = list.where((a) => AlertDisplayHelper.getCategory(a) == AlertCategory.huile).toList();
+        list = list
+            .where(
+              (a) => AlertDisplayHelper.getCategory(a) == AlertCategory.huile,
+            )
+            .toList();
         break;
       case InboxFilter.nettoyage:
-        list = list.where((a) => AlertDisplayHelper.getCategory(a) == AlertCategory.nettoyage).toList();
+        list = list
+            .where(
+              (a) =>
+                  AlertDisplayHelper.getCategory(a) == AlertCategory.nettoyage,
+            )
+            .toList();
         break;
       case InboxFilter.documents:
-        list = list.where((a) => AlertDisplayHelper.getCategory(a) == AlertCategory.documents).toList();
+        list = list
+            .where(
+              (a) =>
+                  AlertDisplayHelper.getCategory(a) == AlertCategory.documents,
+            )
+            .toList();
         break;
       case InboxFilter.toutes:
         break;
@@ -118,37 +147,37 @@ class _AlertsInboxPageState extends State<AlertsInboxPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _filteredAlerts.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.notifications_off,
-                              size: 64,
-                              color: Colors.grey[400],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Aucune alerte',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.notifications_off,
+                          size: 64,
+                          color: Colors.grey[400],
                         ),
-                      )
-                    : RefreshIndicator(
-                        onRefresh: _loadAlerts,
-                        child: ListView.builder(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _filteredAlerts.length,
-                          itemBuilder: (context, index) {
-                            final alert = _filteredAlerts[index];
-                            return _buildAlertCard(alert);
-                          },
+                        const SizedBox(height: 16),
+                        Text(
+                          'Aucune alerte',
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.grey[600],
+                          ),
                         ),
-                      ),
+                      ],
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadAlerts,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _filteredAlerts.length,
+                      itemBuilder: (context, index) {
+                        final alert = _filteredAlerts[index];
+                        return _buildAlertCard(alert);
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
@@ -180,12 +209,28 @@ class _AlertsInboxPageState extends State<AlertsInboxPage> {
                 },
                 selectedColor: AppTheme.primaryBlue.withOpacity(0.2),
               ),
-              _filterChip(InboxFilter.urgentes, 'Urgentes', Icons.priority_high),
+              _filterChip(
+                InboxFilter.urgentes,
+                'Urgentes',
+                Icons.priority_high,
+              ),
               _filterChip(InboxFilter.toutes, 'Toutes', Icons.list),
-              _filterChip(InboxFilter.temperature, 'Température', Icons.thermostat),
-              _filterChip(InboxFilter.reception, 'Réception', Icons.inventory_2),
+              _filterChip(
+                InboxFilter.temperature,
+                'Température',
+                Icons.thermostat,
+              ),
+              _filterChip(
+                InboxFilter.reception,
+                'Réception',
+                Icons.inventory_2,
+              ),
               _filterChip(InboxFilter.huile, 'Huile', Icons.oil_barrel),
-              _filterChip(InboxFilter.nettoyage, 'Nettoyage', Icons.cleaning_services),
+              _filterChip(
+                InboxFilter.nettoyage,
+                'Nettoyage',
+                Icons.cleaning_services,
+              ),
               _filterChip(InboxFilter.documents, 'Documents', Icons.folder),
             ],
           ),
@@ -197,7 +242,11 @@ class _AlertsInboxPageState extends State<AlertsInboxPage> {
   Widget _filterChip(InboxFilter value, String label, IconData icon) {
     final selected = _filter == value;
     return FilterChip(
-      avatar: Icon(icon, size: 18, color: selected ? Colors.white : Colors.grey[700]),
+      avatar: Icon(
+        icon,
+        size: 18,
+        color: selected ? Colors.white : Colors.grey[700],
+      ),
       label: Text(label),
       selected: selected,
       onSelected: (v) {
@@ -271,7 +320,10 @@ class _AlertsInboxPageState extends State<AlertsInboxPage> {
                         Row(
                           children: [
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6,
+                                vertical: 2,
+                              ),
                               decoration: BoxDecoration(
                                 color: color.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(8),
@@ -300,7 +352,10 @@ class _AlertsInboxPageState extends State<AlertsInboxPage> {
                   ),
                   if (alert.blocking)
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(12),
@@ -335,5 +390,3 @@ class _AlertsInboxPageState extends State<AlertsInboxPage> {
     );
   }
 }
-
-

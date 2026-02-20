@@ -92,16 +92,23 @@ class PersonnelRepository {
     try {
       // Validate dates
       if (endDate != null && endDate.isBefore(startDate)) {
-        throw Exception('La date de fin doit être postérieure à la date de début');
+        throw Exception(
+          'La date de fin doit être postérieure à la date de début',
+        );
       }
 
       // Validate foreign worker fields
       if (isForeignWorker) {
         if (foreignWorkPermitType == null || foreignWorkPermitType.isEmpty) {
-          throw Exception('Le type de permis de travail est requis pour un travailleur étranger');
+          throw Exception(
+            'Le type de permis de travail est requis pour un travailleur étranger',
+          );
         }
-        if (foreignWorkPermitNumber == null || foreignWorkPermitNumber.isEmpty) {
-          throw Exception('Le numéro de permis de travail est requis pour un travailleur étranger');
+        if (foreignWorkPermitNumber == null ||
+            foreignWorkPermitNumber.isEmpty) {
+          throw Exception(
+            'Le numéro de permis de travail est requis pour un travailleur étranger',
+          );
         }
       }
 
@@ -113,7 +120,8 @@ class PersonnelRepository {
         'contract_type': contractType.toValue(),
         'is_foreign_worker': isForeignWorker,
         if (isForeignWorker) 'foreign_work_permit_type': foreignWorkPermitType,
-        if (isForeignWorker) 'foreign_work_permit_number': foreignWorkPermitNumber,
+        if (isForeignWorker)
+          'foreign_work_permit_number': foreignWorkPermitNumber,
         if (userId != null) 'user_id': userId,
       };
 
@@ -156,34 +164,45 @@ class PersonnelRepository {
       final finalStartDate = startDate ?? current.startDate;
       final finalEndDate = endDate ?? current.endDate;
       if (finalEndDate != null && finalEndDate.isBefore(finalStartDate)) {
-        throw Exception('La date de fin doit être postérieure à la date de début');
+        throw Exception(
+          'La date de fin doit être postérieure à la date de début',
+        );
       }
 
       // Validate foreign worker fields
       final finalIsForeignWorker = isForeignWorker ?? current.isForeignWorker;
       if (finalIsForeignWorker) {
-        final finalPermitType = foreignWorkPermitType ?? current.foreignWorkPermitType;
-        final finalPermitNumber = foreignWorkPermitNumber ?? current.foreignWorkPermitNumber;
+        final finalPermitType =
+            foreignWorkPermitType ?? current.foreignWorkPermitType;
+        final finalPermitNumber =
+            foreignWorkPermitNumber ?? current.foreignWorkPermitNumber;
         if (finalPermitType == null || finalPermitType.isEmpty) {
-          throw Exception('Le type de permis de travail est requis pour un travailleur étranger');
+          throw Exception(
+            'Le type de permis de travail est requis pour un travailleur étranger',
+          );
         }
         if (finalPermitNumber == null || finalPermitNumber.isEmpty) {
-          throw Exception('Le numéro de permis de travail est requis pour un travailleur étranger');
+          throw Exception(
+            'Le numéro de permis de travail est requis pour un travailleur étranger',
+          );
         }
       }
 
       final updates = <String, dynamic>{};
       if (firstName != null) updates['first_name'] = firstName;
       if (lastName != null) updates['last_name'] = lastName;
-      if (startDate != null) updates['start_date'] = startDate.toIso8601String();
+      if (startDate != null)
+        updates['start_date'] = startDate.toIso8601String();
       if (endDate != null) {
         updates['end_date'] = endDate.toIso8601String();
       } else if (endDate == null && current.endDate != null) {
         // Explicitly set to null if removing end date
         updates['end_date'] = null;
       }
-      if (contractType != null) updates['contract_type'] = contractType.toValue();
-      if (isForeignWorker != null) updates['is_foreign_worker'] = isForeignWorker;
+      if (contractType != null)
+        updates['contract_type'] = contractType.toValue();
+      if (isForeignWorker != null)
+        updates['is_foreign_worker'] = isForeignWorker;
       if (foreignWorkPermitType != null) {
         updates['foreign_work_permit_type'] = foreignWorkPermitType;
       }
@@ -241,4 +260,3 @@ class PersonnelRepository {
     }
   }
 }
-

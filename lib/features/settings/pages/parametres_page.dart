@@ -51,14 +51,16 @@ class _ParametresPageState extends State<ParametresPage> {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('api_url', _apiUrlController.text);
     await prefs.setInt(
-        'timeout_seconds', int.tryParse(_timeoutController.text) ?? 10);
+      'timeout_seconds',
+      int.tryParse(_timeoutController.text) ?? 10,
+    );
     await prefs.setBool('notifications_enabled', _notificationsEnabled);
     await prefs.setBool('sync_auto_enabled', _syncAutoEnabled);
     await prefs.setInt('sync_interval', _syncInterval);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Paramètres sauvegardés')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Paramètres sauvegardés')));
   }
 
   Future<void> _clearAllData() async {
@@ -67,7 +69,8 @@ class _ParametresPageState extends State<ParametresPage> {
       builder: (context) => AlertDialog(
         title: const Text('Confirmer la suppression'),
         content: const Text(
-            'Êtes-vous sûr de vouloir supprimer toutes les données locales ? Cette action est irréversible.'),
+          'Êtes-vous sûr de vouloir supprimer toutes les données locales ? Cette action est irréversible.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -95,7 +98,8 @@ class _ParametresPageState extends State<ParametresPage> {
       builder: (context) => AlertDialog(
         title: const Text('Changer d\'employé'),
         content: const Text(
-            'Voulez-vous changer de compte employé ? Vous serez redirigé vers la page de sélection.'),
+          'Voulez-vous changer de compte employé ? Vous serez redirigé vers la page de sélection.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -121,14 +125,13 @@ class _ParametresPageState extends State<ParametresPage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         }
       }
     }
   }
-
 
   Future<void> _logout() async {
     try {
@@ -140,9 +143,9 @@ class _ParametresPageState extends State<ParametresPage> {
 
       // AuthGate will automatically redirect to login
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Déconnexion réussie')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Déconnexion réussie')));
       }
     } catch (e) {
       if (mounted) {
@@ -187,7 +190,8 @@ class _ParametresPageState extends State<ParametresPage> {
                   SwitchListTile(
                     title: const Text('Activer les notifications'),
                     subtitle: const Text(
-                        'Recevoir des alertes pour les tâches importantes'),
+                      'Recevoir des alertes pour les tâches importantes',
+                    ),
                     value: _notificationsEnabled,
                     onChanged: (value) {
                       setState(() {
@@ -224,7 +228,8 @@ class _ParametresPageState extends State<ParametresPage> {
                     onTap: () async {
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                            content: Text('Synchronisation en cours...')),
+                          content: Text('Synchronisation en cours...'),
+                        ),
                       );
                       try {
                         // await PleskSyncService().forceSync(); // Désactivé - on utilise Supabase maintenant
@@ -276,7 +281,9 @@ class _ParametresPageState extends State<ParametresPage> {
                   ListTile(
                     leading: const Icon(Icons.swap_horiz, color: Colors.blue),
                     title: const Text('Changer d\'employé'),
-                    subtitle: const Text('Sélectionner un autre compte employé'),
+                    subtitle: const Text(
+                      'Sélectionner un autre compte employé',
+                    ),
                     onTap: _changeEmployee,
                   ),
                   ListTile(

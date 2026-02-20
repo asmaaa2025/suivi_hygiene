@@ -92,7 +92,8 @@ class _EtiquettePageState extends State<EtiquettePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-                'Erreur initialisation: ${e is AppException ? e.message : e.toString()}'),
+              'Erreur initialisation: ${e is AppException ? e.message : e.toString()}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -134,8 +135,9 @@ class _EtiquettePageState extends State<EtiquettePage> {
 
       // Load from Supabase
       final produitsMaps = await _productsRepo.getAll();
-      final produitsList =
-          produitsMaps.map((map) => Produit.fromMap(map)).toList();
+      final produitsList = produitsMaps
+          .map((map) => Produit.fromMap(map))
+          .toList();
       if (mounted) {
         setState(() {
           produits = produitsList;
@@ -145,8 +147,9 @@ class _EtiquettePageState extends State<EtiquettePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text('Erreur: ${e is AppException ? e.message : e.toString()}'),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -165,9 +168,9 @@ class _EtiquettePageState extends State<EtiquettePage> {
         devices = devicesList;
       });
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erreur Bluetooth: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erreur Bluetooth: $e')));
     }
   }
 
@@ -193,11 +196,13 @@ class _EtiquettePageState extends State<EtiquettePage> {
     final df = DateFormat('dd/MM/yyyy');
     final logoCommand = showLogo ? await _logoService.getLogoCommand() : '';
 
-    final ingredients =
-        _textSanitizer.sanitizeForZpl(produit.ingredients ?? '');
+    final ingredients = _textSanitizer.sanitizeForZpl(
+      produit.ingredients ?? '',
+    );
     final quantite = _textSanitizer.sanitizeForZpl(produit.quantite ?? '');
-    final origineViande =
-        _textSanitizer.sanitizeForZpl(produit.origineViande ?? '');
+    final origineViande = _textSanitizer.sanitizeForZpl(
+      produit.origineViande ?? '',
+    );
     final allergenes = _textSanitizer.sanitizeForZpl(produit.allergenes ?? '');
 
     final title = _textSanitizer.sanitizeForZpl(produit.nom).toUpperCase();
@@ -345,13 +350,17 @@ class _EtiquettePageState extends State<EtiquettePage> {
     addIngredients(ingredients);
     addField("Qte", quantite);
     addField(
-        "Conservation", _getConservationText(produit.typeProduit, isSurgel));
+      "Conservation",
+      _getConservationText(produit.typeProduit, isSurgel),
+    );
 
     // Utiliser un espacement spécial pour la date
-    contentLines
-        .add('^FO20,$currentPos^FD${_getDateLabel(produit.typeProduit)}:^FS');
     contentLines.add(
-        '^FO${getDateSpacing()},$currentPos^FD${df.format(fabrication)}^FS');
+      '^FO20,$currentPos^FD${_getDateLabel(produit.typeProduit)}:^FS',
+    );
+    contentLines.add(
+      '^FO${getDateSpacing()},$currentPos^FD${df.format(fabrication)}^FS',
+    );
     currentPos += 20;
 
     addField("DLC", df.format(dlc));
@@ -359,8 +368,9 @@ class _EtiquettePageState extends State<EtiquettePage> {
     if (isSurgel) {
       fieldCount++;
       contentLines.add('^FO20,$currentPos^FDMode d\'emploi:^FS');
-      contentLines
-          .add('^FO150,$currentPos^FDA decongeler et conserver a +4 degres^FS');
+      contentLines.add(
+        '^FO150,$currentPos^FDA decongeler et conserver a +4 degres^FS',
+      );
       currentPos += 20;
       contentLines.add('^FO150,$currentPos^FDa consommer sous 3 jours^FS');
       currentPos += 20;
@@ -385,9 +395,11 @@ class _EtiquettePageState extends State<EtiquettePage> {
     addField("Allergenes", allergenes);
 
     // Réécriture des lignes avec taille de police
-    final formattedContent = contentLines.map((line) {
-      return line.contains('^FD') ? '^CF0,$baseFontSize\n$line' : line;
-    }).join('\n');
+    final formattedContent = contentLines
+        .map((line) {
+          return line.contains('^FD') ? '^CF0,$baseFontSize\n$line' : line;
+        })
+        .join('\n');
 
     return '''
 ^XA
@@ -565,8 +577,9 @@ $formattedContent
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content:
-                            Text('Le nom du fabricant ne peut pas être vide'),
+                        content: Text(
+                          'Le nom du fabricant ne peut pas être vide',
+                        ),
                         backgroundColor: Colors.red,
                       ),
                     );
@@ -596,7 +609,8 @@ $formattedContent
       DateTime dlc;
       if (_isSurgel) {
         // Pour les produits surgelés, DLC = date de surgélation + DLC du produit
-        final dlcJours = produit.dlcSurgelationJours ??
+        final dlcJours =
+            produit.dlcSurgelationJours ??
             produit.dlcJours ??
             produit.typeProduit.dlcParDefaut;
         dlc = _selectedDateSurgelation.add(Duration(days: dlcJours));
@@ -621,19 +635,24 @@ $formattedContent
         isSurgel: _isSurgel,
         dateSurgelation: _selectedDateSurgelation,
         showLogo: _showLogo,
-        fabricant: fabricant ??
+        fabricant:
+            fabricant ??
             "KDOUKH DELICE", // Utiliser le nom choisi ou par défaut
       );
 
       // Imprimer avec le service robuste
-      final success = await _bluetoothService
-          .printMultipleLabels(zpl, nombreEtiquettes, context: context);
+      final success = await _bluetoothService.printMultipleLabels(
+        zpl,
+        nombreEtiquettes,
+        context: context,
+      );
 
       if (success) {
         if (!_isOnline) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('Network required to save print history')),
+              content: Text('Network required to save print history'),
+            ),
           );
           return;
         }
@@ -749,16 +768,13 @@ $formattedContent
                     localSelectedType == TypeProduit.recu
                         ? 'Produit reçu d\'un fournisseur'
                         : localSelectedType == TypeProduit.fini
-                            ? 'Produit vendu directement aux clients'
-                            : localSelectedType == TypeProduit.prepare
-                                ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
-                                : localSelectedType == TypeProduit.ouverture
-                                    ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
-                                    : 'Produit décongelé pour utilisation',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
+                        ? 'Produit vendu directement aux clients'
+                        : localSelectedType == TypeProduit.prepare
+                        ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
+                        : localSelectedType == TypeProduit.ouverture
+                        ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
+                        : 'Produit décongelé pour utilisation',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                   SizedBox(height: 16),
                   GridView.count(
@@ -773,20 +789,20 @@ $formattedContent
                       final color = type == TypeProduit.recu
                           ? Colors.purple
                           : type == TypeProduit.fini
-                              ? Colors.green
-                              : type == TypeProduit.prepare
-                                  ? Colors.orange
-                                  : type == TypeProduit.ouverture
-                                      ? Colors.red
-                                      : Colors.blue;
+                          ? Colors.green
+                          : type == TypeProduit.prepare
+                          ? Colors.orange
+                          : type == TypeProduit.ouverture
+                          ? Colors.red
+                          : Colors.blue;
 
                       return InkWell(
                         onTap: () {
                           setDialogState(() {
                             localSelectedType = type;
                             // Remplir automatiquement la DLC selon le type
-                            _dlcJoursController.text =
-                                type.dlcParDefaut.toString();
+                            _dlcJoursController.text = type.dlcParDefaut
+                                .toString();
                           });
                         },
                         borderRadius: BorderRadius.circular(16),
@@ -795,9 +811,7 @@ $formattedContent
                         child: AnimatedContainer(
                           duration: Duration(milliseconds: 200),
                           decoration: BoxDecoration(
-                            color: isSelected
-                                ? color.shade100
-                                : Colors.white,
+                            color: isSelected ? color.shade100 : Colors.white,
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
                               color: isSelected
@@ -837,12 +851,12 @@ $formattedContent
                                     type == TypeProduit.recu
                                         ? Icons.local_shipping
                                         : type == TypeProduit.fini
-                                            ? Icons.shopping_cart
-                                            : type == TypeProduit.prepare
-                                                ? Icons.build
-                                                : type == TypeProduit.ouverture
-                                                    ? Icons.open_in_new
-                                                    : Icons.ac_unit,
+                                        ? Icons.shopping_cart
+                                        : type == TypeProduit.prepare
+                                        ? Icons.build
+                                        : type == TypeProduit.ouverture
+                                        ? Icons.open_in_new
+                                        : Icons.ac_unit,
                                     color: color.shade700,
                                     size: 24,
                                   ),
@@ -858,12 +872,12 @@ $formattedContent
                                         type == TypeProduit.recu
                                             ? 'Produit reçu'
                                             : type == TypeProduit.fini
-                                                ? 'Produit fini'
-                                                : type == TypeProduit.prepare
-                                                    ? 'Produit préparé'
-                                                    : type == TypeProduit.ouverture
-                                                        ? 'Ouverture'
-                                                        : 'Décongélation',
+                                            ? 'Produit fini'
+                                            : type == TypeProduit.prepare
+                                            ? 'Produit préparé'
+                                            : type == TypeProduit.ouverture
+                                            ? 'Ouverture'
+                                            : 'Décongélation',
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
@@ -925,7 +939,7 @@ $formattedContent
                     ),
                     maxLines: 2,
                     inputFormatters: [
-                      DescriptionInputFormatter(maxLength: 200)
+                      DescriptionInputFormatter(maxLength: 200),
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -957,7 +971,7 @@ $formattedContent
                       helperText: 'Ex: gluten, lait, œufs, etc.',
                     ),
                     inputFormatters: [
-                      DescriptionInputFormatter(maxLength: 100)
+                      DescriptionInputFormatter(maxLength: 100),
                     ],
                   ),
                 ],
@@ -989,8 +1003,8 @@ $formattedContent
                         : null,
                     'origineViande':
                         _origineViandeController.text.trim().isNotEmpty
-                            ? _origineViandeController.text.trim()
-                            : null,
+                        ? _origineViandeController.text.trim()
+                        : null,
                     'allergenes': _allergenesController.text.trim().isNotEmpty
                         ? _allergenesController.text.trim()
                         : null,
@@ -1006,14 +1020,15 @@ $formattedContent
 
     if (result != null) {
       if (!_isOnline) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Network required')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Network required')));
         return;
       }
 
       try {
-        final typeProduit = result['typeProduit'] as TypeProduit? ?? TypeProduit.fini;
+        final typeProduit =
+            result['typeProduit'] as TypeProduit? ?? TypeProduit.fini;
         await _productsRepo.createProduct(
           nom: result['nom']?.toString() ?? '',
           typeProduit: typeProduit.name,
@@ -1085,8 +1100,11 @@ $formattedContent
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.inventory_2_outlined,
-                                size: 64, color: Colors.grey.shade400),
+                            Icon(
+                              Icons.inventory_2_outlined,
+                              size: 64,
+                              color: Colors.grey.shade400,
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'Aucun produit',
@@ -1116,7 +1134,8 @@ $formattedContent
                               title: Text(
                                 produit.nom,
                                 style: const TextStyle(
-                                    fontWeight: FontWeight.w600),
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                               subtitle: Text(
                                 'DLC: +${produit.dlcJours ?? 0} jours',
@@ -1126,14 +1145,18 @@ $formattedContent
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   IconButton(
-                                    icon: Icon(Icons.edit,
-                                        color: Colors.blue.shade400),
+                                    icon: Icon(
+                                      Icons.edit,
+                                      color: Colors.blue.shade400,
+                                    ),
                                     onPressed: () => _editProduit(produit),
                                     tooltip: 'Modifier le produit',
                                   ),
                                   IconButton(
-                                    icon: Icon(Icons.delete,
-                                        color: Colors.red.shade400),
+                                    icon: Icon(
+                                      Icons.delete,
+                                      color: Colors.red.shade400,
+                                    ),
                                     onPressed: () => _deleteProduit(produit),
                                     tooltip: 'Supprimer le produit',
                                   ),
@@ -1163,7 +1186,8 @@ $formattedContent
       builder: (context) => AlertDialog(
         title: Text('Confirmation'),
         content: Text(
-            'Êtes-vous sûr de vouloir supprimer le produit "${produit.nom}" ?'),
+          'Êtes-vous sûr de vouloir supprimer le produit "${produit.nom}" ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1180,9 +1204,9 @@ $formattedContent
 
     if (confirm == true) {
       if (!_isOnline) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Network required')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Network required')));
         return;
       }
 
@@ -1207,8 +1231,9 @@ $formattedContent
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text('Erreur: ${e is AppException ? e.message : e.toString()}'),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -1338,8 +1363,8 @@ $formattedContent
                       : null,
                   'origineViande':
                       _origineViandeController.text.trim().isNotEmpty
-                          ? _origineViandeController.text.trim()
-                          : null,
+                      ? _origineViandeController.text.trim()
+                      : null,
                   'allergenes': _allergenesController.text.trim().isNotEmpty
                       ? _allergenesController.text.trim()
                       : null,
@@ -1366,9 +1391,9 @@ $formattedContent
         );
 
         if (!_isOnline) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Network required')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Network required')));
           return;
         }
 
@@ -1389,8 +1414,9 @@ $formattedContent
 
           // Mettre à jour le produit sélectionné si c'est celui qui a été modifié
           if (selectedProduit?.id == produit.id) {
-            final updatedProduitFromList =
-                produits.firstWhere((p) => p.id == produit.id);
+            final updatedProduitFromList = produits.firstWhere(
+              (p) => p.id == produit.id,
+            );
             setState(() {
               selectedProduit = updatedProduitFromList;
             });
@@ -1399,7 +1425,8 @@ $formattedContent
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                  'Erreur: ${e is AppException ? e.message : e.toString()}'),
+                'Erreur: ${e is AppException ? e.message : e.toString()}',
+              ),
               backgroundColor: Colors.red,
             ),
           );
@@ -1472,8 +1499,10 @@ $formattedContent
                       decoration: const InputDecoration(
                         labelText: 'Sélectionner une imprimante',
                         border: OutlineInputBorder(),
-                        contentPadding:
-                            EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                        contentPadding: EdgeInsets.symmetric(
+                          vertical: 16,
+                          horizontal: 12,
+                        ),
                       ),
                       items: devices.map((device) {
                         return DropdownMenuItem<BluetoothDevice>(
@@ -1532,7 +1561,9 @@ $formattedContent
                           border: OutlineInputBorder(),
                           prefixIcon: Icon(Icons.inventory, size: 28),
                           contentPadding: EdgeInsets.symmetric(
-                              vertical: 30, horizontal: 20),
+                            vertical: 30,
+                            horizontal: 20,
+                          ),
                         ),
                         isExpanded: true,
                         menuMaxHeight: 400,
@@ -1577,13 +1608,16 @@ $formattedContent
                       child: ElevatedButton.icon(
                         onPressed: _showProduitsList,
                         icon: const Icon(Icons.list),
-                        label: Text('Gérer les produits',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        label: Text(
+                          'Gérer les produits',
+                          style: TextStyle(fontWeight: FontWeight.bold),
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.orange.shade600,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12)),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           elevation: 4,
                         ),
                       ),
@@ -1608,7 +1642,9 @@ $formattedContent
                         const Text(
                           'Préparation et Impression',
                           style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const Spacer(),
                         ElevatedButton.icon(
@@ -1617,11 +1653,14 @@ $formattedContent
                               showPreparationForm = !showPreparationForm;
                             });
                           },
-                          icon: Icon(showPreparationForm
-                              ? Icons.expand_less
-                              : Icons.expand_more),
+                          icon: Icon(
+                            showPreparationForm
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                          ),
                           label: Text(
-                              showPreparationForm ? 'Masquer' : 'Afficher'),
+                            showPreparationForm ? 'Masquer' : 'Afficher',
+                          ),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.teal,
                             foregroundColor: Colors.white,
@@ -1717,7 +1756,9 @@ $formattedContent
                                   border: OutlineInputBorder(),
                                   prefixIcon: Icon(Icons.qr_code, size: 28),
                                   contentPadding: EdgeInsets.symmetric(
-                                      vertical: 25, horizontal: 20),
+                                    vertical: 25,
+                                    horizontal: 20,
+                                  ),
                                 ),
                                 inputFormatters: [LotNumberInputFormatter()],
                                 validator: (value) {
@@ -1741,7 +1782,9 @@ $formattedContent
                                   border: OutlineInputBorder(),
                                   prefixIcon: Icon(Icons.scale, size: 28),
                                   contentPadding: EdgeInsets.symmetric(
-                                      vertical: 25, horizontal: 20),
+                                    vertical: 25,
+                                    horizontal: 20,
+                                  ),
                                 ),
                                 inputFormatters: [WeightInputFormatter()],
                               ),
@@ -1753,22 +1796,27 @@ $formattedContent
 
                       ListTile(
                         leading: const Icon(Icons.calendar_today),
-                        title: Text(selectedProduit != null
-                            ? _getDateLabel(selectedProduit!.typeProduit)
-                            : 'Date de fabrication'),
+                        title: Text(
+                          selectedProduit != null
+                              ? _getDateLabel(selectedProduit!.typeProduit)
+                              : 'Date de fabrication',
+                        ),
                         subtitle: Text(
-                          DateFormat('dd/MM/yyyy')
-                              .format(_selectedDateFabrication),
+                          DateFormat(
+                            'dd/MM/yyyy',
+                          ).format(_selectedDateFabrication),
                         ),
                         trailing: const Icon(Icons.edit),
                         onTap: () async {
                           final date = await showDatePicker(
                             context: context,
                             initialDate: _selectedDateFabrication,
-                            firstDate: DateTime.now()
-                                .subtract(const Duration(days: 30)),
-                            lastDate:
-                                DateTime.now().add(const Duration(days: 365)),
+                            firstDate: DateTime.now().subtract(
+                              const Duration(days: 30),
+                            ),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365),
+                            ),
                           );
                           if (date != null) {
                             setState(() {
@@ -1785,8 +1833,8 @@ $formattedContent
                           selectedProduit?.dlcSurgelationJours != null
                               ? 'DLC: +${selectedProduit!.dlcSurgelationJours} jours'
                               : selectedProduit?.dlcJours != null
-                                  ? 'DLC: +${selectedProduit!.dlcJours} jours'
-                                  : 'DLC: +3 jours après décongélation',
+                              ? 'DLC: +${selectedProduit!.dlcJours} jours'
+                              : 'DLC: +3 jours après décongélation',
                         ),
                         value: _isSurgel,
                         onChanged: (value) {
@@ -1808,22 +1856,27 @@ $formattedContent
                       if (_isSurgel) ...[
                         const SizedBox(height: 16),
                         ListTile(
-                          leading:
-                              const Icon(Icons.ac_unit, color: Colors.blue),
+                          leading: const Icon(
+                            Icons.ac_unit,
+                            color: Colors.blue,
+                          ),
                           title: const Text('Date de surgélation'),
                           subtitle: Text(
-                            DateFormat('dd/MM/yyyy')
-                                .format(_selectedDateSurgelation),
+                            DateFormat(
+                              'dd/MM/yyyy',
+                            ).format(_selectedDateSurgelation),
                           ),
                           trailing: const Icon(Icons.edit),
                           onTap: () async {
                             final date = await showDatePicker(
                               context: context,
                               initialDate: _selectedDateSurgelation,
-                              firstDate: DateTime.now()
-                                  .subtract(const Duration(days: 365)),
-                              lastDate:
-                                  DateTime.now().add(const Duration(days: 365)),
+                              firstDate: DateTime.now().subtract(
+                                const Duration(days: 365),
+                              ),
+                              lastDate: DateTime.now().add(
+                                const Duration(days: 365),
+                              ),
                             );
                             if (date != null) {
                               setState(() {
@@ -1845,7 +1898,9 @@ $formattedContent
                             border: OutlineInputBorder(),
                             prefixIcon: Icon(Icons.person, size: 28),
                             contentPadding: EdgeInsets.symmetric(
-                                vertical: 25, horizontal: 20),
+                              vertical: 25,
+                              horizontal: 20,
+                            ),
                           ),
                           inputFormatters: [ZplSafeTextInputFormatter()],
                         ),
@@ -1863,13 +1918,17 @@ $formattedContent
                                 decoration: const InputDecoration(
                                   labelText: 'Nombre d\'étiquettes',
                                   border: OutlineInputBorder(),
-                                  prefixIcon:
-                                      Icon(Icons.confirmation_number, size: 28),
+                                  prefixIcon: Icon(
+                                    Icons.confirmation_number,
+                                    size: 28,
+                                  ),
                                   contentPadding: EdgeInsets.symmetric(
-                                      vertical: 25, horizontal: 20),
+                                    vertical: 25,
+                                    horizontal: 20,
+                                  ),
                                 ),
                                 inputFormatters: [
-                                  IntegerInputFormatter(maxValue: 100)
+                                  IntegerInputFormatter(maxValue: 100),
                                 ],
                               ),
                             ),
@@ -1888,13 +1947,16 @@ $formattedContent
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
                               )
                             : const Icon(Icons.print),
-                        label: Text(isPrinting
-                            ? 'Impression...'
-                            : 'Imprimer l\'étiquette'),
+                        label: Text(
+                          isPrinting
+                              ? 'Impression...'
+                              : 'Imprimer l\'étiquette',
+                        ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,

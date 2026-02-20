@@ -29,17 +29,18 @@ class NonConformity {
   });
 
   /// Check if any refusal criteria is met
-  bool get hasAnyRefusal => 
-      temperatureNonCompliant || 
-      packagingOpened || 
-      packagingWet || 
+  bool get hasAnyRefusal =>
+      temperatureNonCompliant ||
+      packagingOpened ||
+      packagingWet ||
       labelMissing;
 
   factory NonConformity.fromJson(Map<String, dynamic> json) {
     return NonConformity(
       id: (json['id'] as String?) ?? '',
       receptionId: json['reception_id'] as String?,
-      temperatureNonCompliant: (json['temperature_non_compliant'] as bool?) ?? false,
+      temperatureNonCompliant:
+          (json['temperature_non_compliant'] as bool?) ?? false,
       packagingOpened: (json['packaging_opened'] as bool?) ?? false,
       packagingWet: (json['packaging_wet'] as bool?) ?? false,
       labelMissing: (json['label_missing'] as bool?) ?? false,
@@ -71,6 +72,3 @@ class NonConformity {
     };
   }
 }
-
-
-

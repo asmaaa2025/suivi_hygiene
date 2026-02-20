@@ -3,7 +3,7 @@ enum TypeProduit {
   fini, // Produit fini vendu aux clients
   prepare, // Produit préparé (farce, etc.) pour créer d'autres produits
   ouverture, // Produit ouvert (bouteille de lait, conserve, etc.)
-  decongelation // Produit décongelé
+  decongelation, // Produit décongelé
 }
 
 extension TypeProduitExtension on TypeProduit {
@@ -106,7 +106,7 @@ class Produit {
     if (typeProduitStr == null || typeProduitStr.isEmpty) {
       return TypeProduit.fini;
     }
-    
+
     // Mapping des valeurs de la base de données vers l'enum
     switch (typeProduitStr.toLowerCase()) {
       case 'reçu':

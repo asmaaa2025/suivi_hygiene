@@ -3,7 +3,8 @@
 /// Clock sessions are per EMPLOYEE (employee_id), not per auth user
 class ClockSession {
   final String id;
-  final String employeeId; // Employee ID (references employees.id, NOT auth.users.id)
+  final String
+  employeeId; // Employee ID (references employees.id, NOT auth.users.id)
   final String organizationId; // Organization ID (references organizations.id)
   final DateTime startAt;
   final DateTime? endAt;
@@ -45,9 +46,10 @@ class ClockSession {
 
   factory ClockSession.fromJson(Map<String, dynamic> json) {
     // Support both old (user_id) and new (employee_id) column names for migration
-    final employeeId = json['employee_id'] as String? ?? json['user_id'] as String;
+    final employeeId =
+        json['employee_id'] as String? ?? json['user_id'] as String;
     final organizationId = json['organization_id'] as String? ?? '';
-    
+
     return ClockSession(
       id: json['id'] as String,
       employeeId: employeeId,
@@ -99,4 +101,3 @@ class ClockSession {
     );
   }
 }
-

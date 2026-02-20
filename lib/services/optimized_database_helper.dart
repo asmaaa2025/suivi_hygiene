@@ -59,8 +59,10 @@ class OptimizedDatabaseHelper {
   /// Initialise la base de données avec gestion d'erreur
   Future<Database> _initDatabase() async {
     try {
-      final dbPath =
-          path.join(await getDatabasesPath(), 'qualipad_optimized.db');
+      final dbPath = path.join(
+        await getDatabasesPath(),
+        'qualipad_optimized.db',
+      );
 
       final database = await openDatabase(
         dbPath,
@@ -171,10 +173,14 @@ class OptimizedDatabaseHelper {
 
   /// Met à jour la base de données
   Future<void> _upgradeDatabase(
-      Database db, int oldVersion, int newVersion) async {
+    Database db,
+    int oldVersion,
+    int newVersion,
+  ) async {
     try {
       print(
-          '🔄 Mise à jour de la base de données de la version $oldVersion vers $newVersion');
+        '🔄 Mise à jour de la base de données de la version $oldVersion vers $newVersion',
+      );
 
       // Ajouter ici les migrations nécessaires
       if (oldVersion < 2) {
@@ -235,58 +241,49 @@ class OptimizedDatabaseHelper {
     required String token,
     String? email,
   }) async {
-    await _executeWithTimeout(
-      () async {
-        final db = await database;
+    await _executeWithTimeout(() async {
+      final db = await database;
 
-        await db.transaction((txn) async {
-          // Supprimer l'utilisateur existant s'il y en a un
-          await txn.delete('users');
+      await db.transaction((txn) async {
+        // Supprimer l'utilisateur existant s'il y en a un
+        await txn.delete('users');
 
-          // Insérer le nouvel utilisateur
-          await txn.insert('users', {
-            'id': const Uuid().v4(),
-            'username': username,
-            'email': email,
-            'token': token,
-            'last_login': DateTime.now().toIso8601String(),
-            'created_at': DateTime.now().toIso8601String(),
-          });
+        // Insérer le nouvel utilisateur
+        await txn.insert('users', {
+          'id': const Uuid().v4(),
+          'username': username,
+          'email': email,
+          'token': token,
+          'last_login': DateTime.now().toIso8601String(),
+          'created_at': DateTime.now().toIso8601String(),
         });
+      });
 
-        print('✅ Utilisateur sauvegardé en cache local');
-      },
-      operation: 'saveUser',
-    );
+      print('✅ Utilisateur sauvegardé en cache local');
+    }, operation: 'saveUser');
   }
 
   /// Récupère l'utilisateur en cache local
   Future<Map<String, dynamic>?> getCachedUser() async {
-    return await _executeWithTimeout(
-      () async {
-        final db = await database;
-        final result = await db.query(
-          'users',
-          limit: 1,
-          orderBy: 'last_login DESC',
-        );
+    return await _executeWithTimeout(() async {
+      final db = await database;
+      final result = await db.query(
+        'users',
+        limit: 1,
+        orderBy: 'last_login DESC',
+      );
 
-        return result.isNotEmpty ? result.first : null;
-      },
-      operation: 'getCachedUser',
-    );
+      return result.isNotEmpty ? result.first : null;
+    }, operation: 'getCachedUser');
   }
 
   /// Supprime l'utilisateur du cache local (logout)
   Future<void> clearCachedUser() async {
-    await _executeWithTimeout(
-      () async {
-        final db = await database;
-        await db.delete('users');
-        print('✅ Utilisateur supprimé du cache local');
-      },
-      operation: 'clearCachedUser',
-    );
+    await _executeWithTimeout(() async {
+      final db = await database;
+      await db.delete('users');
+      print('✅ Utilisateur supprimé du cache local');
+    }, operation: 'clearCachedUser');
   }
 
   /// Récupère les produits avec pagination et gestion d'erreur
@@ -295,65 +292,62 @@ class OptimizedDatabaseHelper {
     int offset = 0,
     String? searchTerm,
   }) async {
-    return await _executeWithTimeout(
-      () async {
-        final db = await database;
+    return await _executeWithTimeout(() async {
+      final db = await database;
 
-        String whereClause = '';
-        List<dynamic> whereArgs = [];
+      String whereClause = '';
+      List<dynamic> whereArgs = [];
 
-        if (searchTerm != null && searchTerm.isNotEmpty) {
-          whereClause = 'WHERE nom LIKE ?';
-          whereArgs.add('%$searchTerm%');
-        }
+      if (searchTerm != null && searchTerm.isNotEmpty) {
+        whereClause = 'WHERE nom LIKE ?';
+        whereArgs.add('%$searchTerm%');
+      }
 
-        final result = await db.rawQuery('''
+      final result = await db.rawQuery(
+        '''
           SELECT * FROM produits 
           $whereClause
           ORDER BY nom ASC 
           LIMIT ? OFFSET ?
-        ''', [...whereArgs, limit, offset]);
+        ''',
+        [...whereArgs, limit, offset],
+      );
 
-        return result;
-      },
-      operation: 'getProduits',
-    );
+      return result;
+    }, operation: 'getProduits');
   }
 
   /// Insère un produit avec gestion d'erreur
   Future<void> insertProduit(Map<String, dynamic> produit) async {
-    await _executeWithTimeout(
-      () async {
-        final db = await database;
+    await _executeWithTimeout(() async {
+      final db = await database;
 
-        await db.transaction((txn) async {
-          await txn.insert('produits', {
-            'id': const Uuid().v4(),
-            'nom': produit['nom'],
-            'dlc': produit['dlc'],
-            'dlc_jours': produit['dlc_jours'],
-            'lot': produit['lot'],
-            'poids': produit['poids'],
-            'date_creation': DateTime.now().toIso8601String(),
-            'date_modification': DateTime.now().toIso8601String(),
-            'date_fabrication': produit['date_fabrication'],
-            'surgelagable': produit['surgelagable'] == true ? 1 : 0,
-            'dlc_surgelation_jours': produit['dlc_surgelation_jours'],
-            'preparateur': produit['preparateur'],
-            'heure_preparation': produit['heure_preparation'],
-            'dluo': produit['dluo'],
-            'ingredients': produit['ingredients'],
-            'quantite': produit['quantite'],
-            'origine_viande': produit['origine_viande'],
-            'allergenes': produit['allergenes'],
-            'type_produit': produit['type_produit'],
-          });
+      await db.transaction((txn) async {
+        await txn.insert('produits', {
+          'id': const Uuid().v4(),
+          'nom': produit['nom'],
+          'dlc': produit['dlc'],
+          'dlc_jours': produit['dlc_jours'],
+          'lot': produit['lot'],
+          'poids': produit['poids'],
+          'date_creation': DateTime.now().toIso8601String(),
+          'date_modification': DateTime.now().toIso8601String(),
+          'date_fabrication': produit['date_fabrication'],
+          'surgelagable': produit['surgelagable'] == true ? 1 : 0,
+          'dlc_surgelation_jours': produit['dlc_surgelation_jours'],
+          'preparateur': produit['preparateur'],
+          'heure_preparation': produit['heure_preparation'],
+          'dluo': produit['dluo'],
+          'ingredients': produit['ingredients'],
+          'quantite': produit['quantite'],
+          'origine_viande': produit['origine_viande'],
+          'allergenes': produit['allergenes'],
+          'type_produit': produit['type_produit'],
         });
+      });
 
-        print('✅ Produit inséré avec succès');
-      },
-      operation: 'insertProduit',
-    );
+      print('✅ Produit inséré avec succès');
+    }, operation: 'insertProduit');
   }
 
   /// Récupère les relevés de température avec filtres
@@ -363,65 +357,62 @@ class OptimizedDatabaseHelper {
     DateTime? dateFin,
     int limit = 100,
   }) async {
-    return await _executeWithTimeout(
-      () async {
-        final db = await database;
+    return await _executeWithTimeout(() async {
+      final db = await database;
 
-        String whereClause = 'WHERE 1=1';
-        List<dynamic> whereArgs = [];
+      String whereClause = 'WHERE 1=1';
+      List<dynamic> whereArgs = [];
 
-        if (appareil != null) {
-          whereClause += ' AND appareil = ?';
-          whereArgs.add(appareil);
-        }
+      if (appareil != null) {
+        whereClause += ' AND appareil = ?';
+        whereArgs.add(appareil);
+      }
 
-        if (dateDebut != null) {
-          whereClause += ' AND date >= ?';
-          whereArgs.add(dateDebut.toIso8601String());
-        }
+      if (dateDebut != null) {
+        whereClause += ' AND date >= ?';
+        whereArgs.add(dateDebut.toIso8601String());
+      }
 
-        if (dateFin != null) {
-          whereClause += ' AND date <= ?';
-          whereArgs.add(dateFin.toIso8601String());
-        }
+      if (dateFin != null) {
+        whereClause += ' AND date <= ?';
+        whereArgs.add(dateFin.toIso8601String());
+      }
 
-        final result = await db.rawQuery('''
+      final result = await db.rawQuery(
+        '''
           SELECT * FROM releves 
           $whereClause
           ORDER BY date DESC 
           LIMIT ?
-        ''', [...whereArgs, limit]);
+        ''',
+        [...whereArgs, limit],
+      );
 
-        return result;
-      },
-      operation: 'getReleves',
-    );
+      return result;
+    }, operation: 'getReleves');
   }
 
   /// Insère un relevé de température
   Future<void> insertReleve(ReleveTemperature releve) async {
-    await _executeWithTimeout(
-      () async {
-        final db = await database;
+    await _executeWithTimeout(() async {
+      final db = await database;
 
-        await db.transaction((txn) async {
-          await txn.insert('releves', {
-            'id': const Uuid().v4(),
-            'appareil': releve.appareil,
-            'temperature': releve.temperature,
-            'date': releve.date.toIso8601String(),
-            'remarque': releve.remarque,
-            'conforme': 1, // Default to conform
-            'commentaire': releve.remarque,
-            'photo_path': releve.photoPath,
-            'synced': 0, // Non synchronisé par défaut
-          });
+      await db.transaction((txn) async {
+        await txn.insert('releves', {
+          'id': const Uuid().v4(),
+          'appareil': releve.appareil,
+          'temperature': releve.temperature,
+          'date': releve.date.toIso8601String(),
+          'remarque': releve.remarque,
+          'conforme': 1, // Default to conform
+          'commentaire': releve.remarque,
+          'photo_path': releve.photoPath,
+          'synced': 0, // Non synchronisé par défaut
         });
+      });
 
-        print('✅ Relevé inséré avec succès');
-      },
-      operation: 'insertReleve',
-    );
+      print('✅ Relevé inséré avec succès');
+    }, operation: 'insertReleve');
   }
 
   /// Synchronise les données avec le serveur
@@ -473,23 +464,21 @@ class OptimizedDatabaseHelper {
 
   /// Obtient des statistiques sur la base de données
   Future<Map<String, int>> getDatabaseStats() async {
-    return await _executeWithTimeout(
-      () async {
-        final db = await database;
+    return await _executeWithTimeout(() async {
+      final db = await database;
 
-        final stats = <String, int>{};
+      final stats = <String, int>{};
 
-        // Compter les enregistrements dans chaque table
-        final tables = ['users', 'produits', 'releves', 'appareils'];
-        for (final table in tables) {
-          final result =
-              await db.rawQuery('SELECT COUNT(*) as count FROM $table');
-          stats[table] = result.first['count'] as int;
-        }
+      // Compter les enregistrements dans chaque table
+      final tables = ['users', 'produits', 'releves', 'appareils'];
+      for (final table in tables) {
+        final result = await db.rawQuery(
+          'SELECT COUNT(*) as count FROM $table',
+        );
+        stats[table] = result.first['count'] as int;
+      }
 
-        return stats;
-      },
-      operation: 'getDatabaseStats',
-    );
+      return stats;
+    }, operation: 'getDatabaseStats');
   }
 }

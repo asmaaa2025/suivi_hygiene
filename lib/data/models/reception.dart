@@ -40,7 +40,8 @@ class Reception {
     return Reception(
       id: json['id']?.toString() ?? '',
       produitId: json['produit_id']?.toString() ?? '',
-      supplierId: json['supplier_id'] as String? ?? json['fournisseur_id'] as String?,
+      supplierId:
+          json['supplier_id'] as String? ?? json['fournisseur_id'] as String?,
       fournisseur: json['fournisseur'] as String?,
       lot: json['lot'] as String?,
       dluo: json['dluo'] != null
@@ -53,11 +54,11 @@ class Reception {
       photoUrl: json['photo_url'] as String?,
       receivedAt: json['received_at'] != null
           ? (DateTime.tryParse(json['received_at'].toString()) ??
-              DateTime.now())
+                DateTime.now())
           : (json['created_at'] != null
-              ? (DateTime.tryParse(json['created_at'].toString()) ??
-                  DateTime.now())
-              : DateTime.now()),
+                ? (DateTime.tryParse(json['created_at'].toString()) ??
+                      DateTime.now())
+                : DateTime.now()),
       createdAt: json['created_at'] != null
           ? (DateTime.tryParse(json['created_at'].toString()) ?? DateTime.now())
           : DateTime.now(),

@@ -52,7 +52,9 @@ class _PersonnelRegistryPageState extends State<PersonnelRegistryPage> {
     try {
       final personnel = await _personnelRepo.getAll(
         activeOnly: _showActiveOnly,
-        searchQuery: _searchController.text.isEmpty ? null : _searchController.text,
+        searchQuery: _searchController.text.isEmpty
+            ? null
+            : _searchController.text,
       );
       if (mounted) {
         setState(() {
@@ -75,7 +77,9 @@ class _PersonnelRegistryPageState extends State<PersonnelRegistryPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Supprimer'),
-        content: Text('Êtes-vous sûr de vouloir supprimer ${personnel.fullName} ?'),
+        content: Text(
+          'Êtes-vous sûr de vouloir supprimer ${personnel.fullName} ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -94,15 +98,15 @@ class _PersonnelRegistryPageState extends State<PersonnelRegistryPage> {
         await _personnelRepo.softDelete(personnel.id);
         await _loadData();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Personnel supprimé')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Personnel supprimé')));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         }
       }
     }
@@ -182,109 +186,108 @@ class _PersonnelRegistryPageState extends State<PersonnelRegistryPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? ErrorState(message: _error!, onRetry: _loadData)
-                    : _personnel.isEmpty
-                        ? const EmptyState(
-                            title: 'Aucun personnel',
-                            message: 'Ajoutez votre premier membre du personnel',
-                            icon: Icons.person_add,
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadData,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _personnel.length,
-                              itemBuilder: (context, index) {
-                                final p = _personnel[index];
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  child: ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: p.isActive
-                                          ? AppTheme.primaryBlue
-                                          : Colors.grey,
-                                      child: Text(
-                                        p.firstName[0].toUpperCase(),
-                                        style: const TextStyle(color: Colors.white),
-                                      ),
-                                    ),
-                                    title: Text(
-                                      p.fullName,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        decoration: p.isActive
-                                            ? null
-                                            : TextDecoration.lineThrough,
-                                      ),
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text('Contrat: ${p.contractType.displayName}'),
-                                        Text(
-                                          'Entrée: ${DateFormat('dd/MM/yyyy').format(p.startDate)}',
-                                        ),
-                                        if (p.endDate != null)
-                                          Text(
-                                            'Sortie: ${DateFormat('dd/MM/yyyy').format(p.endDate!)}',
-                                            style: const TextStyle(color: Colors.red),
-                                          ),
-                                        if (p.isForeignWorker)
-                                          Text(
-                                            'Travailleur étranger',
-                                            style: TextStyle(
-                                              color: Colors.orange,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                      ],
-                                    ),
-                                    trailing: PopupMenuButton(
-                                      itemBuilder: (context) => [
-                                        PopupMenuItem(
-                                          child: const Text('Modifier'),
-                                          onTap: () async {
-                                            await Future.delayed(
-                                              const Duration(milliseconds: 100),
-                                            );
-                                            final result = await context.push(
-                                              '/admin/rh/${p.id}',
-                                            );
-                                            if (result == true) {
-                                              _loadData();
-                                            }
-                                          },
-                                        ),
-                                        PopupMenuItem(
-                                          child: const Text(
-                                            'Supprimer',
-                                            style: TextStyle(color: Colors.red),
-                                          ),
-                                          onTap: () {
-                                            Future.delayed(
-                                              const Duration(milliseconds: 100),
-                                            ).then((_) => _deletePersonnel(p));
-                                          },
-                                        ),
-                                      ],
-                                    ),
-                                    onTap: () async {
-                                      final result = await context.push(
-                                        '/admin/rh/${p.id}',
-                                      );
-                                      if (result == true) {
-                                        _loadData();
-                                      }
-                                    },
-                                  ),
-                                );
-                              },
+                ? ErrorState(message: _error!, onRetry: _loadData)
+                : _personnel.isEmpty
+                ? const EmptyState(
+                    title: 'Aucun personnel',
+                    message: 'Ajoutez votre premier membre du personnel',
+                    icon: Icons.person_add,
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _personnel.length,
+                      itemBuilder: (context, index) {
+                        final p = _personnel[index];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: p.isActive
+                                  ? AppTheme.primaryBlue
+                                  : Colors.grey,
+                              child: Text(
+                                p.firstName[0].toUpperCase(),
+                                style: const TextStyle(color: Colors.white),
+                              ),
                             ),
+                            title: Text(
+                              p.fullName,
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                decoration: p.isActive
+                                    ? null
+                                    : TextDecoration.lineThrough,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Contrat: ${p.contractType.displayName}'),
+                                Text(
+                                  'Entrée: ${DateFormat('dd/MM/yyyy').format(p.startDate)}',
+                                ),
+                                if (p.endDate != null)
+                                  Text(
+                                    'Sortie: ${DateFormat('dd/MM/yyyy').format(p.endDate!)}',
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                if (p.isForeignWorker)
+                                  Text(
+                                    'Travailleur étranger',
+                                    style: TextStyle(
+                                      color: Colors.orange,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            trailing: PopupMenuButton(
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  child: const Text('Modifier'),
+                                  onTap: () async {
+                                    await Future.delayed(
+                                      const Duration(milliseconds: 100),
+                                    );
+                                    final result = await context.push(
+                                      '/admin/rh/${p.id}',
+                                    );
+                                    if (result == true) {
+                                      _loadData();
+                                    }
+                                  },
+                                ),
+                                PopupMenuItem(
+                                  child: const Text(
+                                    'Supprimer',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                  onTap: () {
+                                    Future.delayed(
+                                      const Duration(milliseconds: 100),
+                                    ).then((_) => _deletePersonnel(p));
+                                  },
+                                ),
+                              ],
+                            ),
+                            onTap: () async {
+                              final result = await context.push(
+                                '/admin/rh/${p.id}',
+                              );
+                              if (result == true) {
+                                _loadData();
+                              }
+                            },
                           ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
     );
   }
 }
-

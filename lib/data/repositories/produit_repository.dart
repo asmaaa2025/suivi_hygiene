@@ -21,7 +21,7 @@ class ProduitRepository {
           .select()
           .eq('owner_id', user.id)
           .order('nom');
-      
+
       final products = (response as List)
           .map((json) => Produit.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -77,7 +77,7 @@ class ProduitRepository {
           })
           .select()
           .single();
-      
+
       return Produit.fromJson(response);
     } catch (e) {
       debugPrint('[ProduitRepo] ❌ Error creating product: $e');

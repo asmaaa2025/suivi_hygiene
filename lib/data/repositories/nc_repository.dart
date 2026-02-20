@@ -13,7 +13,8 @@ import 'package:bekkapp/services/employee_session_service.dart';
 class NCRepository {
   final SupabaseClient _client = Supabase.instance.client;
   final StorageService _storageService = StorageService();
-  final EmployeeSessionService _employeeSessionService = EmployeeSessionService();
+  final EmployeeSessionService _employeeSessionService =
+      EmployeeSessionService();
   static const String _storageBucket = 'nc-files';
 
   // ============================================
@@ -47,7 +48,9 @@ class NCRepository {
 
       // Validate employee ID - it must not be null
       if (finalEmployeeId == null) {
-        throw Exception('Employee ID is required but not available. Please ensure you are logged in as an employee.');
+        throw Exception(
+          'Employee ID is required but not available. Please ensure you are logged in as an employee.',
+        );
       }
 
       // Build NC data with prefill
@@ -61,7 +64,7 @@ class NCRepository {
         'created_by': finalEmployeeId, // Use employee ID, not user.id
         'opened_by_employee_id': finalEmployeeId,
       };
-      
+
       // Add source_id only if provided
       if (sourceId != null) {
         ncData['source_id'] = sourceId;
@@ -79,7 +82,8 @@ class NCRepository {
       ncData['opened_by_employee_id'] = finalEmployeeId;
 
       // Ensure description is present (required field)
-      if (ncData['description'] == null || (ncData['description'] as String).isEmpty) {
+      if (ncData['description'] == null ||
+          (ncData['description'] as String).isEmpty) {
         ncData['description'] = 'Non-conformité détectée automatiquement';
       }
 
@@ -95,9 +99,11 @@ class NCRepository {
             .select('id')
             .eq('id', finalEmployeeId)
             .maybeSingle();
-        
+
         if (employeeCheck == null) {
-          throw Exception('Employee ID $finalEmployeeId not found in employees table. Please ensure you are logged in as a valid employee.');
+          throw Exception(
+            'Employee ID $finalEmployeeId not found in employees table. Please ensure you are logged in as a valid employee.',
+          );
         }
       }
 
@@ -112,16 +118,17 @@ class NCRepository {
       return ncId;
     } catch (e) {
       debugPrint('[NCRepo] ❌ Error creating draft NC: $e');
-      
+
       // Provide more helpful error message for foreign key constraint violations
-      if (e.toString().contains('foreign key constraint') && e.toString().contains('users')) {
+      if (e.toString().contains('foreign key constraint') &&
+          e.toString().contains('users')) {
         throw Exception(
           'Erreur de configuration de la base de données: la contrainte created_by pointe vers la mauvaise table.\n\n'
           'Veuillez exécuter le script de migration: 31_fix_non_conformities_created_by_fkey.sql\n'
-          'Ce script corrige la contrainte pour qu\'elle pointe vers public.employees au lieu de auth.users.'
+          'Ce script corrige la contrainte pour qu\'elle pointe vers public.employees au lieu de auth.users.',
         );
       }
-      
+
       throw Exception('Failed to create draft NC: $e');
     }
   }
@@ -164,7 +171,14 @@ class NCRepository {
         query = query.gte('detection_date', startDate.toIso8601String());
       }
       if (endDate != null) {
-        final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+        final endOfDay = DateTime(
+          endDate.year,
+          endDate.month,
+          endDate.day,
+          23,
+          59,
+          59,
+        );
         query = query.lte('detection_date', endOfDay.toIso8601String());
       }
 
@@ -183,7 +197,10 @@ class NCRepository {
   }
 
   /// Get NC by ID with all related data
-  Future<NonConformity?> getById(String id, {bool includeRelated = true}) async {
+  Future<NonConformity?> getById(
+    String id, {
+    bool includeRelated = true,
+  }) async {
     try {
       final user = _client.auth.currentUser;
       if (user == null) return null;
@@ -305,7 +322,8 @@ class NCRepository {
         ncData['detection_date'] = DateTime.now().toIso8601String();
       }
 
-      if (draftData['description'] != null && (draftData['description'] as String).isNotEmpty) {
+      if (draftData['description'] != null &&
+          (draftData['description'] as String).isNotEmpty) {
         ncData['description'] = draftData['description'];
       } else {
         ncData['description'] = 'Brouillon de non-conformité';
@@ -377,7 +395,9 @@ class NCRepository {
         try {
           await deleteAttachment(attachment.id);
         } catch (e) {
-          debugPrint('[NCRepo] Warning: Failed to delete attachment ${attachment.id}: $e');
+          debugPrint(
+            '[NCRepo] Warning: Failed to delete attachment ${attachment.id}: $e',
+          );
         }
       }
 
@@ -444,10 +464,7 @@ class NCRepository {
 
   Future<void> deleteCause(String causeId) async {
     try {
-      await _client
-          .from('non_conformity_causes')
-          .delete()
-          .eq('id', causeId);
+      await _client.from('non_conformity_causes').delete().eq('id', causeId);
     } catch (e) {
       debugPrint('[NCRepo] ❌ Error deleting cause: $e');
       throw Exception('Failed to delete cause: $e');
@@ -587,10 +604,7 @@ class NCRepository {
 
   Future<void> deleteAction(String actionId) async {
     try {
-      await _client
-          .from('non_conformity_actions')
-          .delete()
-          .eq('id', actionId);
+      await _client.from('non_conformity_actions').delete().eq('id', actionId);
     } catch (e) {
       debugPrint('[NCRepo] ❌ Error deleting action: $e');
       throw Exception('Failed to delete action: $e');
@@ -706,18 +720,20 @@ class NCRepository {
 
       // Upload to Supabase Storage
       final timestamp = DateTime.now().millisecondsSinceEpoch;
-      final name = fileName ?? 'nc_${ncId}_$timestamp.${file.path.split('.').last}';
+      final name =
+          fileName ?? 'nc_${ncId}_$timestamp.${file.path.split('.').last}';
       final path = '$ncId/$name';
 
-      debugPrint('[NCRepo] Uploading attachment to bucket: $_storageBucket, path: $path');
+      debugPrint(
+        '[NCRepo] Uploading attachment to bucket: $_storageBucket, path: $path',
+      );
 
-      await _client.storage.from(_storageBucket).upload(
+      await _client.storage
+          .from(_storageBucket)
+          .upload(
             path,
             file,
-            fileOptions: const FileOptions(
-              cacheControl: '3600',
-              upsert: false,
-            ),
+            fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
           );
 
       // Get public URL
@@ -778,7 +794,9 @@ class NCRepository {
             await _client.storage.from(_storageBucket).remove([path]);
           }
         } catch (e) {
-          debugPrint('[NCRepo] Warning: Failed to delete file from storage: $e');
+          debugPrint(
+            '[NCRepo] Warning: Failed to delete file from storage: $e',
+          );
         }
       }
 
@@ -795,4 +813,3 @@ class NCRepository {
     }
   }
 }
-

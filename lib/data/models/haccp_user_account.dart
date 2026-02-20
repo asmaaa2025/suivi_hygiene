@@ -23,7 +23,8 @@ class HaccpUserAccount {
     required this.updatedAt,
   });
 
-  String get displayLabel => displayName?.isNotEmpty == true ? displayName! : email;
+  String get displayLabel =>
+      displayName?.isNotEmpty == true ? displayName! : email;
 
   factory HaccpUserAccount.fromJson(Map<String, dynamic> json) {
     return HaccpUserAccount(
@@ -40,14 +41,14 @@ class HaccpUserAccount {
   }
 
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'email': email,
-        'auth_user_id': authUserId,
-        'display_name': displayName,
-        'organization_id': organizationId,
-        'personnel_id': personnelId,
-        'created_by': createdBy,
-        'created_at': createdAt.toIso8601String(),
-        'updated_at': updatedAt.toIso8601String(),
-      };
+    'id': id,
+    'email': email,
+    'auth_user_id': authUserId,
+    'display_name': displayName,
+    'organization_id': organizationId,
+    'personnel_id': personnelId,
+    'created_by': createdBy,
+    'created_at': createdAt.toIso8601String(),
+    'updated_at': updatedAt.toIso8601String(),
+  };
 }

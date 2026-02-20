@@ -96,26 +96,30 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
         setState(() {
           _changements = changements.map((c) {
             final dateStr = c['date'] as String?;
-          final friteuseId = c['friteuse_id'] as String?;
-          if (friteuseId == null) {
+            final friteuseId = c['friteuse_id'] as String?;
+            if (friteuseId == null) {
+              return {
+                ...c,
+                'date': dateStr != null
+                    ? DateTime.parse(dateStr)
+                    : DateTime.now(),
+                'machine': 'Machine inconnue',
+              };
+            }
+            final fryer = _fryers.firstWhere(
+              (f) => f['id'] == friteuseId,
+              orElse: () => <String, dynamic>{},
+            );
+            final machineName = fryer.isNotEmpty
+                ? (fryer['nom'] as String? ?? 'Machine inconnue')
+                : 'Machine inconnue (ID: $friteuseId)';
             return {
               ...c,
-              'date': dateStr != null ? DateTime.parse(dateStr) : DateTime.now(),
-              'machine': 'Machine inconnue',
+              'date': dateStr != null
+                  ? DateTime.parse(dateStr)
+                  : DateTime.now(),
+              'machine': machineName,
             };
-          }
-          final fryer = _fryers.firstWhere(
-            (f) => f['id'] == friteuseId,
-            orElse: () => <String, dynamic>{},
-          );
-          final machineName = fryer.isNotEmpty 
-              ? (fryer['nom'] as String? ?? 'Machine inconnue')
-              : 'Machine inconnue (ID: $friteuseId)';
-          return {
-            ...c,
-            'date': dateStr != null ? DateTime.parse(dateStr) : DateTime.now(),
-            'machine': machineName,
-          };
           }).toList();
         });
       }
@@ -123,8 +127,9 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text('Erreur: ${e is AppException ? e.message : e.toString()}'),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -154,9 +159,9 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
     if (!_formKey.currentState!.validate()) return;
 
     if (!_isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Network required')));
       return;
     }
 
@@ -166,7 +171,7 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
       final quantiteStr = _quantiteController.text.trim();
       final quantite =
           double.tryParse(quantiteStr.replaceAll(RegExp(r'[^0-9.]'), '')) ??
-              0.0;
+          0.0;
 
       // Find or create friteuse
       var friteuse = _fryers.firstWhere(
@@ -221,7 +226,9 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
             'friteuse_id': friteuseId,
             'friteuse_nom': machineNom,
             'quantite': quantite,
-            'remarque': _remarqueController.text.trim().isEmpty ? null : _remarqueController.text.trim(),
+            'remarque': _remarqueController.text.trim().isEmpty
+                ? null
+                : _remarqueController.text.trim(),
           },
         );
       } catch (e) {
@@ -250,8 +257,9 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text('Erreur: ${e is AppException ? e.message : e.toString()}'),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -265,8 +273,10 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
-    
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -300,121 +310,113 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                        const Text(
-                          'Nouveau changement d\'huile',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                          const Text(
+                            'Nouveau changement d\'huile',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _machineController,
-                          decoration: const InputDecoration(
-                            labelText: 'Machine',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.build),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Veuillez entrer le nom de la machine';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _typeHuileController,
-                          decoration: const InputDecoration(
-                            labelText: 'Type d\'huile',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.opacity),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Veuillez entrer le type d\'huile';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _quantiteController,
-                          decoration: const InputDecoration(
-                            labelText: 'Quantité',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.straighten),
-                          ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
-                              return 'Veuillez entrer la quantité';
-                            }
-                            return null;
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        TextFormField(
-                          controller: _remarqueController,
-                          decoration: const InputDecoration(
-                            labelText: 'Remarque (optionnel)',
-                            border: OutlineInputBorder(),
-                            prefixIcon: Icon(Icons.note),
-                          ),
-                          maxLines: 2,
-                        ),
-                        const SizedBox(height: 16),
-                        InkWell(
-                          onTap: () => _selectDate(context),
-                          child: InputDecorator(
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _machineController,
                             decoration: const InputDecoration(
-                              labelText: 'Date',
+                              labelText: 'Machine',
                               border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.calendar_today),
+                              prefixIcon: Icon(Icons.build),
                             ),
-                            child: Text(
-                              DateFormat('dd/MM/yyyy')
-                                  .format(_selectedDate),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Veuillez entrer le nom de la machine';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _typeHuileController,
+                            decoration: const InputDecoration(
+                              labelText: 'Type d\'huile',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.opacity),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Veuillez entrer le type d\'huile';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _quantiteController,
+                            decoration: const InputDecoration(
+                              labelText: 'Quantité',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.straighten),
+                            ),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Veuillez entrer la quantité';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _remarqueController,
+                            decoration: const InputDecoration(
+                              labelText: 'Remarque (optionnel)',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.note),
+                            ),
+                            maxLines: 2,
+                          ),
+                          const SizedBox(height: 16),
+                          InkWell(
+                            onTap: () => _selectDate(context),
+                            child: InputDecorator(
+                              decoration: const InputDecoration(
+                                labelText: 'Date',
+                                border: OutlineInputBorder(),
+                                prefixIcon: Icon(Icons.calendar_today),
+                              ),
+                              child: Text(
+                                DateFormat('dd/MM/yyyy').format(_selectedDate),
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 16),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _saveChangement,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.amber,
-                              foregroundColor: Colors.white,
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: _saveChangement,
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.amber,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: const Text('Enregistrer'),
                             ),
-                            child: const Text('Enregistrer'),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
             ),
-            ),
-            SliverToBoxAdapter(
-              child: const SizedBox(height: 16),
-            ),
+            SliverToBoxAdapter(child: const SizedBox(height: 16)),
             // Titre de l'historique
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: const Text(
                   'Historique des changements',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
             ),
-            SliverToBoxAdapter(
-              child: const SizedBox(height: 8),
-            ),
+            SliverToBoxAdapter(child: const SizedBox(height: 8)),
             // Liste des changements
             _changements.isEmpty
                 ? SliverFillRemaining(
@@ -423,7 +425,8 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
                       padding: EdgeInsets.all(32.0),
                       child: EmptyState(
                         title: 'Aucun changement enregistré',
-                        message: 'Vous n\'avez pas encore enregistré de changement d\'huile',
+                        message:
+                            'Vous n\'avez pas encore enregistré de changement d\'huile',
                         icon: Icons.oil_barrel,
                       ),
                     ),
@@ -431,196 +434,223 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
                 : SliverPadding(
                     padding: const EdgeInsets.all(16),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                                final changement = _changements[index];
-                                final oilChange = OilChange.fromJson(changement);
-                                final date = changement['date'] is DateTime
-                                    ? changement['date'] as DateTime
-                                    : DateTime.parse(changement['date'] as String);
-                                final quantite = changement['quantite'];
-                                final remarque = changement['remarque'] as String?;
-                                final machineName = changement['machine'] as String? ?? 'Machine inconnue';
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final changement = _changements[index];
+                        final oilChange = OilChange.fromJson(changement);
+                        final date = changement['date'] is DateTime
+                            ? changement['date'] as DateTime
+                            : DateTime.parse(changement['date'] as String);
+                        final quantite = changement['quantite'];
+                        final remarque = changement['remarque'] as String?;
+                        final machineName =
+                            changement['machine'] as String? ??
+                            'Machine inconnue';
 
-                                return SectionCard(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  machineName,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .titleMedium
-                                                      ?.copyWith(
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.calendar_today,
-                                                      size: 16,
-                                                      color: Colors.grey[600],
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      DateFormat('dd/MM/yyyy à HH:mm')
-                                                          .format(date),
-                                                      style: Theme.of(context)
-                                                          .textTheme
-                                                          .bodySmall
-                                                          ?.copyWith(
-                                                            color: Colors.grey[600],
-                                                          ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          // Quantité badge
-                                          if (quantite != null)
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 12,
-                                                vertical: 8,
+                        return SectionCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          machineName,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.amber.withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(12),
-                                                border: Border.all(
-                                                  color: Colors.amber,
-                                                  width: 1,
-                                                ),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.opacity,
-                                                    size: 20,
-                                                    color: Colors.amber[700],
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    '$quantite L',
-                                                    style: TextStyle(
-                                                      color: Colors.amber[700],
-                                                      fontWeight: FontWeight.bold,
-                                                      fontSize: 16,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                        ],
-                                      ),
-                                      if (remarque != null && remarque.isNotEmpty) ...[
-                                        const SizedBox(height: 8),
-                                        Container(
-                                          padding: const EdgeInsets.all(12),
-                                          decoration: BoxDecoration(
-                                            color: Colors.grey[100],
-                                            borderRadius: BorderRadius.circular(8),
-                                          ),
-                                          child: Row(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Icon(
-                                                Icons.note,
-                                                size: 16,
-                                                color: Colors.grey[600],
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Expanded(
-                                                child: Text(
-                                                  remarque,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
                                         ),
-                                      ],
-                                      if (oilChange.photoUrl != null && oilChange.photoUrl!.isNotEmpty) ...[
-                                        const SizedBox(height: 8),
-                                        InkWell(
-                                          onTap: () => _showPhotoDialog(context, oilChange.photoUrl!),
-                                          child: Container(
-                                            height: 100,
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey[200],
-                                              borderRadius: BorderRadius.circular(8),
-                                              border: Border.all(color: Colors.grey[300]!),
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(8),
-                                              child: Image.network(
-                                                oilChange.photoUrl!,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) {
-                                                  return const Center(
-                                                    child: Icon(Icons.broken_image, size: 40),
-                                                  );
-                                                },
-                                                loadingBuilder: (context, child, loadingProgress) {
-                                                  if (loadingProgress == null) return child;
-                                                  return const Center(
-                                                    child: CircularProgressIndicator(),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                      if (oilChange.employeeFirstName != null && oilChange.employeeLastName != null) ...[
-                                        const SizedBox(height: 8),
+                                        const SizedBox(height: 4),
                                         Row(
                                           children: [
-                                            Icon(Icons.person, size: 16, color: Colors.grey[600]),
+                                            Icon(
+                                              Icons.calendar_today,
+                                              size: 16,
+                                              color: Colors.grey[600],
+                                            ),
                                             const SizedBox(width: 4),
                                             Text(
-                                              'Effectué par: ${oilChange.employeeFirstName} ${oilChange.employeeLastName}',
-                                              style: Theme.of(context).textTheme.bodySmall,
+                                              DateFormat(
+                                                'dd/MM/yyyy à HH:mm',
+                                              ).format(date),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall
+                                                  ?.copyWith(
+                                                    color: Colors.grey[600],
+                                                  ),
                                             ),
                                           ],
                                         ),
                                       ],
-                                      // Action buttons
-                                      const SizedBox(height: 12),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
+                                    ),
+                                  ),
+                                  // Quantité badge
+                                  if (quantite != null)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.amber.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.amber,
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
-                                          IconButton(
-                                            icon: const Icon(Icons.edit, size: 20),
-                                            color: AppTheme.primaryBlue,
-                                            onPressed: () => _editOilChange(context, oilChange),
-                                            tooltip: 'Modifier',
+                                          Icon(
+                                            Icons.opacity,
+                                            size: 20,
+                                            color: Colors.amber[700],
                                           ),
-                                          IconButton(
-                                            icon: const Icon(Icons.delete_outline, size: 20),
-                                            color: AppTheme.statusCritical,
-                                            onPressed: () => _deleteOilChange(context, oilChange),
-                                            tooltip: 'Supprimer',
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            '$quantite L',
+                                            style: TextStyle(
+                                              color: Colors.amber[700],
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 16,
+                                            ),
                                           ),
                                         ],
                                       ),
+                                    ),
+                                ],
+                              ),
+                              if (remarque != null && remarque.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Icon(
+                                        Icons.note,
+                                        size: 16,
+                                        color: Colors.grey[600],
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          remarque,
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
+                                        ),
+                                      ),
                                     ],
                                   ),
-                                );
-                        },
-                        childCount: _changements.length,
-                      ),
+                                ),
+                              ],
+                              if (oilChange.photoUrl != null &&
+                                  oilChange.photoUrl!.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                InkWell(
+                                  onTap: () => _showPhotoDialog(
+                                    context,
+                                    oilChange.photoUrl!,
+                                  ),
+                                  child: Container(
+                                    height: 100,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
+                                      ),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        oilChange.photoUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return const Center(
+                                                child: Icon(
+                                                  Icons.broken_image,
+                                                  size: 40,
+                                                ),
+                                              );
+                                            },
+                                        loadingBuilder:
+                                            (context, child, loadingProgress) {
+                                              if (loadingProgress == null)
+                                                return child;
+                                              return const Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              );
+                                            },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (oilChange.employeeFirstName != null &&
+                                  oilChange.employeeLastName != null) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.person,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Effectué par: ${oilChange.employeeFirstName} ${oilChange.employeeLastName}',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              // Action buttons
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, size: 20),
+                                    color: AppTheme.primaryBlue,
+                                    onPressed: () =>
+                                        _editOilChange(context, oilChange),
+                                    tooltip: 'Modifier',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      size: 20,
+                                    ),
+                                    color: AppTheme.statusCritical,
+                                    onPressed: () =>
+                                        _deleteOilChange(context, oilChange),
+                                    tooltip: 'Supprimer',
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        );
+                      }, childCount: _changements.length),
                     ),
                   ),
           ],
@@ -629,12 +659,17 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
     );
   }
 
-  Future<void> _deleteOilChange(BuildContext context, OilChange oilChange) async {
+  Future<void> _deleteOilChange(
+    BuildContext context,
+    OilChange oilChange,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Supprimer'),
-        content: const Text('Êtes-vous sûr de vouloir supprimer ce changement d\'huile ?'),
+        content: const Text(
+          'Êtes-vous sûr de vouloir supprimer ce changement d\'huile ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -659,9 +694,9 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         }
       }
     }
@@ -671,7 +706,11 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
     // For now, we'll just show a message that editing is not yet implemented
     // In the future, we could navigate to an edit form
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('L\'édition des changements d\'huile sera disponible prochainement')),
+      const SnackBar(
+        content: Text(
+          'L\'édition des changements d\'huile sera disponible prochainement',
+        ),
+      ),
     );
   }
 
@@ -697,14 +736,18 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
                       child: CircularProgressIndicator(
                         value: loadingProgress.expectedTotalBytes != null
                             ? loadingProgress.cumulativeBytesLoaded /
-                                loadingProgress.expectedTotalBytes!
+                                  loadingProgress.expectedTotalBytes!
                             : null,
                       ),
                     );
                   },
                   errorBuilder: (context, error, stackTrace) {
                     return const Center(
-                      child: Icon(Icons.broken_image, color: Colors.white, size: 50),
+                      child: Icon(
+                        Icons.broken_image,
+                        color: Colors.white,
+                        size: 50,
+                      ),
                     );
                   },
                 ),

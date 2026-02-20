@@ -14,9 +14,11 @@ class EntryPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
     final routePrefix = _getRoutePrefix(context);
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Saisie rapide'),
@@ -40,8 +42,11 @@ class EntryPage extends StatelessWidget {
                     color: AppTheme.statusInfo.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.thermostat,
-                      color: AppTheme.statusInfo, size: 24),
+                  child: Icon(
+                    Icons.thermostat,
+                    color: AppTheme.statusInfo,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -74,8 +79,11 @@ class EntryPage extends StatelessWidget {
                     color: AppTheme.primaryBlue.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.inventory_2,
-                      color: AppTheme.primaryBlue, size: 24),
+                  child: Icon(
+                    Icons.inventory_2,
+                    color: AppTheme.primaryBlue,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -108,8 +116,11 @@ class EntryPage extends StatelessWidget {
                     color: AppTheme.statusOk.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.cleaning_services,
-                      color: AppTheme.statusOk, size: 24),
+                  child: Icon(
+                    Icons.cleaning_services,
+                    color: AppTheme.statusOk,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -142,8 +153,11 @@ class EntryPage extends StatelessWidget {
                     color: AppTheme.statusWarn.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(Icons.oil_barrel,
-                      color: AppTheme.statusWarn, size: 24),
+                  child: Icon(
+                    Icons.oil_barrel,
+                    color: AppTheme.statusWarn,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

@@ -25,7 +25,9 @@ class ClockRepository {
       if (response == null) return null;
       return ClockSession.fromJson(response as Map<String, dynamic>);
     } catch (e) {
-      debugPrint('[ClockRepo] ❌ Error getting open session for employee $employeeId: $e');
+      debugPrint(
+        '[ClockRepo] ❌ Error getting open session for employee $employeeId: $e',
+      );
       return null;
     }
   }
@@ -42,7 +44,9 @@ class ClockRepository {
       // Check if this employee already has an open session
       final existing = await getOpenSession(employeeId);
       if (existing != null) {
-        throw Exception('Vous avez déjà une session de pointage ouverte. Veuillez d\'abord pointer la sortie.');
+        throw Exception(
+          'Vous avez déjà une session de pointage ouverte. Veuillez d\'abord pointer la sortie.',
+        );
       }
 
       // Verify employee exists and get organization_id
@@ -51,44 +55,61 @@ class ClockRepository {
           .select('id, first_name, last_name, organization_id')
           .eq('id', employeeId)
           .maybeSingle();
-      
+
       if (employeeCheck == null) {
-        debugPrint('[ClockRepo] ❌ Employee ID $employeeId does not exist in employees table');
-        throw Exception('L\'employé avec l\'ID $employeeId n\'existe pas dans la base de données. Veuillez vérifier que l\'employé est bien créé dans la table employees.');
+        debugPrint(
+          '[ClockRepo] ❌ Employee ID $employeeId does not exist in employees table',
+        );
+        throw Exception(
+          'L\'employé avec l\'ID $employeeId n\'existe pas dans la base de données. Veuillez vérifier que l\'employé est bien créé dans la table employees.',
+        );
       }
-      
+
       final organizationId = employeeCheck['organization_id'] as String;
-      debugPrint('[ClockRepo] ✅ Employee verified: ${employeeCheck['first_name']} ${employeeCheck['last_name']} (ID: $employeeId, Org: $organizationId)');
+      debugPrint(
+        '[ClockRepo] ✅ Employee verified: ${employeeCheck['first_name']} ${employeeCheck['last_name']} (ID: $employeeId, Org: $organizationId)',
+      );
 
       final now = DateTime.now();
       // CRITICAL: Use employee_id and organization_id, NOT user_id
       // Business model: employees are NOT auth users, so we don't use user_id
       final insertData = <String, dynamic>{
-        'employee_id': employeeId, // REQUIRED: employee_id references employees.id
-        'organization_id': organizationId, // REQUIRED: organization_id references organizations.id
+        'employee_id':
+            employeeId, // REQUIRED: employee_id references employees.id
+        'organization_id':
+            organizationId, // REQUIRED: organization_id references organizations.id
         'start_at': now.toIso8601String(),
         if (deviceId != null) 'device_id': deviceId,
         // DO NOT include user_id - employees are not auth users
       };
 
-      debugPrint('[ClockRepo] Clocking in employee: $employeeId (Org: $organizationId)');
-      
+      debugPrint(
+        '[ClockRepo] Clocking in employee: $employeeId (Org: $organizationId)',
+      );
+
       final response = await _client
           .from('clock_sessions')
           .insert(insertData)
           .select()
           .single();
 
-      debugPrint('[ClockRepo] ✅ Clocked in successfully for employee $employeeId');
+      debugPrint(
+        '[ClockRepo] ✅ Clocked in successfully for employee $employeeId',
+      );
       return ClockSession.fromJson(response as Map<String, dynamic>);
     } catch (e) {
       debugPrint('[ClockRepo] ❌ Error clocking in: $e');
       // Provide more helpful error message
       if (e.toString().contains('foreign key constraint')) {
-        throw Exception('L\'employé sélectionné n\'existe pas dans la base de données. Veuillez sélectionner un employé valide ou créer cet employé d\'abord.');
+        throw Exception(
+          'L\'employé sélectionné n\'existe pas dans la base de données. Veuillez sélectionner un employé valide ou créer cet employé d\'abord.',
+        );
       }
-      if (e.toString().contains('unique constraint') || e.toString().contains('duplicate key')) {
-        throw Exception('Vous avez déjà une session de pointage ouverte. Veuillez d\'abord pointer la sortie.');
+      if (e.toString().contains('unique constraint') ||
+          e.toString().contains('duplicate key')) {
+        throw Exception(
+          'Vous avez déjà une session de pointage ouverte. Veuillez d\'abord pointer la sortie.',
+        );
       }
       throw Exception('Échec du pointage d\'entrée: $e');
     }
@@ -104,15 +125,21 @@ class ClockRepository {
       // Get current open session for THIS SPECIFIC employee only
       final session = await getOpenSession(employeeId);
       if (session == null) {
-        throw Exception('Aucune session ouverte pour vous. Veuillez d\'abord pointer l\'entrée.');
+        throw Exception(
+          'Aucune session ouverte pour vous. Veuillez d\'abord pointer l\'entrée.',
+        );
       }
 
       final now = DateTime.now();
       debugPrint('[ClockRepo] [CLOCK_OUT] Clocking out employee: $employeeId');
       debugPrint('[ClockRepo] [CLOCK_OUT] Session ID: ${session.id}');
-      debugPrint('[ClockRepo] [CLOCK_OUT] Session start_at: ${session.startAt}');
-      debugPrint('[ClockRepo] [CLOCK_OUT] Session employee_id: ${session.employeeId}');
-      
+      debugPrint(
+        '[ClockRepo] [CLOCK_OUT] Session start_at: ${session.startAt}',
+      );
+      debugPrint(
+        '[ClockRepo] [CLOCK_OUT] Session employee_id: ${session.employeeId}',
+      );
+
       // CRITICAL: Update ONLY this specific session by ID AND employee_id
       // This ensures we never accidentally close other employees' sessions
       // We use BOTH session.id AND employee_id to be absolutely sure
@@ -123,21 +150,32 @@ class ClockRepository {
             'updated_at': now.toIso8601String(),
           })
           .eq('id', session.id) // Match by session ID first (most specific)
-          .eq('employee_id', employeeId) // CRITICAL: Double-check employee_id matches
+          .eq(
+            'employee_id',
+            employeeId,
+          ) // CRITICAL: Double-check employee_id matches
           .isFilter('end_at', null) // Only update if still open
           .select()
           .single();
 
       // Verify the response is for the correct employee
-      final closedSession = ClockSession.fromJson(response as Map<String, dynamic>);
+      final closedSession = ClockSession.fromJson(
+        response as Map<String, dynamic>,
+      );
       if (closedSession.employeeId != employeeId) {
-        debugPrint('[ClockRepo] ❌ CRITICAL ERROR: Closed session belongs to different employee!');
+        debugPrint(
+          '[ClockRepo] ❌ CRITICAL ERROR: Closed session belongs to different employee!',
+        );
         debugPrint('[ClockRepo] Expected employee_id: $employeeId');
         debugPrint('[ClockRepo] Got employee_id: ${closedSession.employeeId}');
-        throw Exception('Erreur critique: La session fermée appartient à un autre employé');
+        throw Exception(
+          'Erreur critique: La session fermée appartient à un autre employé',
+        );
       }
 
-      debugPrint('[ClockRepo] ✅ Clocked out successfully for employee $employeeId');
+      debugPrint(
+        '[ClockRepo] ✅ Clocked out successfully for employee $employeeId',
+      );
       return closedSession;
     } catch (e) {
       debugPrint('[ClockRepo] ❌ Error clocking out: $e');
@@ -155,14 +193,20 @@ class ClockRepository {
 
       final now = DateTime.now();
       final sessionAge = now.difference(session.startAt);
-      
+
       // Only auto-close if session is older than 24 hours
       if (sessionAge.inHours >= 24) {
-        debugPrint('[ClockRepo] [AUTO_CLOSE] Auto-closing old session for employee $employeeId');
-        debugPrint('[ClockRepo] [AUTO_CLOSE] Session age: ${sessionAge.inHours} hours');
-        debugPrint('[ClockRepo] [AUTO_CLOSE] Session started at: ${session.startAt}');
+        debugPrint(
+          '[ClockRepo] [AUTO_CLOSE] Auto-closing old session for employee $employeeId',
+        );
+        debugPrint(
+          '[ClockRepo] [AUTO_CLOSE] Session age: ${sessionAge.inHours} hours',
+        );
+        debugPrint(
+          '[ClockRepo] [AUTO_CLOSE] Session started at: ${session.startAt}',
+        );
         debugPrint('[ClockRepo] [AUTO_CLOSE] Session ID: ${session.id}');
-        
+
         // Close ONLY this employee's session - use BOTH id and employee_id
         await _client
             .from('clock_sessions')
@@ -173,8 +217,10 @@ class ClockRepository {
             .eq('id', session.id) // Match by session ID
             .eq('employee_id', employeeId) // CRITICAL: Only this employee
             .isFilter('end_at', null); // Only if still open
-        
-        debugPrint('[ClockRepo] ✅ Auto-closed old session for employee $employeeId');
+
+        debugPrint(
+          '[ClockRepo] ✅ Auto-closed old session for employee $employeeId',
+        );
       }
     } catch (e) {
       debugPrint('[ClockRepo] ❌ Error auto-closing old session: $e');
@@ -199,7 +245,7 @@ class ClockRepository {
         // Use employee_id only (NOT user_id) - employees are not auth users
         query = query.eq('employee_id', employeeId);
       }
-      
+
       if (organizationId != null) {
         query = query.eq('organization_id', organizationId);
       }
@@ -247,7 +293,7 @@ class ClockRepository {
         // Use employee_id only (NOT user_id) - employees are not auth users
         query = query.inFilter('employee_id', employeeIds);
       }
-      
+
       if (organizationId != null) {
         query = query.eq('organization_id', organizationId);
       }
@@ -269,7 +315,9 @@ class ClockRepository {
           .map((json) => ClockSession.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      debugPrint('[ClockRepo] ✅ Fetched ${sessions.length} sessions for ${employeeIds.length} employees');
+      debugPrint(
+        '[ClockRepo] ✅ Fetched ${sessions.length} sessions for ${employeeIds.length} employees',
+      );
       return sessions;
     } catch (e) {
       debugPrint('[ClockRepo] ❌ Error getting history for users: $e');
@@ -277,4 +325,3 @@ class ClockRepository {
     }
   }
 }
-

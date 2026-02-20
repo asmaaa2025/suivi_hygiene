@@ -39,7 +39,8 @@ class ApiService {
       } catch (e) {
         debugPrint('[ApiService] ⚠️ Supabase non initialisé: $e');
         throw Exception(
-            'Supabase must be initialized in main() before calling ApiService.initialize()');
+          'Supabase must be initialized in main() before calling ApiService.initialize()',
+        );
       }
     }
   }
@@ -65,7 +66,9 @@ class ApiService {
 
   /// Connexion avec email/password
   static Future<Map<String, dynamic>> login(
-      String email, String password) async {
+    String email,
+    String password,
+  ) async {
     await _ensureInitialized();
 
     try {
@@ -103,7 +106,9 @@ class ApiService {
 
   /// Inscription avec email/password
   static Future<Map<String, dynamic>> signUp(
-      String email, String password) async {
+    String email,
+    String password,
+  ) async {
     await _ensureInitialized();
 
     try {
@@ -126,7 +131,8 @@ class ApiService {
 
       // La session est automatiquement sauvegardée par Supabase Flutter SDK
       debugPrint(
-          '[Auth] ✅ Inscription réussie - Session gérée automatiquement');
+        '[Auth] ✅ Inscription réussie - Session gérée automatiquement',
+      );
 
       return _success({
         'message': 'Compte créé avec succès',
@@ -185,8 +191,9 @@ class ApiService {
   // ============================================
 
   /// Liste les températures (optionnel: filtrer par appareil)
-  static Future<List<Map<String, dynamic>>> getTemperatures(
-      {String? appareil}) async {
+  static Future<List<Map<String, dynamic>>> getTemperatures({
+    String? appareil,
+  }) async {
     final filters = appareil != null ? {'appareil': appareil} : null;
     return await _fetchAll('temperatures', filters: filters, orderBy: 'date');
   }
@@ -277,8 +284,9 @@ class ApiService {
   }
 
   /// Crée un fournisseur
-  static Future<Map<String, dynamic>?> createFournisseur(
-      {required String nom}) async {
+  static Future<Map<String, dynamic>?> createFournisseur({
+    required String nom,
+  }) async {
     return await _insert('fournisseurs', {'nom': nom});
   }
 
@@ -417,8 +425,11 @@ class ApiService {
       debugPrint('[$table] [INSERT] userId=$userId');
       debugPrint('[$table] [INSERT] payload=$payload');
 
-      final result =
-          await _supabase!.from(table).insert(payload).select().single();
+      final result = await _supabase!
+          .from(table)
+          .insert(payload)
+          .select()
+          .single();
 
       debugPrint('[$table] [INSERT] ✅ id=${result['id']}');
       return result;
@@ -471,8 +482,9 @@ class ApiService {
 
   static Future<bool> _checkNetwork() async {
     try {
-      await InternetAddress.lookup('google.com')
-          .timeout(const Duration(seconds: 5));
+      await InternetAddress.lookup(
+        'google.com',
+      ).timeout(const Duration(seconds: 5));
       return true;
     } catch (e) {
       return false;
@@ -485,7 +497,9 @@ class ApiService {
       final fileName =
           '$currentUserId/${DateTime.now().millisecondsSinceEpoch}.jpg';
 
-      await _supabase!.storage.from(bucket).uploadBinary(
+      await _supabase!.storage
+          .from(bucket)
+          .uploadBinary(
             fileName,
             bytes,
             fileOptions: const FileOptions(contentType: 'image/jpeg'),

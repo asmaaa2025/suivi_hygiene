@@ -11,11 +11,13 @@ class TacheNettoyageRepository {
       final user = _client.auth.currentUser;
       if (user == null) {
         debugPrint(
-            '[TacheNettoyageRepo] ❌ No authenticated user - cannot fetch tasks');
+          '[TacheNettoyageRepo] ❌ No authenticated user - cannot fetch tasks',
+        );
         debugPrint('[TacheNettoyageRepo]   - Method: getAll');
         debugPrint('[TacheNettoyageRepo]   - Table: taches_nettoyage');
         throw Exception(
-            'Vous devez être connecté pour accéder aux tâches de nettoyage');
+          'Vous devez être connecté pour accéder aux tâches de nettoyage',
+        );
       }
 
       debugPrint('[TacheNettoyageRepo] 🔍 Fetching tasks');
@@ -28,12 +30,14 @@ class TacheNettoyageRepository {
       if (isActive != null) {
         query = query.eq('is_active', isActive);
         debugPrint(
-            '[TacheNettoyageRepo]   - Applied filter: is_active = $isActive');
+          '[TacheNettoyageRepo]   - Applied filter: is_active = $isActive',
+        );
       }
 
       final response = await query.order('nom');
       debugPrint(
-          '[TacheNettoyageRepo]   - Raw response length: ${(response as List).length}');
+        '[TacheNettoyageRepo]   - Raw response length: ${(response as List).length}',
+      );
 
       final tasks = (response as List).map((json) {
         try {
@@ -47,7 +51,8 @@ class TacheNettoyageRepository {
       }).toList();
 
       debugPrint(
-          '[TacheNettoyageRepo] ✅ Successfully fetched ${tasks.length} task(s)');
+        '[TacheNettoyageRepo] ✅ Successfully fetched ${tasks.length} task(s)',
+      );
       return tasks;
     } catch (e, stackTrace) {
       final errorStr = e.toString();
@@ -72,15 +77,19 @@ class TacheNettoyageRepository {
         rethrow;
       }
       throw Exception(
-          'Erreur lors de la récupération des tâches: ${e.toString()}');
+        'Erreur lors de la récupération des tâches: ${e.toString()}',
+      );
     }
     return <TacheNettoyage>[];
   }
 
   Future<TacheNettoyage> getById(String id) async {
     try {
-      final response =
-          await _client.from('taches_nettoyage').select().eq('id', id).single();
+      final response = await _client
+          .from('taches_nettoyage')
+          .select()
+          .eq('id', id)
+          .single();
       return TacheNettoyage.fromJson(response);
     } catch (e) {
       debugPrint('[TacheNettoyageRepo] Error fetching task: $e');
@@ -170,17 +179,20 @@ class TacheNettoyageRepository {
   Future<List<TacheNettoyage>> getTasksDueForDate(DateTime date) async {
     try {
       debugPrint(
-          '[TacheNettoyageRepo] ========== getTasksDueForDate START ==========');
+        '[TacheNettoyageRepo] ========== getTasksDueForDate START ==========',
+      );
       debugPrint('[TacheNettoyageRepo] Repository: TacheNettoyageRepository');
       debugPrint('[TacheNettoyageRepo] Method: getTasksDueForDate');
       debugPrint(
-          '[TacheNettoyageRepo] Data source: Supabase ONLY (no local storage)');
+        '[TacheNettoyageRepo] Data source: Supabase ONLY (no local storage)',
+      );
       debugPrint('[TacheNettoyageRepo] Date: $date');
       debugPrint('[TacheNettoyageRepo] Table: taches_nettoyage');
 
       final allTasks = await getAll(isActive: true);
       debugPrint(
-          '[TacheNettoyageRepo]   - Found ${allTasks.length} active tasks');
+        '[TacheNettoyageRepo]   - Found ${allTasks.length} active tasks',
+      );
 
       final dueTasks = <TacheNettoyage>[];
 
@@ -191,25 +203,30 @@ class TacheNettoyageRepository {
       }
 
       debugPrint(
-          '[TacheNettoyageRepo] ✅ Found ${dueTasks.length} due tasks for $date');
+        '[TacheNettoyageRepo] ✅ Found ${dueTasks.length} due tasks for $date',
+      );
       debugPrint(
-          '[TacheNettoyageRepo] ========== getTasksDueForDate SUCCESS ==========');
+        '[TacheNettoyageRepo] ========== getTasksDueForDate SUCCESS ==========',
+      );
       return dueTasks;
     } catch (e, stackTrace) {
       final errorStr = e.toString();
       if (errorStr.contains('PostgrestException') ||
           errorStr.contains('PGRST')) {
         debugPrint(
-            '[TacheNettoyageRepo] ❌ Supabase error in getTasksDueForDate');
+          '[TacheNettoyageRepo] ❌ Supabase error in getTasksDueForDate',
+        );
         debugPrint('[TacheNettoyageRepo]   - Error: $e');
         debugPrint('[TacheNettoyageRepo]   - StackTrace: $stackTrace');
         debugPrint('[TacheNettoyageRepo] ====================================');
         throw Exception(
-            'Erreur Supabase lors de la récupération des tâches: $errorStr');
+          'Erreur Supabase lors de la récupération des tâches: $errorStr',
+        );
       }
     } catch (e, stackTrace) {
       debugPrint(
-          '[TacheNettoyageRepo] ❌ UNEXPECTED ERROR in getTasksDueForDate');
+        '[TacheNettoyageRepo] ❌ UNEXPECTED ERROR in getTasksDueForDate',
+      );
       debugPrint('[TacheNettoyageRepo]   - Error type: ${e.runtimeType}');
       debugPrint('[TacheNettoyageRepo]   - Error message: $e');
       debugPrint('[TacheNettoyageRepo]   - StackTrace: $stackTrace');
@@ -219,13 +236,17 @@ class TacheNettoyageRepository {
           e.toString().contains('LocalDataException') ||
           e.toString().contains('initializeDataForming')) {
         debugPrint(
-            '[TacheNettoyageRepo] ⚠️⚠️⚠️ LocalDataException detected! ⚠️⚠️⚠️');
+          '[TacheNettoyageRepo] ⚠️⚠️⚠️ LocalDataException detected! ⚠️⚠️⚠️',
+        );
         debugPrint(
-            '[TacheNettoyageRepo]   - This should NOT happen - app uses Supabase-only');
+          '[TacheNettoyageRepo]   - This should NOT happen - app uses Supabase-only',
+        );
         debugPrint(
-            '[TacheNettoyageRepo]   - This suggests an old code path is still active');
+          '[TacheNettoyageRepo]   - This suggests an old code path is still active',
+        );
         debugPrint(
-            '[TacheNettoyageRepo]   - Check for any imports or calls to LocalData/LocalDataSource');
+          '[TacheNettoyageRepo]   - Check for any imports or calls to LocalData/LocalDataSource',
+        );
       }
 
       debugPrint('[TacheNettoyageRepo] ====================================');
@@ -258,13 +279,15 @@ class TacheNettoyageRepository {
         // Check if today matches the day of month (handle months with fewer days)
         final targetDay = task.dayOfMonth!;
         final lastDayOfMonth = DateTime(date.year, date.month + 1, 0).day;
-        final dayToCheck =
-            targetDay > lastDayOfMonth ? lastDayOfMonth : targetDay;
+        final dayToCheck = targetDay > lastDayOfMonth
+            ? lastDayOfMonth
+            : targetDay;
 
         if (date.day != dayToCheck) return false;
 
         // Check if it's the right month interval
-        final monthsSinceCreation = (date.year - task.createdAt.year) * 12 +
+        final monthsSinceCreation =
+            (date.year - task.createdAt.year) * 12 +
             (date.month - task.createdAt.month);
         return monthsSinceCreation >= 0 &&
             monthsSinceCreation % task.interval == 0;

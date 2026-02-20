@@ -1,5 +1,5 @@
 /// NC Wizard Success Screen
-/// 
+///
 /// Shows success message after NC submission
 /// Buttons: Voir la fiche, Exporter PDF, Historique
 
@@ -32,10 +32,7 @@ void _navigateToAlerts(BuildContext context) {
 class NcWizardSuccess extends StatelessWidget {
   final String? ncId;
 
-  const NcWizardSuccess({
-    super.key,
-    this.ncId,
-  });
+  const NcWizardSuccess({super.key, this.ncId});
 
   Future<void> _exportPdf(BuildContext context) async {
     if (ncId == null) return;
@@ -45,15 +42,15 @@ class NcWizardSuccess extends StatelessWidget {
       final path = await NcPdfExportService().exportSingleNcToPdf(nc);
       if (context.mounted) {
         await NcPdfExportService().shareExport(path);
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Fiche exportée en PDF')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Fiche exportée en PDF')));
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     }
   }
@@ -76,27 +73,23 @@ class NcWizardSuccess extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               // Success icon
-              Icon(
-                Icons.check_circle,
-                size: 120,
-                color: Colors.green,
-              ),
+              Icon(Icons.check_circle, size: 120, color: Colors.green),
               const SizedBox(height: 32),
               // Success message
               Text(
                 'Non-conformité créée avec succès !',
                 style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 28,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 28,
+                ),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 16),
               Text(
                 'Votre fiche de non-conformité a été enregistrée.',
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[600],
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                 textAlign: TextAlign.center,
               ),
               if (ncId != null) ...[
@@ -111,10 +104,7 @@ class NcWizardSuccess extends StatelessWidget {
                     children: [
                       Text(
                         'ID de la fiche',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -166,4 +156,3 @@ class NcWizardSuccess extends StatelessWidget {
     );
   }
 }
-

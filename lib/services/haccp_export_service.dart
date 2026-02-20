@@ -71,230 +71,265 @@ class HaccpExportService {
     allRows.add([]);
 
     if (includeAll || modules!.contains(kTemperatures)) {
-    // 1. Températures
-    try {
-      final temps = await _temperatureRepo.getAll(
-        startDate: startDate,
-        endDate: endDate,
-      );
-      final appareils = await _appareilRepo.getAll();
-      final appareilsMap = {for (var a in appareils) a.id: a};
+      // 1. Températures
+      try {
+        final temps = await _temperatureRepo.getAll(
+          startDate: startDate,
+          endDate: endDate,
+        );
+        final appareils = await _appareilRepo.getAll();
+        final appareilsMap = {for (var a in appareils) a.id: a};
 
-      allRows.add(['=== TEMPÉRATURES (${temps.length} enregistrement(s)) ===']);
-      allRows.add([
-        'Date',
-        'Appareil',
-        'Température (°C)',
-        'Employé',
-        'Remarque',
-        'Photo',
-      ]);
-      for (final t in temps) {
-        final appareil = appareilsMap[t.appareilId];
-        final emp = _formatEmployee(t.employeeFirstName, t.employeeLastName);
         allRows.add([
-          _df.format(t.createdAt),
-          appareil?.nom ?? t.appareilId,
-          t.temperature.toStringAsFixed(1),
-          emp,
-          t.remarque ?? '',
-          t.photoUrl != null ? 'Oui' : 'Non',
+          '=== TEMPÉRATURES (${temps.length} enregistrement(s)) ===',
         ]);
+        allRows.add([
+          'Date',
+          'Appareil',
+          'Température (°C)',
+          'Employé',
+          'Remarque',
+          'Photo',
+        ]);
+        for (final t in temps) {
+          final appareil = appareilsMap[t.appareilId];
+          final emp = _formatEmployee(t.employeeFirstName, t.employeeLastName);
+          allRows.add([
+            _df.format(t.createdAt),
+            appareil?.nom ?? t.appareilId,
+            t.temperature.toStringAsFixed(1),
+            emp,
+            t.remarque ?? '',
+            t.photoUrl != null ? 'Oui' : 'Non',
+          ]);
+        }
+        allRows.add([]);
+      } catch (e) {
+        debugPrint('[HaccpExport] Températures error: $e');
+        allRows.add(['Erreur températures: $e']);
+        allRows.add([]);
       }
-      allRows.add([]);
-    } catch (e) {
-      debugPrint('[HaccpExport] Températures error: $e');
-      allRows.add(['Erreur températures: $e']);
-      allRows.add([]);
-    }
     }
 
     if (includeAll || modules!.contains(kReceptions)) {
-    // 2. Réceptions
-    try {
-      final receptions = await _receptionRepo.getAll(
-        startDate: startDate,
-        endDate: endDate,
-      );
-      allRows.add(['=== RÉCEPTIONS (${receptions.length} enregistrement(s)) ===']);
-      allRows.add([
-        'Date',
-        'Fournisseur',
-        'Lot',
-        'Température (°C)',
-        'Employé',
-        'Remarque',
-        'Non-conformité',
-      ]);
-      for (final r in receptions) {
-        final emp = _formatEmployee(r.employeeFirstName, r.employeeLastName);
+      // 2. Réceptions
+      try {
+        final receptions = await _receptionRepo.getAll(
+          startDate: startDate,
+          endDate: endDate,
+        );
         allRows.add([
-          _df.format(r.receivedAt),
-          r.fournisseur ?? '',
-          r.lot ?? '',
-          r.temperature?.toStringAsFixed(1) ?? '',
-          emp,
-          r.remarque ?? '',
-          r.nonConformityId != null ? 'Oui' : 'Non',
+          '=== RÉCEPTIONS (${receptions.length} enregistrement(s)) ===',
         ]);
+        allRows.add([
+          'Date',
+          'Fournisseur',
+          'Lot',
+          'Température (°C)',
+          'Employé',
+          'Remarque',
+          'Non-conformité',
+        ]);
+        for (final r in receptions) {
+          final emp = _formatEmployee(r.employeeFirstName, r.employeeLastName);
+          allRows.add([
+            _df.format(r.receivedAt),
+            r.fournisseur ?? '',
+            r.lot ?? '',
+            r.temperature?.toStringAsFixed(1) ?? '',
+            emp,
+            r.remarque ?? '',
+            r.nonConformityId != null ? 'Oui' : 'Non',
+          ]);
+        }
+        allRows.add([]);
+      } catch (e) {
+        debugPrint('[HaccpExport] Réceptions error: $e');
+        allRows.add(['Erreur réceptions: $e']);
+        allRows.add([]);
       }
-      allRows.add([]);
-    } catch (e) {
-      debugPrint('[HaccpExport] Réceptions error: $e');
-      allRows.add(['Erreur réceptions: $e']);
-      allRows.add([]);
-    }
     }
 
     if (includeAll || modules!.contains(kCleaning)) {
-    // 3. Nettoyages
-    try {
-      final nettoyages = await _nettoyageRepo.getAllCompleted(
-        startDate: startDate,
-        endDate: endDate,
-      );
-      final taches = await _tacheRepo.getAll();
-      final tachesMap = {for (var t in taches) t.id: t};
+      // 3. Nettoyages
+      try {
+        final nettoyages = await _nettoyageRepo.getAllCompleted(
+          startDate: startDate,
+          endDate: endDate,
+        );
+        final taches = await _tacheRepo.getAll();
+        final tachesMap = {for (var t in taches) t.id: t};
 
-      allRows.add(['=== NETTOYAGES (${nettoyages.length} enregistrement(s)) ===']);
-      allRows.add([
-        'Date',
-        'Tâche',
-        'Conforme',
-        'Employé',
-        'Remarque',
-        'Photo',
-      ]);
-      for (final n in nettoyages) {
-        final tache = tachesMap[n.tacheId];
-        final emp = _formatEmployee(n.employeeFirstName, n.employeeLastName);
         allRows.add([
-          _df.format(n.doneAt ?? n.createdAt),
-          tache?.nom ?? n.tacheId,
-          n.conforme == true ? 'Oui' : 'Non',
-          emp,
-          n.remarque ?? '',
-          n.photoUrl != null ? 'Oui' : 'Non',
+          '=== NETTOYAGES (${nettoyages.length} enregistrement(s)) ===',
         ]);
+        allRows.add([
+          'Date',
+          'Tâche',
+          'Conforme',
+          'Employé',
+          'Remarque',
+          'Photo',
+        ]);
+        for (final n in nettoyages) {
+          final tache = tachesMap[n.tacheId];
+          final emp = _formatEmployee(n.employeeFirstName, n.employeeLastName);
+          allRows.add([
+            _df.format(n.doneAt ?? n.createdAt),
+            tache?.nom ?? n.tacheId,
+            n.conforme == true ? 'Oui' : 'Non',
+            emp,
+            n.remarque ?? '',
+            n.photoUrl != null ? 'Oui' : 'Non',
+          ]);
+        }
+        allRows.add([]);
+      } catch (e) {
+        debugPrint('[HaccpExport] Nettoyages error: $e');
+        allRows.add(['Erreur nettoyages: $e']);
+        allRows.add([]);
       }
-      allRows.add([]);
-    } catch (e) {
-      debugPrint('[HaccpExport] Nettoyages error: $e');
-      allRows.add(['Erreur nettoyages: $e']);
-      allRows.add([]);
-    }
     }
 
     if (includeAll || modules!.contains(kOil)) {
-    // 4. Changements d'huile
-    try {
-      final oilData = await _oilChangeRepo.getAll();
-      final oilChanges = (oilData)
-          .map((j) => OilChange.fromJson(j))
-          .where((o) {
-            if (startDate != null && o.changedAt.isBefore(startDate)) return false;
-            if (endDate != null) {
-              final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
-              if (o.changedAt.isAfter(endOfDay)) return false;
-            }
-            return true;
-          })
-          .toList();
+      // 4. Changements d'huile
+      try {
+        final oilData = await _oilChangeRepo.getAll();
+        final oilChanges = (oilData).map((j) => OilChange.fromJson(j)).where((
+          o,
+        ) {
+          if (startDate != null && o.changedAt.isBefore(startDate))
+            return false;
+          if (endDate != null) {
+            final endOfDay = DateTime(
+              endDate.year,
+              endDate.month,
+              endDate.day,
+              23,
+              59,
+              59,
+            );
+            if (o.changedAt.isAfter(endOfDay)) return false;
+          }
+          return true;
+        }).toList();
 
-      allRows.add(['=== CHANGEMENTS D\'HUILE (${oilChanges.length} enregistrement(s)) ===']);
-      allRows.add([
-        'Date',
-        'Machine',
-        'Quantité (L)',
-        'Employé',
-        'Remarque',
-      ]);
-      for (final o in oilChanges) {
-        final emp = _formatEmployee(o.employeeFirstName, o.employeeLastName);
         allRows.add([
-          _df.format(o.changedAt),
-          o.friteuseNom ?? o.friteuseId,
-          o.quantite.toStringAsFixed(1),
-          emp,
-          o.remarque ?? '',
+          '=== CHANGEMENTS D\'HUILE (${oilChanges.length} enregistrement(s)) ===',
         ]);
+        allRows.add(['Date', 'Machine', 'Quantité (L)', 'Employé', 'Remarque']);
+        for (final o in oilChanges) {
+          final emp = _formatEmployee(o.employeeFirstName, o.employeeLastName);
+          allRows.add([
+            _df.format(o.changedAt),
+            o.friteuseNom ?? o.friteuseId,
+            o.quantite.toStringAsFixed(1),
+            emp,
+            o.remarque ?? '',
+          ]);
+        }
+        allRows.add([]);
+      } catch (e) {
+        debugPrint('[HaccpExport] Huiles error: $e');
+        allRows.add(['Erreur changements d\'huile: $e']);
+        allRows.add([]);
       }
-      allRows.add([]);
-    } catch (e) {
-      debugPrint('[HaccpExport] Huiles error: $e');
-      allRows.add(['Erreur changements d\'huile: $e']);
-      allRows.add([]);
-    }
     }
 
     if (includeAll || modules!.contains(kNc)) {
-    // 5. Non-conformités
-    try {
-      final ncs = await _ncRepo.listNonConformities();
-      final filteredNcs = ncs.where((nc) {
-        if (startDate != null && nc.detectionDate.isBefore(startDate)) return false;
-        if (endDate != null) {
-          final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
-          if (nc.detectionDate.isAfter(endOfDay)) return false;
-        }
-        return true;
-      }).toList();
+      // 5. Non-conformités
+      try {
+        final ncs = await _ncRepo.listNonConformities();
+        final filteredNcs = ncs.where((nc) {
+          if (startDate != null && nc.detectionDate.isBefore(startDate))
+            return false;
+          if (endDate != null) {
+            final endOfDay = DateTime(
+              endDate.year,
+              endDate.month,
+              endDate.day,
+              23,
+              59,
+              59,
+            );
+            if (nc.detectionDate.isAfter(endOfDay)) return false;
+          }
+          return true;
+        }).toList();
 
-      allRows.add(['=== NON-CONFORMITÉS (${filteredNcs.length} enregistrement(s)) ===']);
-      allRows.add([
-        'Date',
-        'N° Fiche',
-        'Statut',
-        'Description',
-        'Catégorie',
-        'Source',
-      ]);
-      for (final nc in filteredNcs) {
         allRows.add([
-          _df.format(nc.detectionDate),
-          nc.ficheNumber ?? nc.id,
-          _ncStatusLabel(nc.status),
-          nc.description,
-          nc.objectCategory.displayName,
-          nc.sourceType?.value ?? 'Manuel',
+          '=== NON-CONFORMITÉS (${filteredNcs.length} enregistrement(s)) ===',
         ]);
+        allRows.add([
+          'Date',
+          'N° Fiche',
+          'Statut',
+          'Description',
+          'Catégorie',
+          'Source',
+        ]);
+        for (final nc in filteredNcs) {
+          allRows.add([
+            _df.format(nc.detectionDate),
+            nc.ficheNumber ?? nc.id,
+            _ncStatusLabel(nc.status),
+            nc.description,
+            nc.objectCategory.displayName,
+            nc.sourceType?.value ?? 'Manuel',
+          ]);
+        }
+      } catch (e) {
+        debugPrint('[HaccpExport] NC error: $e');
+        allRows.add(['Erreur non-conformités: $e']);
       }
-    } catch (e) {
-      debugPrint('[HaccpExport] NC error: $e');
-      allRows.add(['Erreur non-conformités: $e']);
-    }
     }
 
     if (includeAll || modules!.contains(kRappels)) {
-    try {
-      final rappels = await _rappelRepo.getAll();
-      final filtered = rappels.where((r) {
-        if (startDate != null && r.dateDetection.isBefore(startDate)) return false;
-        if (endDate != null) {
-          final end = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
-          if (r.dateDetection.isAfter(end)) return false;
-        }
-        return true;
-      }).toList();
-      allRows.add(['=== PLAN DE RAPPEL (${filtered.length} entrée(s)) ===']);
-      allRows.add(['Date', 'Produit', 'Lot', 'Fournisseur', 'Motif', 'Statut', 'Actions']);
-      for (final r in filtered) {
+      try {
+        final rappels = await _rappelRepo.getAll();
+        final filtered = rappels.where((r) {
+          if (startDate != null && r.dateDetection.isBefore(startDate))
+            return false;
+          if (endDate != null) {
+            final end = DateTime(
+              endDate.year,
+              endDate.month,
+              endDate.day,
+              23,
+              59,
+              59,
+            );
+            if (r.dateDetection.isAfter(end)) return false;
+          }
+          return true;
+        }).toList();
+        allRows.add(['=== PLAN DE RAPPEL (${filtered.length} entrée(s)) ===']);
         allRows.add([
-          _df.format(r.dateDetection),
-          r.produitNom,
-          r.lot ?? '-',
-          r.fournisseur ?? '-',
-          r.motif,
-          r.statut.displayName,
-          r.actionsPrises ?? '-',
+          'Date',
+          'Produit',
+          'Lot',
+          'Fournisseur',
+          'Motif',
+          'Statut',
+          'Actions',
         ]);
+        for (final r in filtered) {
+          allRows.add([
+            _df.format(r.dateDetection),
+            r.produitNom,
+            r.lot ?? '-',
+            r.fournisseur ?? '-',
+            r.motif,
+            r.statut.displayName,
+            r.actionsPrises ?? '-',
+          ]);
+        }
+        allRows.add([]);
+      } catch (e) {
+        debugPrint('[HaccpExport] Rappels error: $e');
+        allRows.add(['Erreur rappels: $e']);
+        allRows.add([]);
       }
-      allRows.add([]);
-    } catch (e) {
-      debugPrint('[HaccpExport] Rappels error: $e');
-      allRows.add(['Erreur rappels: $e']);
-      allRows.add([]);
-    }
     }
 
     // Écrire le fichier
@@ -315,10 +350,14 @@ class HaccpExportService {
 
   String _ncStatusLabel(NCStatus s) {
     switch (s) {
-      case NCStatus.draft: return 'Brouillon';
-      case NCStatus.open: return 'Ouvert';
-      case NCStatus.inProgress: return 'En cours';
-      case NCStatus.closed: return 'Fermé';
+      case NCStatus.draft:
+        return 'Brouillon';
+      case NCStatus.open:
+        return 'Ouvert';
+      case NCStatus.inProgress:
+        return 'En cours';
+      case NCStatus.closed:
+        return 'Fermé';
     }
   }
 
@@ -346,43 +385,45 @@ class HaccpExportService {
     final now = DateTime.now();
 
     pw.Widget buildHeader() => pw.Container(
-          padding: const pw.EdgeInsets.all(12),
-          decoration: pw.BoxDecoration(
-            color: PdfColors.blue900,
-            borderRadius: pw.BorderRadius.circular(4),
+      padding: const pw.EdgeInsets.all(12),
+      decoration: pw.BoxDecoration(
+        color: PdfColors.blue900,
+        borderRadius: pw.BorderRadius.circular(4),
+      ),
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'REGISTRE HACCP - Données de traçabilité',
+            style: pw.TextStyle(
+              color: PdfColors.white,
+              fontSize: 18,
+              fontWeight: pw.FontWeight.bold,
+            ),
           ),
-          child: pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                'REGISTRE HACCP - Données de traçabilité',
-                style: pw.TextStyle(
-                  color: PdfColors.white,
-                  fontSize: 18,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.SizedBox(height: 4),
-              pw.Text(
-                'Document généré le ${_df.format(now)} - Utilisable pour contrôle officiel',
-                style: pw.TextStyle(color: PdfColors.white, fontSize: 10),
-              ),
-              if (companyName != null && companyName.isNotEmpty)
-                pw.Text(
-                  companyName,
-                  style: pw.TextStyle(color: PdfColors.grey200, fontSize: 10),
-                ),
-            ],
+          pw.SizedBox(height: 4),
+          pw.Text(
+            'Document généré le ${_df.format(now)} - Utilisable pour contrôle officiel',
+            style: pw.TextStyle(color: PdfColors.white, fontSize: 10),
           ),
-        );
+          if (companyName != null && companyName.isNotEmpty)
+            pw.Text(
+              companyName,
+              style: pw.TextStyle(color: PdfColors.grey200, fontSize: 10),
+            ),
+        ],
+      ),
+    );
 
     final sections = <pw.Widget>[buildHeader(), pw.SizedBox(height: 16)];
 
     if (startDate != null || endDate != null) {
-      sections.add(pw.Text(
-        'Période : ${startDate != null ? _df.format(startDate) : '-'} à ${endDate != null ? _df.format(endDate) : '-'}',
-        style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
-      ));
+      sections.add(
+        pw.Text(
+          'Période : ${startDate != null ? _df.format(startDate) : '-'} à ${endDate != null ? _df.format(endDate) : '-'}',
+          style: const pw.TextStyle(fontSize: 10, color: PdfColors.grey700),
+        ),
+      );
       sections.add(pw.SizedBox(height: 12));
     }
 
@@ -396,22 +437,29 @@ class HaccpExportService {
         final appareilsMap = {for (var a in appareils) a.id: a};
 
         sections.add(_pdfSectionTitle('Températures (${temps.length})'));
-        sections.add(_pdfTable(
-          headers: ['Date', 'Appareil', '°C', 'Employé', 'Remarque'],
-          rows: temps.map((t) {
-            final a = appareilsMap[t.appareilId];
-            return [
-              _df.format(t.createdAt),
-              a?.nom ?? t.appareilId,
-              t.temperature.toStringAsFixed(1),
-              _formatEmployee(t.employeeFirstName, t.employeeLastName),
-              t.remarque ?? '-',
-            ];
-          }).toList(),
-        ));
+        sections.add(
+          _pdfTable(
+            headers: ['Date', 'Appareil', '°C', 'Employé', 'Remarque'],
+            rows: temps.map((t) {
+              final a = appareilsMap[t.appareilId];
+              return [
+                _df.format(t.createdAt),
+                a?.nom ?? t.appareilId,
+                t.temperature.toStringAsFixed(1),
+                _formatEmployee(t.employeeFirstName, t.employeeLastName),
+                t.remarque ?? '-',
+              ];
+            }).toList(),
+          ),
+        );
         sections.add(pw.SizedBox(height: 12));
       } catch (e) {
-        sections.add(pw.Text('Erreur températures: $e', style: const pw.TextStyle(color: PdfColors.red)));
+        sections.add(
+          pw.Text(
+            'Erreur températures: $e',
+            style: const pw.TextStyle(color: PdfColors.red),
+          ),
+        );
         sections.add(pw.SizedBox(height: 8));
       }
     }
@@ -423,20 +471,31 @@ class HaccpExportService {
           endDate: endDate,
         );
         sections.add(_pdfSectionTitle('Réceptions (${receptions.length})'));
-        sections.add(_pdfTable(
-          headers: ['Date', 'Fournisseur', 'Lot', '°C', 'Employé', 'NC'],
-          rows: receptions.map((r) => [
-                _df.format(r.receivedAt),
-                r.fournisseur ?? '-',
-                r.lot ?? '-',
-                r.temperature?.toStringAsFixed(1) ?? '-',
-                _formatEmployee(r.employeeFirstName, r.employeeLastName),
-                r.nonConformityId != null ? 'Oui' : 'Non',
-              ]).toList(),
-        ));
+        sections.add(
+          _pdfTable(
+            headers: ['Date', 'Fournisseur', 'Lot', '°C', 'Employé', 'NC'],
+            rows: receptions
+                .map(
+                  (r) => [
+                    _df.format(r.receivedAt),
+                    r.fournisseur ?? '-',
+                    r.lot ?? '-',
+                    r.temperature?.toStringAsFixed(1) ?? '-',
+                    _formatEmployee(r.employeeFirstName, r.employeeLastName),
+                    r.nonConformityId != null ? 'Oui' : 'Non',
+                  ],
+                )
+                .toList(),
+          ),
+        );
         sections.add(pw.SizedBox(height: 12));
       } catch (e) {
-        sections.add(pw.Text('Erreur réceptions: $e', style: const pw.TextStyle(color: PdfColors.red)));
+        sections.add(
+          pw.Text(
+            'Erreur réceptions: $e',
+            style: const pw.TextStyle(color: PdfColors.red),
+          ),
+        );
         sections.add(pw.SizedBox(height: 8));
       }
     }
@@ -451,19 +510,30 @@ class HaccpExportService {
         final tachesMap = {for (var t in taches) t.id: t};
 
         sections.add(_pdfSectionTitle('Nettoyages (${nettoyages.length})'));
-        sections.add(_pdfTable(
-          headers: ['Date', 'Tâche', 'Conforme', 'Employé', 'Remarque'],
-          rows: nettoyages.map((n) => [
-                _df.format(n.doneAt ?? n.createdAt),
-                tachesMap[n.tacheId]?.nom ?? n.tacheId,
-                n.conforme == true ? 'Oui' : 'Non',
-                _formatEmployee(n.employeeFirstName, n.employeeLastName),
-                n.remarque ?? '-',
-              ]).toList(),
-        ));
+        sections.add(
+          _pdfTable(
+            headers: ['Date', 'Tâche', 'Conforme', 'Employé', 'Remarque'],
+            rows: nettoyages
+                .map(
+                  (n) => [
+                    _df.format(n.doneAt ?? n.createdAt),
+                    tachesMap[n.tacheId]?.nom ?? n.tacheId,
+                    n.conforme == true ? 'Oui' : 'Non',
+                    _formatEmployee(n.employeeFirstName, n.employeeLastName),
+                    n.remarque ?? '-',
+                  ],
+                )
+                .toList(),
+          ),
+        );
         sections.add(pw.SizedBox(height: 12));
       } catch (e) {
-        sections.add(pw.Text('Erreur nettoyages: $e', style: const pw.TextStyle(color: PdfColors.red)));
+        sections.add(
+          pw.Text(
+            'Erreur nettoyages: $e',
+            style: const pw.TextStyle(color: PdfColors.red),
+          ),
+        );
         sections.add(pw.SizedBox(height: 8));
       }
     }
@@ -471,32 +541,50 @@ class HaccpExportService {
     if (includeAll || modules!.contains(kOil)) {
       try {
         final oilData = await _oilChangeRepo.getAll();
-        final oilChanges = oilData
-            .map((j) => OilChange.fromJson(j))
-            .where((o) {
-              if (startDate != null && o.changedAt.isBefore(startDate)) return false;
-              if (endDate != null) {
-                final end = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
-                if (o.changedAt.isAfter(end)) return false;
-              }
-              return true;
-            })
-            .toList();
+        final oilChanges = oilData.map((j) => OilChange.fromJson(j)).where((o) {
+          if (startDate != null && o.changedAt.isBefore(startDate))
+            return false;
+          if (endDate != null) {
+            final end = DateTime(
+              endDate.year,
+              endDate.month,
+              endDate.day,
+              23,
+              59,
+              59,
+            );
+            if (o.changedAt.isAfter(end)) return false;
+          }
+          return true;
+        }).toList();
 
-        sections.add(_pdfSectionTitle('Changements d\'huile (${oilChanges.length})'));
-        sections.add(_pdfTable(
-          headers: ['Date', 'Machine', 'Quantité (L)', 'Employé', 'Remarque'],
-          rows: oilChanges.map((o) => [
-                _df.format(o.changedAt),
-                o.friteuseNom ?? o.friteuseId,
-                o.quantite.toStringAsFixed(1),
-                _formatEmployee(o.employeeFirstName, o.employeeLastName),
-                o.remarque ?? '-',
-              ]).toList(),
-        ));
+        sections.add(
+          _pdfSectionTitle('Changements d\'huile (${oilChanges.length})'),
+        );
+        sections.add(
+          _pdfTable(
+            headers: ['Date', 'Machine', 'Quantité (L)', 'Employé', 'Remarque'],
+            rows: oilChanges
+                .map(
+                  (o) => [
+                    _df.format(o.changedAt),
+                    o.friteuseNom ?? o.friteuseId,
+                    o.quantite.toStringAsFixed(1),
+                    _formatEmployee(o.employeeFirstName, o.employeeLastName),
+                    o.remarque ?? '-',
+                  ],
+                )
+                .toList(),
+          ),
+        );
         sections.add(pw.SizedBox(height: 12));
       } catch (e) {
-        sections.add(pw.Text('Erreur huiles: $e', style: const pw.TextStyle(color: PdfColors.red)));
+        sections.add(
+          pw.Text(
+            'Erreur huiles: $e',
+            style: const pw.TextStyle(color: PdfColors.red),
+          ),
+        );
         sections.add(pw.SizedBox(height: 8));
       }
     }
@@ -505,27 +593,46 @@ class HaccpExportService {
       try {
         final ncs = await _ncRepo.listNonConformities();
         final filtered = ncs.where((nc) {
-          if (startDate != null && nc.detectionDate.isBefore(startDate)) return false;
+          if (startDate != null && nc.detectionDate.isBefore(startDate))
+            return false;
           if (endDate != null) {
-            final end = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+            final end = DateTime(
+              endDate.year,
+              endDate.month,
+              endDate.day,
+              23,
+              59,
+              59,
+            );
             if (nc.detectionDate.isAfter(end)) return false;
           }
           return true;
         }).toList();
 
         sections.add(_pdfSectionTitle('Non-conformités (${filtered.length})'));
-        sections.add(_pdfTable(
-          headers: ['Date', 'N° Fiche', 'Statut', 'Description', 'Catégorie'],
-          rows: filtered.map((nc) => [
-                _df.format(nc.detectionDate),
-                nc.ficheNumber ?? nc.id,
-                _ncStatusLabel(nc.status),
-                nc.description,
-                nc.objectCategory.displayName,
-              ]).toList(),
-        ));
+        sections.add(
+          _pdfTable(
+            headers: ['Date', 'N° Fiche', 'Statut', 'Description', 'Catégorie'],
+            rows: filtered
+                .map(
+                  (nc) => [
+                    _df.format(nc.detectionDate),
+                    nc.ficheNumber ?? nc.id,
+                    _ncStatusLabel(nc.status),
+                    nc.description,
+                    nc.objectCategory.displayName,
+                  ],
+                )
+                .toList(),
+          ),
+        );
       } catch (e) {
-        sections.add(pw.Text('Erreur NC: $e', style: const pw.TextStyle(color: PdfColors.red)));
+        sections.add(
+          pw.Text(
+            'Erreur NC: $e',
+            style: const pw.TextStyle(color: PdfColors.red),
+          ),
+        );
       }
     }
 
@@ -533,35 +640,56 @@ class HaccpExportService {
       try {
         final rappels = await _rappelRepo.getAll();
         final filtered = rappels.where((r) {
-          if (startDate != null && r.dateDetection.isBefore(startDate)) return false;
+          if (startDate != null && r.dateDetection.isBefore(startDate))
+            return false;
           if (endDate != null) {
-            final end = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+            final end = DateTime(
+              endDate.year,
+              endDate.month,
+              endDate.day,
+              23,
+              59,
+              59,
+            );
             if (r.dateDetection.isAfter(end)) return false;
           }
           return true;
         }).toList();
         sections.add(_pdfSectionTitle('Plan de rappel (${filtered.length})'));
-        sections.add(_pdfTable(
-          headers: ['Date', 'Produit', 'Lot', 'Statut', 'Motif'],
-          rows: filtered.map((r) => [
-                _df.format(r.dateDetection),
-                r.produitNom,
-                r.lot ?? '-',
-                r.statut.displayName,
-                _truncateForPdf(r.motif, 40),
-              ]).toList(),
-        ));
+        sections.add(
+          _pdfTable(
+            headers: ['Date', 'Produit', 'Lot', 'Statut', 'Motif'],
+            rows: filtered
+                .map(
+                  (r) => [
+                    _df.format(r.dateDetection),
+                    r.produitNom,
+                    r.lot ?? '-',
+                    r.statut.displayName,
+                    _truncateForPdf(r.motif, 40),
+                  ],
+                )
+                .toList(),
+          ),
+        );
       } catch (e) {
-        sections.add(pw.Text('Erreur rappels: $e', style: const pw.TextStyle(color: PdfColors.red)));
+        sections.add(
+          pw.Text(
+            'Erreur rappels: $e',
+            style: const pw.TextStyle(color: PdfColors.red),
+          ),
+        );
       }
     }
 
     sections.add(pw.SizedBox(height: 20));
     sections.add(pw.Divider());
-    sections.add(pw.Text(
-      'Document généré par HACCPilot - Export destiné au contrôle officiel',
-      style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
-    ));
+    sections.add(
+      pw.Text(
+        'Document généré par HACCPilot - Export destiné au contrôle officiel',
+        style: const pw.TextStyle(fontSize: 8, color: PdfColors.grey600),
+      ),
+    );
 
     pdf.addPage(
       pw.MultiPage(
@@ -574,7 +702,8 @@ class HaccpExportService {
     final appDir = await getApplicationDocumentsDirectory();
     final exportDir = Directory('${appDir.path}/exports_haccp');
     if (!await exportDir.exists()) await exportDir.create(recursive: true);
-    final fileName = 'registre_haccp_${DateFormat('yyyyMMdd_HHmmss').format(now)}.pdf';
+    final fileName =
+        'registre_haccp_${DateFormat('yyyyMMdd_HHmmss').format(now)}.pdf';
     final file = File('${exportDir.path}/$fileName');
     await file.writeAsBytes(await pdf.save());
 
@@ -583,14 +712,17 @@ class HaccpExportService {
   }
 
   pw.Widget _pdfSectionTitle(String title) => pw.Container(
-        margin: const pw.EdgeInsets.only(bottom: 6),
-        child: pw.Text(
-          title,
-          style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
-        ),
-      );
+    margin: const pw.EdgeInsets.only(bottom: 6),
+    child: pw.Text(
+      title,
+      style: pw.TextStyle(fontSize: 14, fontWeight: pw.FontWeight.bold),
+    ),
+  );
 
-  pw.Widget _pdfTable({required List<String> headers, required List<List<String>> rows}) {
+  pw.Widget _pdfTable({
+    required List<String> headers,
+    required List<List<String>> rows,
+  }) {
     return pw.Table(
       border: pw.TableBorder.all(color: PdfColors.grey400, width: 0.5),
       columnWidths: {
@@ -599,17 +731,36 @@ class HaccpExportService {
       children: [
         pw.TableRow(
           decoration: const pw.BoxDecoration(color: PdfColors.grey300),
-          children: headers.map((h) => pw.Padding(
-                padding: const pw.EdgeInsets.all(6),
-                child: pw.Text(h, style: pw.TextStyle(fontSize: 9, fontWeight: pw.FontWeight.bold)),
-              )).toList(),
+          children: headers
+              .map(
+                (h) => pw.Padding(
+                  padding: const pw.EdgeInsets.all(6),
+                  child: pw.Text(
+                    h,
+                    style: pw.TextStyle(
+                      fontSize: 9,
+                      fontWeight: pw.FontWeight.bold,
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
         ),
-        ...rows.map((row) => pw.TableRow(
-              children: row.map((c) => pw.Padding(
+        ...rows.map(
+          (row) => pw.TableRow(
+            children: row
+                .map(
+                  (c) => pw.Padding(
                     padding: const pw.EdgeInsets.all(6),
-                    child: pw.Text(_truncateForPdf(c, 80), style: const pw.TextStyle(fontSize: 8)),
-                  )).toList(),
-            )),
+                    child: pw.Text(
+                      _truncateForPdf(c, 80),
+                      style: const pw.TextStyle(fontSize: 8),
+                    ),
+                  ),
+                )
+                .toList(),
+          ),
+        ),
       ],
     );
   }
@@ -618,7 +769,9 @@ class HaccpExportService {
   Future<void> shareExport(String filePath, {bool isPdf = false}) async {
     await Share.shareXFiles(
       [XFile(filePath)],
-      subject: isPdf ? 'Registre HACCP - Contrôle officiel' : 'Export HACCP - Données',
+      subject: isPdf
+          ? 'Registre HACCP - Contrôle officiel'
+          : 'Export HACCP - Données',
       text: isPdf
           ? 'Registre de traçabilité HACCP - Document pour contrôle officiel'
           : 'Export des données HACCP',

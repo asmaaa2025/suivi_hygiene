@@ -22,7 +22,7 @@ class AuthException extends AppException {
 /// Supabase operation exceptions
 class SupabaseException extends AppException {
   SupabaseException(super.message, {String? code})
-      : super(code: code ?? 'SUPABASE_ERROR');
+    : super(code: code ?? 'SUPABASE_ERROR');
 }
 
 /// Validation exceptions

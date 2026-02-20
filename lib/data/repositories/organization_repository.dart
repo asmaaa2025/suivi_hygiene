@@ -14,12 +14,14 @@ class OrganizationRepository {
         throw Exception('User not authenticated');
       }
 
-      debugPrint('[OrganizationRepo] Looking for organization with id: ${user.id}');
+      debugPrint(
+        '[OrganizationRepo] Looking for organization with id: ${user.id}',
+      );
 
       // Try to find existing organization for this user
       // For simplicity, we'll use user.id as organization name/id
       // In production, you'd have a proper organization management
-      
+
       // Check if an organization with this user's id exists
       final response = await _client
           .from('organizations')
@@ -28,11 +30,15 @@ class OrganizationRepository {
           .maybeSingle();
 
       if (response != null) {
-        debugPrint('[OrganizationRepo] ✅ Found existing organization: ${response['id']}');
+        debugPrint(
+          '[OrganizationRepo] ✅ Found existing organization: ${response['id']}',
+        );
         return response['id'] as String;
       }
 
-      debugPrint('[OrganizationRepo] No organization found, creating new one...');
+      debugPrint(
+        '[OrganizationRepo] No organization found, creating new one...',
+      );
 
       // Create a new organization using user.id as primary key
       try {
@@ -45,24 +51,32 @@ class OrganizationRepository {
             .select('id')
             .single();
 
-        debugPrint('[OrganizationRepo] ✅ Created new organization: ${newOrg['id']}');
+        debugPrint(
+          '[OrganizationRepo] ✅ Created new organization: ${newOrg['id']}',
+        );
         return newOrg['id'] as String;
       } catch (e) {
         // If insert fails (e.g., constraint violation, RLS issue), try to get it again
-        debugPrint('[OrganizationRepo] ⚠️ Insert failed, trying to get again: $e');
+        debugPrint(
+          '[OrganizationRepo] ⚠️ Insert failed, trying to get again: $e',
+        );
         final retryResponse = await _client
             .from('organizations')
             .select('id')
             .eq('id', user.id)
             .maybeSingle();
-        
+
         if (retryResponse != null) {
-          debugPrint('[OrganizationRepo] ✅ Found organization on retry: ${retryResponse['id']}');
+          debugPrint(
+            '[OrganizationRepo] ✅ Found organization on retry: ${retryResponse['id']}',
+          );
           return retryResponse['id'] as String;
         }
-        
+
         // If still not found, log the error and throw
-        debugPrint('[OrganizationRepo] ❌ Failed to create or find organization: $e');
+        debugPrint(
+          '[OrganizationRepo] ❌ Failed to create or find organization: $e',
+        );
         throw Exception('Failed to create or find organization: $e');
       }
     } catch (e, stackTrace) {
@@ -90,4 +104,3 @@ class OrganizationRepository {
     }
   }
 }
-

@@ -32,9 +32,9 @@ class OilChange {
       changedAt: json['changed_at'] != null
           ? (DateTime.tryParse(json['changed_at'].toString()) ?? DateTime.now())
           : (json['created_at'] != null
-              ? (DateTime.tryParse(json['created_at'].toString()) ??
-                  DateTime.now())
-              : DateTime.now()),
+                ? (DateTime.tryParse(json['created_at'].toString()) ??
+                      DateTime.now())
+                : DateTime.now()),
       remarque: json['remarque'] as String?,
       photoUrl: json['photo_url'] as String?,
       createdAt: json['created_at'] != null

@@ -66,12 +66,14 @@ class _NettoyagePageState extends State<NettoyagePage> {
       // Load from Supabase directly (no cache)
       final taches = await _cleaningRepo.getAll();
       final nettoyages = taches
-          .map((t) => <String, dynamic>{
-                'id': t.id,
-                'nom': t.nom,
-                'date': t.createdAt.toIso8601String(),
-                'is_active': t.isActive,
-              })
+          .map(
+            (t) => <String, dynamic>{
+              'id': t.id,
+              'nom': t.nom,
+              'date': t.createdAt.toIso8601String(),
+              'is_active': t.isActive,
+            },
+          )
           .toList();
 
       debugPrint('[NettoyagePage] ✅ Loaded ${nettoyages.length} nettoyages');
@@ -80,13 +82,15 @@ class _NettoyagePageState extends State<NettoyagePage> {
         setState(() {
           // Convert to Map format for compatibility with existing UI
           _nettoyages = nettoyages
-              .map((n) => <String, dynamic>{
-                    'id': n['id'],
-                    'action': n['nom'] ?? 'Nettoyage',
-                    'statut': (n['is_active'] == true) ? 'Actif' : 'Inactif',
-                    'remarque': '',
-                    'date': n['date'],
-                  })
+              .map(
+                (n) => <String, dynamic>{
+                  'id': n['id'],
+                  'action': n['nom'] ?? 'Nettoyage',
+                  'statut': (n['is_active'] == true) ? 'Actif' : 'Inactif',
+                  'remarque': '',
+                  'date': n['date'],
+                },
+              )
               .toList();
         });
       }
@@ -115,19 +119,22 @@ class _NettoyagePageState extends State<NettoyagePage> {
     setState(() => _isLoading = true);
     try {
       debugPrint(
-          '[NettoyagePage] Creating nettoyage for action: $_selectedAction');
+        '[NettoyagePage] Creating nettoyage for action: $_selectedAction',
+      );
 
       // Note: This page uses old format. For now, we'll create a simple task-based nettoyage
       // In production, you'd want to map _selectedAction to a tache_id
       // For now, we'll skip creation and show a message
       debugPrint(
-          '[NettoyagePage] ⚠️ Old format detected. Use CleaningPage instead.');
+        '[NettoyagePage] ⚠️ Old format detected. Use CleaningPage instead.',
+      );
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text(
-                'Cette page utilise un format obsolète. Utilisez la page Nettoyage principale.'),
+              'Cette page utilise un format obsolète. Utilisez la page Nettoyage principale.',
+            ),
             backgroundColor: Colors.orange,
           ),
         );
@@ -235,8 +242,11 @@ class _NettoyagePageState extends State<NettoyagePage> {
                                   labelText: 'Date',
                                   border: OutlineInputBorder(),
                                 ),
-                                child: Text(DateFormat('dd/MM/yyyy')
-                                    .format(_selectedDate)),
+                                child: Text(
+                                  DateFormat(
+                                    'dd/MM/yyyy',
+                                  ).format(_selectedDate),
+                                ),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -260,13 +270,15 @@ class _NettoyagePageState extends State<NettoyagePage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.blue.shade600,
                                   foregroundColor: Colors.white,
-                                  padding:
-                                      const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                 ),
                                 child: Text(
                                   'Enregistrer le nettoyage',
                                   style: GoogleFonts.montserrat(
-                                      fontWeight: FontWeight.bold),
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ),
                             ),
@@ -320,8 +332,9 @@ class _NettoyagePageState extends State<NettoyagePage> {
                                     itemBuilder: (context, index) {
                                       final nettoyage = _nettoyages[index];
                                       return Card(
-                                        margin:
-                                            const EdgeInsets.only(bottom: 8),
+                                        margin: const EdgeInsets.only(
+                                          bottom: 8,
+                                        ),
                                         child: ListTile(
                                           leading: Icon(
                                             Icons.cleaning_services,
@@ -330,19 +343,22 @@ class _NettoyagePageState extends State<NettoyagePage> {
                                           title: Text(
                                             nettoyage['action'] ?? 'N/A',
                                             style: GoogleFonts.montserrat(
-                                                fontWeight: FontWeight.w600),
+                                              fontWeight: FontWeight.w600,
+                                            ),
                                           ),
                                           subtitle: Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                DateFormat('dd/MM/yyyy HH:mm')
-                                                    .format(
-                                                  DateTime.parse(nettoyage[
-                                                          'date'] ??
-                                                      DateTime.now()
-                                                          .toIso8601String()),
+                                                DateFormat(
+                                                  'dd/MM/yyyy HH:mm',
+                                                ).format(
+                                                  DateTime.parse(
+                                                    nettoyage['date'] ??
+                                                        DateTime.now()
+                                                            .toIso8601String(),
+                                                  ),
                                                 ),
                                               ),
                                               if (nettoyage['remarque']
@@ -355,7 +371,8 @@ class _NettoyagePageState extends State<NettoyagePage> {
                                             label: Text(
                                               nettoyage['statut'] ?? 'Terminé',
                                               style: const TextStyle(
-                                                  color: Colors.white),
+                                                color: Colors.white,
+                                              ),
                                             ),
                                             backgroundColor:
                                                 Colors.green.shade600,

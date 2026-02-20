@@ -34,7 +34,10 @@ void main() {
     });
 
     test('normalizes whitespace', () {
-      expect(sanitizer.sanitizeForZpl('  multiple   spaces  ').trim(), isNot(contains('  ')));
+      expect(
+        sanitizer.sanitizeForZpl('  multiple   spaces  ').trim(),
+        isNot(contains('  ')),
+      );
     });
 
     test('handles mixed content', () {
@@ -56,7 +59,10 @@ void main() {
     });
 
     test('removes control characters', () {
-      expect(sanitizer.sanitizeForDisplay('Hi\x00There'), isNot(contains('\x00')));
+      expect(
+        sanitizer.sanitizeForDisplay('Hi\x00There'),
+        isNot(contains('\x00')),
+      );
     });
 
     test('normalizes multiple spaces', () {
@@ -70,7 +76,10 @@ void main() {
     });
 
     test('removes control characters from input', () {
-      expect(sanitizer.sanitizeForInput('text\x07\x1F'), isNot(contains('\x07')));
+      expect(
+        sanitizer.sanitizeForInput('text\x07\x1F'),
+        isNot(contains('\x07')),
+      );
     });
   });
 

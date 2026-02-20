@@ -113,7 +113,7 @@ class _AppTopBarState extends State<AppTopBar> {
       ),
       child: SafeArea(
         bottom: false,
-          child: Padding(
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -123,11 +123,13 @@ class _AppTopBarState extends State<AppTopBar> {
               Flexible(
                 flex: 2,
                 child: Text(
-                  widget.organizationName ?? _organizationName ?? 'Organisation',
+                  widget.organizationName ??
+                      _organizationName ??
+                      'Organisation',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
-                        fontSize: 10,
-                      ),
+                    color: Colors.grey[600],
+                    fontSize: 10,
+                  ),
                   overflow: TextOverflow.ellipsis,
                   maxLines: 1,
                   textAlign: TextAlign.left,
@@ -146,12 +148,17 @@ class _AppTopBarState extends State<AppTopBar> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.person, size: 16, color: AppTheme.primaryBlue),
+                          Icon(
+                            Icons.person,
+                            size: 16,
+                            color: AppTheme.primaryBlue,
+                          ),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
                               employeeName,
-                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                   ),
@@ -180,11 +187,17 @@ class _AppTopBarState extends State<AppTopBar> {
                     ElevatedButton.icon(
                       onPressed: () => context.go('/employee-selection'),
                       icon: const Icon(Icons.swap_horiz, size: 16),
-                      label: const Text('Changer', style: TextStyle(fontSize: 11)),
+                      label: const Text(
+                        'Changer',
+                        style: TextStyle(fontSize: 11),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryBlue,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
                         minimumSize: const Size(0, 32),
                         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                       ),
@@ -225,9 +238,9 @@ class _AppTopBarState extends State<AppTopBar> {
       // Redirect to login page immediately
       if (mounted) {
         context.go('/login');
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Déconnexion réussie')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Déconnexion réussie')));
       }
     } catch (e) {
       if (mounted) {
@@ -295,4 +308,3 @@ class _AppTopBarState extends State<AppTopBar> {
     );
   }
 }
-

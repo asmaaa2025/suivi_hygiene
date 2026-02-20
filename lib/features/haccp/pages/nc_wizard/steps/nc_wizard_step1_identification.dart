@@ -1,5 +1,5 @@
 /// NC Wizard Step 1/7 - Identification
-/// 
+///
 /// Step 1: Date/heure, Site/zone, Type de NC, Gravité, Détectée par
 
 import 'package:flutter/material.dart';
@@ -37,16 +37,16 @@ class NcWizardStep1Identification extends StatelessWidget {
             Text(
               'Identification',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Informations de base sur la non-conformité',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
             // Date/heure de détection
@@ -66,7 +66,9 @@ class NcWizardStep1Identification extends StatelessWidget {
               helperText: 'Lieu où la non-conformité a été détectée',
               value: draft.siteZone,
               onChanged: (value) {
-                onDraftChanged((d) => d.copyWith(siteZone: value.isEmpty ? null : value));
+                onDraftChanged(
+                  (d) => d.copyWith(siteZone: value.isEmpty ? null : value),
+                );
               },
             ),
             const SizedBox(height: 24),
@@ -78,7 +80,10 @@ class NcWizardStep1Identification extends StatelessWidget {
               required: true,
               hintText: 'Sélectionner un type',
               items: const [
-                DropdownMenuItem(value: 'Température', child: Text('Température')),
+                DropdownMenuItem(
+                  value: 'Température',
+                  child: Text('Température'),
+                ),
                 DropdownMenuItem(value: 'Réception', child: Text('Réception')),
                 DropdownMenuItem(value: 'Nettoyage', child: Text('Nettoyage')),
                 DropdownMenuItem(value: 'Huile', child: Text('Huile')),
@@ -121,9 +126,9 @@ class NcWizardStep1Identification extends StatelessWidget {
                   Text(
                     'Détectée par',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                        ),
+                      fontWeight: FontWeight.bold,
+                      fontSize: 18,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Row(
@@ -139,10 +144,7 @@ class NcWizardStep1Identification extends StatelessWidget {
                   if (currentEmployee != null)
                     Text(
                       'ID: ${currentEmployee!.id}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                 ],
               ),
@@ -154,4 +156,3 @@ class NcWizardStep1Identification extends StatelessWidget {
     );
   }
 }
-

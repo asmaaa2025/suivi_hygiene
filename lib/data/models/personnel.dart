@@ -47,7 +47,8 @@ class Personnel {
           ? DateTime.parse(json['end_date'] as String)
           : null,
       contractType: ContractType.fromString(
-          json['contract_type'] as String? ?? 'CDI'),
+        json['contract_type'] as String? ?? 'CDI',
+      ),
       isForeignWorker: json['is_foreign_worker'] as bool? ?? false,
       foreignWorkPermitType: json['foreign_work_permit_type'] as String?,
       foreignWorkPermitNumber: json['foreign_work_permit_number'] as String?,
@@ -98,7 +99,8 @@ class Personnel {
       endDate: endDate ?? this.endDate,
       contractType: contractType ?? this.contractType,
       isForeignWorker: isForeignWorker ?? this.isForeignWorker,
-      foreignWorkPermitType: foreignWorkPermitType ?? this.foreignWorkPermitType,
+      foreignWorkPermitType:
+          foreignWorkPermitType ?? this.foreignWorkPermitType,
       foreignWorkPermitNumber:
           foreignWorkPermitNumber ?? this.foreignWorkPermitNumber,
       userId: userId ?? this.userId,
@@ -201,4 +203,3 @@ enum ContractType {
     }
   }
 }
-

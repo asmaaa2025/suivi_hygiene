@@ -51,7 +51,8 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
         });
       }
       debugPrint(
-          '[AppareilsManagement] ✅ Loaded ${appareils.length} appareils');
+        '[AppareilsManagement] ✅ Loaded ${appareils.length} appareils',
+      );
     } catch (e, stackTrace) {
       debugPrint('[AppareilsManagement] ❌ Error loading appareils: $e');
       debugPrint('[AppareilsManagement] StackTrace: $stackTrace');
@@ -112,8 +113,9 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
                         hintText: 'Optionnel',
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -125,8 +127,9 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
                         hintText: 'Optionnel',
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                     ),
                   ),
                 ],
@@ -175,9 +178,9 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
           setState(() => _isLoading = false);
         }
       }
@@ -221,8 +224,9 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
                         hintText: 'Optionnel',
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -234,8 +238,9 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
                         hintText: 'Optionnel',
                         border: OutlineInputBorder(),
                       ),
-                      keyboardType:
-                          const TextInputType.numberWithOptions(decimal: true),
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
                     ),
                   ),
                 ],
@@ -285,9 +290,9 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
           setState(() => _isLoading = false);
         }
       }
@@ -300,7 +305,8 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
       builder: (context) => AlertDialog(
         title: const Text('Supprimer l\'appareil'),
         content: Text(
-            'Êtes-vous sûr de vouloir supprimer "${appareil.nom}" ?\n\nCette action est irréversible.'),
+          'Êtes-vous sûr de vouloir supprimer "${appareil.nom}" ?\n\nCette action est irréversible.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -308,8 +314,10 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            child: Text('Supprimer',
-                style: TextStyle(color: AppTheme.statusCritical)),
+            child: Text(
+              'Supprimer',
+              style: TextStyle(color: AppTheme.statusCritical),
+            ),
           ),
         ],
       ),
@@ -327,9 +335,9 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
           setState(() => _isLoading = false);
         }
       }
@@ -356,132 +364,131 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
               itemBuilder: (context, index) => const ListItemSkeleton(),
             )
           : _error != null
-              ? ErrorState(message: _error!, onRetry: _loadAppareils)
-              : _appareils.isEmpty
-                  ? const EmptyState(
-                      title: 'Aucun appareil',
-                      message: 'Ajoutez votre premier appareil de mesure',
-                      icon: Icons.device_thermostat,
-                    )
-                  : RefreshIndicator(
-                      onRefresh: _loadAppareils,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _appareils.length,
-                        itemBuilder: (context, index) {
-                          final appareil = _appareils[index];
+          ? ErrorState(message: _error!, onRetry: _loadAppareils)
+          : _appareils.isEmpty
+          ? const EmptyState(
+              title: 'Aucun appareil',
+              message: 'Ajoutez votre premier appareil de mesure',
+              icon: Icons.device_thermostat,
+            )
+          : RefreshIndicator(
+              onRefresh: _loadAppareils,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _appareils.length,
+                itemBuilder: (context, index) {
+                  final appareil = _appareils[index];
 
-                          return SectionCard(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
+                  return SectionCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    appareil.nom,
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleMedium,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  if (appareil.tempMin != null ||
+                                      appareil.tempMax != null)
+                                    Row(
+                                      children: [
+                                        if (appareil.tempMin != null)
                                           Text(
-                                            appareil.nom,
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .titleMedium,
+                                            'Min: ${appareil.tempMin!.toStringAsFixed(1)}°C',
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
                                           ),
-                                          const SizedBox(height: 4),
-                                          if (appareil.tempMin != null ||
-                                              appareil.tempMax != null)
-                                            Row(
-                                              children: [
-                                                if (appareil.tempMin != null)
-                                                  Text(
-                                                    'Min: ${appareil.tempMin!.toStringAsFixed(1)}°C',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodySmall,
-                                                  ),
-                                                if (appareil.tempMin != null &&
-                                                    appareil.tempMax != null)
-                                                  Text(' • ',
-                                                      style: TextStyle(
-                                                          color: AppTheme
-                                                              .textSecondary)),
-                                                if (appareil.tempMax != null)
-                                                  Text(
-                                                    'Max: ${appareil.tempMax!.toStringAsFixed(1)}°C',
-                                                    style: Theme.of(context)
-                                                        .textTheme
-                                                        .bodySmall,
-                                                  ),
-                                              ],
-                                            )
-                                          else
-                                            Text(
-                                              'Aucun seuil défini',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color:
-                                                        AppTheme.textTertiary,
-                                                    fontStyle: FontStyle.italic,
-                                                  ),
+                                        if (appareil.tempMin != null &&
+                                            appareil.tempMax != null)
+                                          Text(
+                                            ' • ',
+                                            style: TextStyle(
+                                              color: AppTheme.textSecondary,
                                             ),
-                                        ],
-                                      ),
-                                    ),
-                                    PopupMenuButton(
-                                      itemBuilder: (context) => [
-                                        PopupMenuItem(
-                                          value: 'edit',
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.edit,
-                                                  color: AppTheme.primaryBlue),
-                                              const SizedBox(width: 8),
-                                              const Text('Modifier'),
-                                            ],
                                           ),
-                                        ),
-                                        PopupMenuItem(
-                                          value: 'delete',
-                                          child: Row(
-                                            children: [
-                                              Icon(Icons.delete,
-                                                  color:
-                                                      AppTheme.statusCritical),
-                                              const SizedBox(width: 8),
-                                              const Text('Supprimer'),
-                                            ],
+                                        if (appareil.tempMax != null)
+                                          Text(
+                                            'Max: ${appareil.tempMax!.toStringAsFixed(1)}°C',
+                                            style: Theme.of(
+                                              context,
+                                            ).textTheme.bodySmall,
                                           ),
-                                        ),
                                       ],
-                                      onSelected: (value) {
-                                        if (value == 'edit') {
-                                          _showEditAppareilDialog(appareil);
-                                        } else if (value == 'delete') {
-                                          _deleteAppareil(appareil);
-                                        }
-                                      },
+                                    )
+                                  else
+                                    Text(
+                                      'Aucun seuil défini',
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            color: AppTheme.textTertiary,
+                                            fontStyle: FontStyle.italic,
+                                          ),
                                     ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Créé le ${DateFormat('dd/MM/yyyy').format(appareil.createdAt)}',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodySmall
-                                      ?.copyWith(
-                                        color: AppTheme.textSecondary,
+                                ],
+                              ),
+                            ),
+                            PopupMenuButton(
+                              itemBuilder: (context) => [
+                                PopupMenuItem(
+                                  value: 'edit',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.edit,
+                                        color: AppTheme.primaryBlue,
                                       ),
+                                      const SizedBox(width: 8),
+                                      const Text('Modifier'),
+                                    ],
+                                  ),
+                                ),
+                                PopupMenuItem(
+                                  value: 'delete',
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.delete,
+                                        color: AppTheme.statusCritical,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      const Text('Supprimer'),
+                                    ],
+                                  ),
                                 ),
                               ],
+                              onSelected: (value) {
+                                if (value == 'edit') {
+                                  _showEditAppareilDialog(appareil);
+                                } else if (value == 'delete') {
+                                  _deleteAppareil(appareil);
+                                }
+                              },
                             ),
-                          );
-                        },
-                      ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Créé le ${DateFormat('dd/MM/yyyy').format(appareil.createdAt)}',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppTheme.textSecondary),
+                        ),
+                      ],
                     ),
+                  );
+                },
+              ),
+            ),
     );
   }
 }

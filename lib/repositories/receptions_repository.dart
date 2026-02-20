@@ -37,10 +37,12 @@ class ReceptionsRepository extends BaseRepository {
           .eq('user_id', currentUserId) // Filter by user_id
           .order('nom');
 
-      final List<Map<String, dynamic>> list =
-          List<Map<String, dynamic>>.from(data);
+      final List<Map<String, dynamic>> list = List<Map<String, dynamic>>.from(
+        data,
+      );
       debugPrint(
-          '[$_suppliersTable] [GET_SUPPLIERS] ✅ Success: Fetched ${list.length} suppliers');
+        '[$_suppliersTable] [GET_SUPPLIERS] ✅ Success: Fetched ${list.length} suppliers',
+      );
       return list;
     } catch (e) {
       debugPrint('[$_suppliersTable] [GET_SUPPLIERS] ❌ Error: ${e.toString()}');
@@ -53,27 +55,36 @@ class ReceptionsRepository extends BaseRepository {
   /// Log Supabase errors with full details
   void _logSupabaseError(dynamic error, String operation) {
     debugPrint(
-        '[$_suppliersTable] [${operation.toUpperCase()}] ========== ERROR DETAILS ==========');
+      '[$_suppliersTable] [${operation.toUpperCase()}] ========== ERROR DETAILS ==========',
+    );
     debugPrint(
-        '[$_suppliersTable] [${operation.toUpperCase()}] Error type: ${error.runtimeType}');
+      '[$_suppliersTable] [${operation.toUpperCase()}] Error type: ${error.runtimeType}',
+    );
     debugPrint(
-        '[$_suppliersTable] [${operation.toUpperCase()}] Error message: ${error.toString()}');
+      '[$_suppliersTable] [${operation.toUpperCase()}] Error message: ${error.toString()}',
+    );
 
     if (error is PostgrestException) {
       debugPrint(
-          '[$_suppliersTable] [${operation.toUpperCase()}] PostgrestException details:');
+        '[$_suppliersTable] [${operation.toUpperCase()}] PostgrestException details:',
+      );
       debugPrint(
-          '[$_suppliersTable] [${operation.toUpperCase()}]   - code: ${error.code}');
+        '[$_suppliersTable] [${operation.toUpperCase()}]   - code: ${error.code}',
+      );
       debugPrint(
-          '[$_suppliersTable] [${operation.toUpperCase()}]   - message: ${error.message}');
+        '[$_suppliersTable] [${operation.toUpperCase()}]   - message: ${error.message}',
+      );
       debugPrint(
-          '[$_suppliersTable] [${operation.toUpperCase()}]   - details: ${error.details}');
+        '[$_suppliersTable] [${operation.toUpperCase()}]   - details: ${error.details}',
+      );
       debugPrint(
-          '[$_suppliersTable] [${operation.toUpperCase()}]   - hint: ${error.hint}');
+        '[$_suppliersTable] [${operation.toUpperCase()}]   - hint: ${error.hint}',
+      );
     }
 
     debugPrint(
-        '[$_suppliersTable] [${operation.toUpperCase()}] ====================================');
+      '[$_suppliersTable] [${operation.toUpperCase()}] ====================================',
+    );
   }
 
   /// Create supplier
@@ -84,26 +95,28 @@ class ReceptionsRepository extends BaseRepository {
       }
 
       final currentUserId = userId;
-      final payload = {
-        'nom': nom,
-        'user_id': currentUserId,
-      };
+      final payload = {'nom': nom, 'user_id': currentUserId};
 
       debugPrint('[$_suppliersTable] [CREATE_SUPPLIER] Starting create');
       debugPrint('[$_suppliersTable] [CREATE_SUPPLIER] userId: $currentUserId');
       debugPrint('[$_suppliersTable] [CREATE_SUPPLIER] payload: $payload');
 
-      final result =
-          await client.from(_suppliersTable).insert(payload).select().single();
+      final result = await client
+          .from(_suppliersTable)
+          .insert(payload)
+          .select()
+          .single();
 
       await _cache.clearTable('suppliers');
       debugPrint(
-          '[$_suppliersTable] [CREATE_SUPPLIER] ✅ Success: Created supplier ${result['id']}');
+        '[$_suppliersTable] [CREATE_SUPPLIER] ✅ Success: Created supplier ${result['id']}',
+      );
       debugPrint('[$_suppliersTable] [CREATE_SUPPLIER] Result: $result');
       return result;
     } catch (e) {
       debugPrint(
-          '[$_suppliersTable] [CREATE_SUPPLIER] ❌ Error: ${e.toString()}');
+        '[$_suppliersTable] [CREATE_SUPPLIER] ❌ Error: ${e.toString()}',
+      );
       _logSupabaseError(e, 'createSupplier');
       if (e is NetworkException) rethrow;
       throw SupabaseException('Failed to create supplier: ${e.toString()}');

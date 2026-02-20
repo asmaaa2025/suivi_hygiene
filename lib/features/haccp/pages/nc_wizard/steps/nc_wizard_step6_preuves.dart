@@ -1,5 +1,5 @@
 /// NC Wizard Step 6/7 - Preuves / Pièces jointes
-/// 
+///
 /// Step 6: Photos, Documents, Commentaires preuves
 
 import 'dart:io';
@@ -40,7 +40,9 @@ class _NcWizardStep6PreuvesState extends State<NcWizardStep6Preuves> {
       debugPrint('[NcWizardStep6] Error picking image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de la sélection de l\'image: $e')),
+          SnackBar(
+            content: Text('Erreur lors de la sélection de l\'image: $e'),
+          ),
         );
       }
     }
@@ -65,7 +67,9 @@ class _NcWizardStep6PreuvesState extends State<NcWizardStep6Preuves> {
       debugPrint('[NcWizardStep6] Error picking document: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur lors de la sélection du document: $e')),
+          SnackBar(
+            content: Text('Erreur lors de la sélection du document: $e'),
+          ),
         );
       }
     }
@@ -96,25 +100,25 @@ class _NcWizardStep6PreuvesState extends State<NcWizardStep6Preuves> {
             Text(
               'Preuves / Pièces jointes',
               style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: 24,
+              ),
             ),
             const SizedBox(height: 8),
             Text(
               'Ajoutez des photos et documents pour étayer la non-conformité',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: Colors.grey[600]),
             ),
             const SizedBox(height: 32),
             // Photos section
             Text(
               'Photos',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
             ),
             const SizedBox(height: 12),
             Row(
@@ -172,7 +176,11 @@ class _NcWizardStep6PreuvesState extends State<NcWizardStep6Preuves> {
                         top: 4,
                         right: 4,
                         child: IconButton(
-                          icon: const Icon(Icons.close, color: Colors.white, size: 20),
+                          icon: const Icon(
+                            Icons.close,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                           onPressed: () => _removePhoto(index),
                           style: IconButton.styleFrom(
                             backgroundColor: Colors.black54,
@@ -191,9 +199,9 @@ class _NcWizardStep6PreuvesState extends State<NcWizardStep6Preuves> {
             Text(
               'Documents',
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                  ),
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+              ),
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
@@ -228,10 +236,15 @@ class _NcWizardStep6PreuvesState extends State<NcWizardStep6Preuves> {
             // Commentaires preuves
             WizardTextInput(
               label: 'Commentaires sur les preuves',
-              helperText: 'Commentaires additionnels sur les pièces jointes (optionnel)',
+              helperText:
+                  'Commentaires additionnels sur les pièces jointes (optionnel)',
               value: widget.draft.evidenceComments,
               onChanged: (value) {
-                widget.onDraftChanged((d) => d.copyWith(evidenceComments: value.isEmpty ? null : value));
+                widget.onDraftChanged(
+                  (d) => d.copyWith(
+                    evidenceComments: value.isEmpty ? null : value,
+                  ),
+                );
               },
               maxLines: 3,
             ),
@@ -242,4 +255,3 @@ class _NcWizardStep6PreuvesState extends State<NcWizardStep6Preuves> {
     );
   }
 }
-

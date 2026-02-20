@@ -1,5 +1,5 @@
 /// Compliance Repository
-/// 
+///
 /// Handles database operations for compliance requirements and events
 
 import 'package:flutter/foundation.dart';
@@ -16,7 +16,9 @@ class ComplianceRepository {
   SupabaseClient get _client => _supabase.client;
 
   /// Get all compliance requirements for an organization
-  Future<List<ComplianceRequirement>> getRequirements(String organizationId) async {
+  Future<List<ComplianceRequirement>> getRequirements(
+    String organizationId,
+  ) async {
     try {
       await _network.hasConnection();
 
@@ -28,7 +30,10 @@ class ComplianceRepository {
           .order('code');
 
       return (response as List)
-          .map((json) => ComplianceRequirement.fromJson(json as Map<String, dynamic>))
+          .map(
+            (json) =>
+                ComplianceRequirement.fromJson(json as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       debugPrint('[ComplianceRepo] Error fetching requirements: $e');
@@ -83,7 +88,9 @@ class ComplianceRepository {
   }
 
   /// Get events for a specific requirement
-  Future<List<ComplianceEvent>> getEventsForRequirement(String requirementId) async {
+  Future<List<ComplianceEvent>> getEventsForRequirement(
+    String requirementId,
+  ) async {
     try {
       await _network.hasConnection();
 
@@ -179,10 +186,7 @@ class ComplianceRepository {
     try {
       await _network.hasConnection();
 
-      await _client
-          .from('compliance_events')
-          .delete()
-          .eq('id', eventId);
+      await _client.from('compliance_events').delete().eq('id', eventId);
     } catch (e) {
       debugPrint('[ComplianceRepo] Error deleting event: $e');
       if (e is NetworkException) rethrow;
@@ -190,13 +194,3 @@ class ComplianceRepository {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-

@@ -1,5 +1,5 @@
 /// Compliance Service
-/// 
+///
 /// Handles compliance requirement calculations, status, and alert generation
 
 import 'package:flutter/foundation.dart';
@@ -14,9 +14,9 @@ class ComplianceService {
     final requirementEvents = events
         .where((e) => e.requirementId == requirement.id)
         .toList();
-    
+
     if (requirementEvents.isEmpty) return null;
-    
+
     requirementEvents.sort((a, b) => b.eventDate.compareTo(a.eventDate));
     return requirementEvents.first.eventDate;
   }
@@ -30,7 +30,7 @@ class ComplianceService {
       // If no previous event, due date is today (immediately due)
       return DateTime.now();
     }
-    
+
     return lastEventDate.add(Duration(days: requirement.frequencyDays));
   }
 
@@ -42,7 +42,7 @@ class ComplianceService {
     final lastEventDate = getLastEventDate(requirement, events);
     final nextDueDate = computeDueDate(requirement, lastEventDate);
     final today = DateTime.now();
-    
+
     ComplianceStatus status;
     int? daysUntilDue;
     int? daysOverdue;
@@ -54,7 +54,7 @@ class ComplianceService {
     } else {
       final daysDifference = nextDueDate.difference(today).inDays;
       final warningThreshold = 14; // Days before due date to show warning
-      
+
       if (daysDifference < -requirement.graceDays) {
         // Overdue (past grace period)
         status = ComplianceStatus.overdue;
@@ -128,13 +128,3 @@ class ComplianceService {
     }
   }
 }
-
-
-
-
-
-
-
-
-
-

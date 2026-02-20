@@ -31,17 +31,19 @@ class _TableauAllergenesPageState extends State<TableauAllergenesPage> {
     try {
       final list = await _productsRepo.getAll();
       final produits = list.map((m) => Produit.fromMap(m)).toList();
-      if (mounted) setState(() {
-        _produits = produits;
-        _isLoading = false;
-      });
+      if (mounted)
+        setState(() {
+          _produits = produits;
+          _isLoading = false;
+        });
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  List<Produit> get _produitsAvecAllergenes =>
-      _produits.where((p) => p.allergenes != null && p.allergenes!.trim().isNotEmpty).toList();
+  List<Produit> get _produitsAvecAllergenes => _produits
+      .where((p) => p.allergenes != null && p.allergenes!.trim().isNotEmpty)
+      .toList();
 
   @override
   Widget build(BuildContext context) {
@@ -58,31 +60,34 @@ class _TableauAllergenesPageState extends State<TableauAllergenesPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _produitsAvecAllergenes.isEmpty
-              ? _buildEmptyState()
-              : RefreshIndicator(
-                  onRefresh: _load,
-                  child: ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: _produitsAvecAllergenes.length,
-                    itemBuilder: (context, i) {
-                      final p = _produitsAvecAllergenes[i];
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        child: ListTile(
-                          leading: const CircleAvatar(
-                            child: Icon(Icons.warning_amber, color: Colors.orange),
-                          ),
-                          title: Text(p.nom, style: const TextStyle(fontWeight: FontWeight.bold)),
-                          subtitle: Text(
-                            p.allergenes!,
-                            style: TextStyle(color: Colors.grey[700], fontSize: 13),
-                          ),
-                          isThreeLine: true,
-                        ),
-                      );
-                    },
-                  ),
-                ),
+          ? _buildEmptyState()
+          : RefreshIndicator(
+              onRefresh: _load,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(16),
+                itemCount: _produitsAvecAllergenes.length,
+                itemBuilder: (context, i) {
+                  final p = _produitsAvecAllergenes[i];
+                  return Card(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    child: ListTile(
+                      leading: const CircleAvatar(
+                        child: Icon(Icons.warning_amber, color: Colors.orange),
+                      ),
+                      title: Text(
+                        p.nom,
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
+                      subtitle: Text(
+                        p.allergenes!,
+                        style: TextStyle(color: Colors.grey[700], fontSize: 13),
+                      ),
+                      isThreeLine: true,
+                    ),
+                  );
+                },
+              ),
+            ),
     );
   }
 

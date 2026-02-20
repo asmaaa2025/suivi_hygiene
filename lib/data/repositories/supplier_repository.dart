@@ -5,7 +5,7 @@ import '../models/supplier.dart';
 /// Repository for suppliers
 class SupplierRepository {
   final SupabaseClient _client = Supabase.instance.client;
-  
+
   // Expose client for organization access
   SupabaseClient get client => _client;
 
@@ -19,17 +19,14 @@ class SupplierRepository {
       }
 
       debugPrint('[SupplierRepo] Fetching suppliers, user: ${user.id}');
-      var query = _client
-          .from('suppliers')
-          .select()
-          .eq('owner_id', user.id);
-      
+      var query = _client.from('suppliers').select().eq('owner_id', user.id);
+
       if (includeOccasional != null) {
         query = query.eq('is_occasional', includeOccasional);
       }
-      
+
       final response = await query.order('name');
-      
+
       final suppliers = (response as List)
           .map((json) => Supplier.fromJson(json as Map<String, dynamic>))
           .toList();
@@ -88,7 +85,7 @@ class SupplierRepository {
           })
           .select()
           .single();
-      
+
       return Supplier.fromJson(response);
     } catch (e) {
       debugPrint('[SupplierRepo] ❌ Error creating supplier: $e');
@@ -133,4 +130,3 @@ class SupplierRepository {
     }
   }
 }
-

@@ -66,8 +66,10 @@ class _DocumentsPageState extends State<DocumentsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  'Erreur: ${e is AppException ? e.message : e.toString()}')),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
+          ),
         );
       }
     } finally {
@@ -79,9 +81,9 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
   Future<void> _ajouterFichier() async {
     if (!_isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Network required')));
       return;
     }
 
@@ -94,8 +96,10 @@ class _DocumentsPageState extends State<DocumentsPage> {
             '${const Uuid().v4()}_${path.basename(pickedFile.path)}';
 
         // Upload to Supabase Storage
-        final storageUrl =
-            await _documentsRepo.uploadFile(pickedFile, fileName);
+        final storageUrl = await _documentsRepo.uploadFile(
+          pickedFile,
+          fileName,
+        );
 
         // Create document record
         await _documentsRepo.createDocument(
@@ -112,8 +116,10 @@ class _DocumentsPageState extends State<DocumentsPage> {
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  'Erreur: ${e is AppException ? e.message : e.toString()}')),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
+          ),
         );
       } finally {
         if (mounted) {
@@ -133,15 +139,19 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
   Future<void> _ajouterPhoto({required ImageSource source}) async {
     if (!_isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Network required')));
       return;
     }
 
     try {
       final XFile? photo = await _picker.pickImage(
-          source: source, maxWidth: 2048, maxHeight: 2048, imageQuality: 90);
+        source: source,
+        maxWidth: 2048,
+        maxHeight: 2048,
+        imageQuality: 90,
+      );
       if (photo != null) {
         setState(() => _isLoading = true);
         try {
@@ -150,8 +160,10 @@ class _DocumentsPageState extends State<DocumentsPage> {
               '${const Uuid().v4()}_photo${path.extension(photo.path)}';
 
           // Upload to Supabase Storage
-          final storageUrl =
-              await _documentsRepo.uploadFile(imageFile, fileName);
+          final storageUrl = await _documentsRepo.uploadFile(
+            imageFile,
+            fileName,
+          );
 
           // Create document record
           await _documentsRepo.createDocument(
@@ -168,8 +180,10 @@ class _DocumentsPageState extends State<DocumentsPage> {
         } catch (e) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(
-                    'Erreur: ${e is AppException ? e.message : e.toString()}')),
+              content: Text(
+                'Erreur: ${e is AppException ? e.message : e.toString()}',
+              ),
+            ),
           );
         } finally {
           if (mounted) {
@@ -199,8 +213,9 @@ class _DocumentsPageState extends State<DocumentsPage> {
         await _loadDocuments();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content:
-                Text('Document scanné ajouté : ${path.basename(newFile.path)}'),
+            content: Text(
+              'Document scanné ajouté : ${path.basename(newFile.path)}',
+            ),
             backgroundColor: Colors.green,
           ),
         );
@@ -217,9 +232,9 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
   Future<void> _supprimerFichier(Map<String, dynamic> document) async {
     if (!_isOnline) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Network required')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Network required')));
       return;
     }
 
@@ -230,11 +245,13 @@ class _DocumentsPageState extends State<DocumentsPage> {
         content: const Text('Supprimer ce document ?'),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Annuler')),
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Annuler'),
+          ),
           TextButton(
-              onPressed: () => Navigator.pop(ctx, true),
-              child: const Text('Supprimer')),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Supprimer'),
+          ),
         ],
       ),
     );
@@ -244,19 +261,23 @@ class _DocumentsPageState extends State<DocumentsPage> {
     try {
       final storagePath = document['chemin'] as String?;
       await _documentsRepo.deleteDocument(
-          document['id'] as String, storagePath);
+        document['id'] as String,
+        storagePath,
+      );
       await _loadDocuments();
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Document supprimé')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Document supprimé')));
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-              content: Text(
-                  'Erreur: ${e is AppException ? e.message : e.toString()}')),
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
+          ),
         );
       }
     } finally {
@@ -357,8 +378,9 @@ class _DocumentsPageState extends State<DocumentsPage> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('Confirmer la suppression'),
-        content:
-            Text('Êtes-vous sûr de vouloir supprimer "${document['nom']}" ?'),
+        content: Text(
+          'Êtes-vous sûr de vouloir supprimer "${document['nom']}" ?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -443,143 +465,138 @@ class _DocumentsPageState extends State<DocumentsPage> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : _documents.isEmpty
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.folder_open,
-                        size: 80,
-                        color: Colors.grey.shade400,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        'Aucun document',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        _isOnline
-                            ? 'Appuyez sur + pour ajouter des documents'
-                            : 'Network required to load documents',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade500,
-                        ),
-                      ),
-                    ],
+          ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.folder_open,
+                    size: 80,
+                    color: Colors.grey.shade400,
                   ),
-                )
-              : ListView.builder(
-                  padding: EdgeInsets.all(16),
-                  itemCount: _documents.length,
-                  itemBuilder: (_, index) {
-                    final document = _documents[index];
-                    final fileName = document['nom'] as String? ?? 'Document';
-                    final fileSize = document['taille'] as int? ?? 0;
-                    final dateStr = document['date'] as String?;
-                    final fileDate = dateStr != null
-                        ? DateTime.parse(dateStr)
-                        : DateTime.now();
+                  SizedBox(height: 16),
+                  Text(
+                    'Aucun document',
+                    style: TextStyle(fontSize: 18, color: Colors.grey.shade600),
+                  ),
+                  SizedBox(height: 8),
+                  Text(
+                    _isOnline
+                        ? 'Appuyez sur + pour ajouter des documents'
+                        : 'Network required to load documents',
+                    style: TextStyle(fontSize: 14, color: Colors.grey.shade500),
+                  ),
+                ],
+              ),
+            )
+          : ListView.builder(
+              padding: EdgeInsets.all(16),
+              itemCount: _documents.length,
+              itemBuilder: (_, index) {
+                final document = _documents[index];
+                final fileName = document['nom'] as String? ?? 'Document';
+                final fileSize = document['taille'] as int? ?? 0;
+                final dateStr = document['date'] as String?;
+                final fileDate = dateStr != null
+                    ? DateTime.parse(dateStr)
+                    : DateTime.now();
 
-                    return Card(
-                      margin: EdgeInsets.only(bottom: 12),
-                      elevation: 2,
-                      child: ListTile(
-                        contentPadding: EdgeInsets.all(16),
-                        leading: Container(
-                          width: 50,
-                          height: 50,
-                          decoration: BoxDecoration(
-                            color: _getFileColor(fileName).withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(
-                            _getFileIcon(fileName),
-                            color: _getFileColor(fileName),
-                            size: 24,
-                          ),
-                        ),
-                        title: Text(
-                          fileName,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            fontSize: 16,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            SizedBox(height: 4),
-                            Text(
-                              '${_formatFileSize(fileSize)} • ${_formatDate(fileDate)}',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Colors.grey.shade600,
-                              ),
-                            ),
-                          ],
-                        ),
-                        trailing: PopupMenuButton<String>(
-                          onSelected: (value) {
-                            switch (value) {
-                              case 'preview':
-                                _previsualiserFichier(document);
-                                break;
-                              case 'share':
-                                // TODO: Implémenter le partage
-                                break;
-                              case 'delete':
-                                _showDeleteConfirmation(document);
-                                break;
-                            }
-                          },
-                          itemBuilder: (context) => [
-                            PopupMenuItem(
-                              value: 'preview',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.visibility,
-                                      color: Colors.blue, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Prévisualiser'),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'share',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.share,
-                                      color: Colors.green, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Partager'),
-                                ],
-                              ),
-                            ),
-                            PopupMenuItem(
-                              value: 'delete',
-                              child: Row(
-                                children: [
-                                  Icon(Icons.delete,
-                                      color: Colors.red, size: 20),
-                                  SizedBox(width: 8),
-                                  Text('Supprimer'),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        onTap: () => _previsualiserFichier(document),
+                return Card(
+                  margin: EdgeInsets.only(bottom: 12),
+                  elevation: 2,
+                  child: ListTile(
+                    contentPadding: EdgeInsets.all(16),
+                    leading: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: _getFileColor(fileName).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    );
-                  },
-                ),
+                      child: Icon(
+                        _getFileIcon(fileName),
+                        color: _getFileColor(fileName),
+                        size: 24,
+                      ),
+                    ),
+                    title: Text(
+                      fileName,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    subtitle: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: 4),
+                        Text(
+                          '${_formatFileSize(fileSize)} • ${_formatDate(fileDate)}',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade600,
+                          ),
+                        ),
+                      ],
+                    ),
+                    trailing: PopupMenuButton<String>(
+                      onSelected: (value) {
+                        switch (value) {
+                          case 'preview':
+                            _previsualiserFichier(document);
+                            break;
+                          case 'share':
+                            // TODO: Implémenter le partage
+                            break;
+                          case 'delete':
+                            _showDeleteConfirmation(document);
+                            break;
+                        }
+                      },
+                      itemBuilder: (context) => [
+                        PopupMenuItem(
+                          value: 'preview',
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.visibility,
+                                color: Colors.blue,
+                                size: 20,
+                              ),
+                              SizedBox(width: 8),
+                              Text('Prévisualiser'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'share',
+                          child: Row(
+                            children: [
+                              Icon(Icons.share, color: Colors.green, size: 20),
+                              SizedBox(width: 8),
+                              Text('Partager'),
+                            ],
+                          ),
+                        ),
+                        PopupMenuItem(
+                          value: 'delete',
+                          child: Row(
+                            children: [
+                              Icon(Icons.delete, color: Colors.red, size: 20),
+                              SizedBox(width: 8),
+                              Text('Supprimer'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    onTap: () => _previsualiserFichier(document),
+                  ),
+                );
+              },
+            ),
     );
   }
 

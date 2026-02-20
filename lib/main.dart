@@ -17,7 +17,8 @@ void main() async {
   } catch (e) {
     // .env file is optional - will use defaults or build-time environment variables
     debugPrint(
-        'Note: .env file not found. Using defaults or build-time environment variables.');
+      'Note: .env file not found. Using defaults or build-time environment variables.',
+    );
   }
 
   // Initialize date formatting for French locale
@@ -36,11 +37,7 @@ void main() async {
   // Note: Clock-in state is now persisted in DB (clock_sessions table)
   // No need for AppSessionService - state survives app restarts
 
-  runApp(
-    const ProviderScope(
-      child: HaccpApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: HaccpApp()));
 }
 
 class HaccpApp extends StatelessWidget {

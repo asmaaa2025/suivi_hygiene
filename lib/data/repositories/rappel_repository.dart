@@ -75,7 +75,11 @@ class RappelRepository {
       'created_by': user.id,
     };
 
-    final response = await _client.from('rappels').insert(insertData).select().single();
+    final response = await _client
+        .from('rappels')
+        .insert(insertData)
+        .select()
+        .single();
     return Rappel.fromJson(response as Map<String, dynamic>);
   }
 
@@ -83,22 +87,32 @@ class RappelRepository {
     final orgRepo = OrganizationRepository();
     final orgId = await orgRepo.getOrCreateOrganization();
 
-    await _client.from('rappels').update({
-      'produit_nom': rappel.produitNom,
-      'lot': rappel.lot,
-      'fournisseur': rappel.fournisseur,
-      'motif': rappel.motif,
-      'date_detection': rappel.dateDetection.toIso8601String().split('T')[0],
-      'statut': rappel.statut.value,
-      'actions_prises': rappel.actionsPrises,
-      'contact_ddpp': rappel.contactDdpp,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', rappel.id).eq('organization_id', orgId);
+    await _client
+        .from('rappels')
+        .update({
+          'produit_nom': rappel.produitNom,
+          'lot': rappel.lot,
+          'fournisseur': rappel.fournisseur,
+          'motif': rappel.motif,
+          'date_detection': rappel.dateDetection.toIso8601String().split(
+            'T',
+          )[0],
+          'statut': rappel.statut.value,
+          'actions_prises': rappel.actionsPrises,
+          'contact_ddpp': rappel.contactDdpp,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', rappel.id)
+        .eq('organization_id', orgId);
   }
 
   Future<void> delete(String id) async {
     final orgRepo = OrganizationRepository();
     final orgId = await orgRepo.getOrCreateOrganization();
-    await _client.from('rappels').delete().eq('id', id).eq('organization_id', orgId);
+    await _client
+        .from('rappels')
+        .delete()
+        .eq('id', id)
+        .eq('organization_id', orgId);
   }
 }

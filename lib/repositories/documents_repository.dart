@@ -75,13 +75,14 @@ class DocumentsRepository extends BaseRepository {
       // Delete from Storage if path provided
       if (storagePath != null) {
         try {
-          await _supabase.client.storage
-              .from(_storageBucket)
-              .remove([storagePath]);
+          await _supabase.client.storage.from(_storageBucket).remove([
+            storagePath,
+          ]);
           debugPrint('[Documents] Deleted file from storage: $storagePath');
         } catch (e) {
           debugPrint(
-              '[Documents] Warning: Could not delete file from storage: $e');
+            '[Documents] Warning: Could not delete file from storage: $e',
+          );
         }
       }
 

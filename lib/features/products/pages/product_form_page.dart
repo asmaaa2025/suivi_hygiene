@@ -32,10 +32,10 @@ class _ProductFormPageState extends State<ProductFormPage> {
   bool _isLoading = false;
   bool _isLoadingData = false;
   bool _isEditMode = false;
-  
+
   // Product type selection
   TypeProduit _selectedType = TypeProduit.fini;
-  
+
   // Supplier selection (only for "reçu" products)
   List<Supplier> _suppliers = [];
   String? _selectedSupplierId;
@@ -80,7 +80,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
     try {
       final produitData = await _produitRepo.getById(widget.productId!);
       if (!mounted) return;
-      
+
       setState(() {
         if (_nomController.text.isEmpty) {
           _nomController.text = produitData['nom'] ?? '';
@@ -126,9 +126,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
       });
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         Navigator.pop(context);
       }
     }
@@ -157,22 +157,28 @@ class _ProductFormPageState extends State<ProductFormPage> {
               ? null
               : _allergenesController.text.trim(),
         );
-        
+
         // Link product to supplier if type is "reçu" and supplier is selected
         if (_selectedType == TypeProduit.recu && _selectedSupplierId != null) {
           try {
-            debugPrint('[ProductForm] Linking product ${productData['id']} to supplier $_selectedSupplierId');
+            debugPrint(
+              '[ProductForm] Linking product ${productData['id']} to supplier $_selectedSupplierId',
+            );
             await _supplierProductRepo.linkProductToSupplier(
               supplierId: _selectedSupplierId!,
               productId: productData['id'] as String,
             );
-            debugPrint('[ProductForm] ✅ Successfully linked product to supplier');
+            debugPrint(
+              '[ProductForm] ✅ Successfully linked product to supplier',
+            );
           } catch (e) {
             debugPrint('[ProductForm] ❌ Error linking to supplier: $e');
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(
-                  content: Text('Produit créé mais erreur lors de la liaison au fournisseur: $e'),
+                  content: Text(
+                    'Produit créé mais erreur lors de la liaison au fournisseur: $e',
+                  ),
                   backgroundColor: Colors.orange,
                   duration: const Duration(seconds: 5),
                 ),
@@ -181,7 +187,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
             // Don't fail the creation if linking fails, but show warning
           }
         } else {
-          debugPrint('[ProductForm] ⚠️ Product type is ${_selectedType.name}, supplier is $_selectedSupplierId - skipping link');
+          debugPrint(
+            '[ProductForm] ⚠️ Product type is ${_selectedType.name}, supplier is $_selectedSupplierId - skipping link',
+          );
         }
       }
 
@@ -196,9 +204,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Erreur: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
       }
     } finally {
       if (mounted) {
@@ -249,16 +257,13 @@ class _ProductFormPageState extends State<ProductFormPage> {
                     _selectedType == TypeProduit.recu
                         ? 'Produit reçu d\'un fournisseur'
                         : _selectedType == TypeProduit.fini
-                            ? 'Produit vendu directement aux clients'
-                            : _selectedType == TypeProduit.prepare
-                                ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
-                                : _selectedType == TypeProduit.ouverture
-                                    ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
-                                    : 'Produit décongelé pour utilisation',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey.shade600,
-                    ),
+                        ? 'Produit vendu directement aux clients'
+                        : _selectedType == TypeProduit.prepare
+                        ? 'Produit intermédiaire (farce, etc.) pour créer d\'autres produits'
+                        : _selectedType == TypeProduit.ouverture
+                        ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
+                        : 'Produit décongelé pour utilisation',
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
                   SizedBox(height: 16),
                   SizedBox(
@@ -275,12 +280,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         final color = type == TypeProduit.recu
                             ? Colors.purple
                             : type == TypeProduit.fini
-                                ? Colors.green
-                                : type == TypeProduit.prepare
-                                    ? Colors.orange
-                                    : type == TypeProduit.ouverture
-                                        ? Colors.red
-                                        : Colors.blue;
+                            ? Colors.green
+                            : type == TypeProduit.prepare
+                            ? Colors.orange
+                            : type == TypeProduit.ouverture
+                            ? Colors.red
+                            : Colors.blue;
 
                         return InkWell(
                           onTap: () {
@@ -298,9 +303,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                           child: AnimatedContainer(
                             duration: Duration(milliseconds: 200),
                             decoration: BoxDecoration(
-                              color: isSelected
-                                  ? color.shade100
-                                  : Colors.white,
+                              color: isSelected ? color.shade100 : Colors.white,
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: isSelected
@@ -340,12 +343,12 @@ class _ProductFormPageState extends State<ProductFormPage> {
                                       type == TypeProduit.recu
                                           ? Icons.local_shipping
                                           : type == TypeProduit.fini
-                                              ? Icons.shopping_cart
-                                              : type == TypeProduit.prepare
-                                                  ? Icons.build
-                                                  : type == TypeProduit.ouverture
-                                                      ? Icons.open_in_new
-                                                      : Icons.ac_unit,
+                                          ? Icons.shopping_cart
+                                          : type == TypeProduit.prepare
+                                          ? Icons.build
+                                          : type == TypeProduit.ouverture
+                                          ? Icons.open_in_new
+                                          : Icons.ac_unit,
                                       color: color.shade700,
                                       size: 24,
                                     ),
@@ -355,18 +358,19 @@ class _ProductFormPageState extends State<ProductFormPage> {
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Text(
                                           type == TypeProduit.recu
                                               ? 'Produit reçu'
                                               : type == TypeProduit.fini
-                                                  ? 'Produit fini'
-                                                  : type == TypeProduit.prepare
-                                                      ? 'Produit préparé'
-                                                      : type == TypeProduit.ouverture
-                                                          ? 'Ouverture'
-                                                          : 'Décongélation',
+                                              ? 'Produit fini'
+                                              : type == TypeProduit.prepare
+                                              ? 'Produit préparé'
+                                              : type == TypeProduit.ouverture
+                                              ? 'Ouverture'
+                                              : 'Décongélation',
                                           style: TextStyle(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
@@ -411,7 +415,7 @@ class _ProductFormPageState extends State<ProductFormPage> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // Supplier selection (only for "reçu" products)
                   if (_selectedType == TypeProduit.recu)
                     DropdownButtonFormField<String>(
@@ -419,7 +423,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
                       decoration: const InputDecoration(
                         labelText: 'Fournisseur (optionnel)',
                         prefixIcon: Icon(Icons.local_shipping),
-                        helperText: 'Sélectionnez un fournisseur ou laissez vide',
+                        helperText:
+                            'Sélectionnez un fournisseur ou laissez vide',
                       ),
                       items: [
                         const DropdownMenuItem(
@@ -439,8 +444,9 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         });
                       },
                     ),
-                  if (_selectedType == TypeProduit.recu) const SizedBox(height: 16),
-                  
+                  if (_selectedType == TypeProduit.recu)
+                    const SizedBox(height: 16),
+
                   TextFormField(
                     controller: _categorieController,
                     decoration: const InputDecoration(
@@ -462,7 +468,8 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   SwitchListTile(
                     title: const Text('Produit actif'),
                     subtitle: const Text(
-                        'Les produits inactifs ne seront pas disponibles dans les listes'),
+                      'Les produits inactifs ne seront pas disponibles dans les listes',
+                    ),
                     value: _actif,
                     onChanged: (value) => setState(() => _actif = value),
                   ),

@@ -5,7 +5,7 @@ import '../../../../data/models/employee.dart';
 /// Page to enter admin code for admin employees
 class AdminCodePage extends StatefulWidget {
   final Employee? employee;
-  
+
   const AdminCodePage({super.key, this.employee});
 
   @override
@@ -15,7 +15,7 @@ class AdminCodePage extends StatefulWidget {
 /// Wrapper to pass employee
 class AdminCodePageWithEmployee extends StatelessWidget {
   final Employee employee;
-  
+
   const AdminCodePageWithEmployee({super.key, required this.employee});
 
   @override
@@ -32,7 +32,7 @@ class _AdminCodePageState extends State<AdminCodePage> {
   void initState() {
     super.initState();
   }
-  
+
   Employee? get _employee => widget.employee;
 
   @override
@@ -75,10 +75,7 @@ class _AdminCodePageState extends State<AdminCodePage> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Colors.purple.shade400,
-              Colors.purple.shade600,
-            ],
+            colors: [Colors.purple.shade400, Colors.purple.shade600],
           ),
         ),
         child: SafeArea(
@@ -166,7 +163,9 @@ class _AdminCodePageState extends State<AdminCodePage> {
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: Colors.purple.shade600,
                                   foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 16,
+                                  ),
                                 ),
                                 child: const Text(
                                   'Valider',
@@ -193,4 +192,3 @@ class _AdminCodePageState extends State<AdminCodePage> {
     );
   }
 }
-

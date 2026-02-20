@@ -41,11 +41,11 @@ final appRouter = GoRouter(
     final session = client.auth.currentSession;
     final isLoggedIn = session != null;
     final location = state.matchedLocation;
-    
+
     // Public routes that don't require authentication
     final publicRoutes = ['/login', '/employee-selection', '/admin-code'];
     final isPublicRoute = publicRoutes.contains(location);
-    
+
     // If not logged in and not on public route, redirect to login
     if (!isLoggedIn && !isPublicRoute) {
       debugPrint('[Router] Not logged in, redirecting to login');
@@ -59,8 +59,10 @@ final appRouter = GoRouter(
       await employeeSessionService.initialize();
       final authService = AuthService();
       final userRole = await authService.getCurrentUserRole();
-      
-      debugPrint('[Router] User role: ${userRole.toValue()}, location: $location');
+
+      debugPrint(
+        '[Router] User role: ${userRole.toValue()}, location: $location',
+      );
 
       // ALWAYS redirect to employee-selection first when app starts
       // This ensures "Qui es-tu ?" is shown every time the app opens
@@ -77,7 +79,8 @@ final appRouter = GoRouter(
 
       // Employees routes - Admin only (employees should not see admin info like codes)
       // Allow access for admins even without employee selected (needed to create first employee)
-      if (location.startsWith('/employees') || location.startsWith('/admin/employees')) {
+      if (location.startsWith('/employees') ||
+          location.startsWith('/admin/employees')) {
         if (!userRole.isAdmin) {
           debugPrint('[Router] Access denied to employees route (admin only)');
           return userRole.isAdmin ? '/admin/home' : '/app/home';
@@ -94,7 +97,9 @@ final appRouter = GoRouter(
       // RBAC: Check admin routes
       if (location.startsWith('/admin')) {
         if (!userRole.canAccessAdminShell) {
-          debugPrint('[Router] Access denied to admin route, redirecting to app');
+          debugPrint(
+            '[Router] Access denied to admin route, redirecting to app',
+          );
           return '/app/home';
         }
       }
@@ -121,10 +126,7 @@ final appRouter = GoRouter(
   },
   routes: [
     // Public routes
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginPage(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginPage()),
     GoRoute(
       path: '/employee-selection',
       builder: (context, state) => const EmployeeSelectionPage(),
@@ -137,10 +139,7 @@ final appRouter = GoRouter(
     // Normal shell routes (/app/*)
     ShellRoute(
       builder: (context, state, child) {
-        return NormalShell(
-          location: state.matchedLocation,
-          child: child,
-        );
+        return NormalShell(location: state.matchedLocation, child: child);
       },
       routes: [
         GoRoute(
@@ -232,10 +231,7 @@ final appRouter = GoRouter(
     // Admin shell routes (/admin/*)
     ShellRoute(
       builder: (context, state, child) {
-        return AdminShell(
-          location: state.matchedLocation,
-          child: child,
-        );
+        return AdminShell(location: state.matchedLocation, child: child);
       },
       routes: [
         // Same pages as normal shell
@@ -349,10 +345,7 @@ final appRouter = GoRouter(
         return userRole.isAdmin ? '/admin/entry' : '/app/entry';
       },
     ),
-    GoRoute(
-      path: '/cleaning',
-      redirect: (context, state) => '/app/cleaning',
-    ),
+    GoRoute(path: '/cleaning', redirect: (context, state) => '/app/cleaning'),
     GoRoute(
       path: '/temperatures',
       redirect: (context, state) => '/app/temperatures',
@@ -365,14 +358,8 @@ final appRouter = GoRouter(
       path: '/oil-changes',
       builder: (context, state) => const OilChangesListPage(),
     ),
-    GoRoute(
-      path: '/history',
-      redirect: (context, state) => '/app/history',
-    ),
-    GoRoute(
-      path: '/labels',
-      builder: (context, state) => const LabelsPage(),
-    ),
+    GoRoute(path: '/history', redirect: (context, state) => '/app/history'),
+    GoRoute(path: '/labels', builder: (context, state) => const LabelsPage()),
     GoRoute(
       path: '/products',
       builder: (context, state) => const ProductsListPage(),

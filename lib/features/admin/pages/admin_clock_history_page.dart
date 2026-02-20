@@ -19,13 +19,13 @@ class AdminClockHistoryPage extends StatefulWidget {
 class _AdminClockHistoryPageState extends State<AdminClockHistoryPage> {
   final ClockRepository _clockRepo = ClockRepository();
   final EmployeeRepository _employeeRepo = EmployeeRepository();
-  
+
   List<ClockSession> _sessions = [];
   List<Employee> _employees = [];
   Map<String, Employee> _employeeMap = {};
   bool _isLoading = true;
   String? _error;
-  
+
   String? _selectedEmployeeId;
   DateTime? _startDate;
   DateTime? _endDate;
@@ -43,9 +43,7 @@ class _AdminClockHistoryPageState extends State<AdminClockHistoryPage> {
       final employees = await _employeeRepo.getAll(activeOnly: false);
       setState(() {
         _employees = employees;
-        _employeeMap = {
-          for (var emp in employees) emp.id: emp
-        };
+        _employeeMap = {for (var emp in employees) emp.id: emp};
       });
     } catch (e) {
       debugPrint('[AdminClockHistory] Error loading employees: $e');
@@ -118,9 +116,7 @@ class _AdminClockHistoryPageState extends State<AdminClockHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Historique de Pointage'),
-      ),
+      appBar: AppBar(title: const Text('Historique de Pointage')),
       body: Column(
         children: [
           // Filters
@@ -143,10 +139,12 @@ class _AdminClockHistoryPageState extends State<AdminClockHistoryPage> {
                         value: null,
                         child: Text('Tous'),
                       ),
-                      ..._employees.map((emp) => DropdownMenuItem<String>(
-                                value: emp.id,
-                                child: Text(emp.fullName),
-                              )),
+                      ..._employees.map(
+                        (emp) => DropdownMenuItem<String>(
+                          value: emp.id,
+                          child: Text(emp.fullName),
+                        ),
+                      ),
                     ],
                     onChanged: (value) {
                       setState(() => _selectedEmployeeId = value);
@@ -198,73 +196,73 @@ class _AdminClockHistoryPageState extends State<AdminClockHistoryPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? ErrorState(message: _error!, onRetry: _loadData)
-                    : _sessions.isEmpty
-                        ? const EmptyState(
-                            title: 'Aucune session',
-                            message: 'Aucune session de pointage trouvée',
-                            icon: Icons.access_time,
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadData,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _sessions.length,
-                              itemBuilder: (context, index) {
-                                final session = _sessions[index];
-                                final employee = _employeeMap[session.employeeId];
-                                return Card(
-                                  margin: const EdgeInsets.only(bottom: 12),
-                                  child: ListTile(
-                                    leading: CircleAvatar(
-                                      backgroundColor: session.isOpen
-                                          ? Colors.orange
-                                          : Colors.green,
-                                      child: Icon(
-                                        session.isOpen
-                                            ? Icons.access_time
-                                            : Icons.check,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    title: Text(
-                                      employee?.fullName ?? 'Employé ${session.employeeId.substring(0, 8)}...',
-                                      style: const TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    subtitle: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Entrée: ${DateFormat('dd/MM/yyyy HH:mm').format(session.startAt)}',
-                                        ),
-                                        if (session.endAt != null)
-                                          Text(
-                                            'Sortie: ${DateFormat('dd/MM/yyyy HH:mm').format(session.endAt!)}',
-                                          ),
-                                        Text(
-                                          session.isOpen
-                                              ? 'En cours'
-                                              : 'Durée: ${session.durationFormatted}',
-                                          style: TextStyle(
-                                            color: session.isOpen
-                                                ? Colors.orange
-                                                : Colors.grey,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
+                ? ErrorState(message: _error!, onRetry: _loadData)
+                : _sessions.isEmpty
+                ? const EmptyState(
+                    title: 'Aucune session',
+                    message: 'Aucune session de pointage trouvée',
+                    icon: Icons.access_time,
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _sessions.length,
+                      itemBuilder: (context, index) {
+                        final session = _sessions[index];
+                        final employee = _employeeMap[session.employeeId];
+                        return Card(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          child: ListTile(
+                            leading: CircleAvatar(
+                              backgroundColor: session.isOpen
+                                  ? Colors.orange
+                                  : Colors.green,
+                              child: Icon(
+                                session.isOpen
+                                    ? Icons.access_time
+                                    : Icons.check,
+                                color: Colors.white,
+                              ),
+                            ),
+                            title: Text(
+                              employee?.fullName ??
+                                  'Employé ${session.employeeId.substring(0, 8)}...',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Entrée: ${DateFormat('dd/MM/yyyy HH:mm').format(session.startAt)}',
+                                ),
+                                if (session.endAt != null)
+                                  Text(
+                                    'Sortie: ${DateFormat('dd/MM/yyyy HH:mm').format(session.endAt!)}',
                                   ),
-                                );
-                              },
+                                Text(
+                                  session.isOpen
+                                      ? 'En cours'
+                                      : 'Durée: ${session.durationFormatted}',
+                                  style: TextStyle(
+                                    color: session.isOpen
+                                        ? Colors.orange
+                                        : Colors.grey,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
     );
   }
 }
-

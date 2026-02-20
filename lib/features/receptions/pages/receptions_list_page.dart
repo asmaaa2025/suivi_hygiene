@@ -23,7 +23,7 @@ class ReceptionsListPage extends StatefulWidget {
 class _ReceptionsListPageState extends State<ReceptionsListPage> {
   final _receptionRepo = ReceptionRepository();
   final _produitRepo = ProduitRepository();
-  
+
   List<Reception> _receptions = [];
   Map<String, Produit> _produits = {}; // Map of produitId -> Produit
   bool _isLoading = true;
@@ -54,7 +54,7 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
         endDate: _endDate,
       );
       debugPrint('[ReceptionsList] Found ${receptions.length} receptions');
-      
+
       // Get all products to map produitId to product name
       debugPrint('[ReceptionsList] Fetching products...');
       final allProducts = await _produitRepo.getAll();
@@ -65,7 +65,9 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
       }
 
       if (mounted) {
-        debugPrint('[ReceptionsList] Updating UI with ${receptions.length} receptions');
+        debugPrint(
+          '[ReceptionsList] Updating UI with ${receptions.length} receptions',
+        );
         setState(() {
           _receptions = receptions;
           _produits = produitsMap;
@@ -84,7 +86,10 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
     }
   }
 
-  Future<void> _deleteReception(BuildContext context, Reception reception) async {
+  Future<void> _deleteReception(
+    BuildContext context,
+    Reception reception,
+  ) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -108,22 +113,24 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
         await _receptionRepo.delete(reception.id);
         await _loadData();
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Réception supprimée')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(const SnackBar(content: Text('Réception supprimée')));
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Erreur: $e')),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
         }
       }
     }
   }
 
   void _editReception(BuildContext context, Reception reception) {
-    final isAdminRoute = GoRouterState.of(context).matchedLocation.startsWith('/admin');
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
     final routePrefix = isAdminRoute ? '/admin' : '/app';
     context.push('$routePrefix/receptions/${reception.id}');
   }
@@ -150,7 +157,11 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
                       child: const Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.broken_image, size: 64, color: Colors.white),
+                          Icon(
+                            Icons.broken_image,
+                            size: 64,
+                            color: Colors.white,
+                          ),
                           SizedBox(height: 16),
                           Text(
                             'Impossible de charger l\'image',
@@ -179,9 +190,7 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white),
                 onPressed: () => Navigator.of(context).pop(),
-                style: IconButton.styleFrom(
-                  backgroundColor: Colors.black54,
-                ),
+                style: IconButton.styleFrom(backgroundColor: Colors.black54),
               ),
             ),
           ],
@@ -291,227 +300,256 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
             child: _isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : _error != null
-                    ? ErrorState(message: _error!, onRetry: _loadData)
-                    : _receptions.isEmpty
-                        ? const EmptyState(
-                            title: 'Aucune réception',
-                            message: 'Vous n\'avez pas encore enregistré de réception',
-                            icon: Icons.inventory_2,
-                          )
-                        : RefreshIndicator(
-                            onRefresh: _loadData,
-                            child: ListView.builder(
-                              padding: const EdgeInsets.all(16),
-                              itemCount: _receptions.length,
-                              itemBuilder: (context, index) {
-                                final reception = _receptions[index];
-                                final produit = _produits[reception.produitId];
-                                final productName = produit?.nom ?? 'Produit inconnu';
-                                final supplierName = reception.fournisseur ?? 'Fournisseur inconnu';
+                ? ErrorState(message: _error!, onRetry: _loadData)
+                : _receptions.isEmpty
+                ? const EmptyState(
+                    title: 'Aucune réception',
+                    message: 'Vous n\'avez pas encore enregistré de réception',
+                    icon: Icons.inventory_2,
+                  )
+                : RefreshIndicator(
+                    onRefresh: _loadData,
+                    child: ListView.builder(
+                      padding: const EdgeInsets.all(16),
+                      itemCount: _receptions.length,
+                      itemBuilder: (context, index) {
+                        final reception = _receptions[index];
+                        final produit = _produits[reception.produitId];
+                        final productName = produit?.nom ?? 'Produit inconnu';
+                        final supplierName =
+                            reception.fournisseur ?? 'Fournisseur inconnu';
 
-                                return SectionCard(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  productName,
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .titleMedium
-                                                      ?.copyWith(
-                                                        fontWeight: FontWeight.bold,
-                                                      ),
-                                                ),
-                                                const SizedBox(height: 4),
-                                                Text(
-                                                  'Fournisseur: $supplierName',
-                                                  style: Theme.of(context)
-                                                      .textTheme
-                                                      .bodyMedium,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          // Temperature badge
-                                          if (reception.temperature != null)
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 4,
+                        return SectionCard(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          productName,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleMedium
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
                                               ),
-                                              decoration: BoxDecoration(
-                                                color: _getTemperatureColor(reception.temperature!)
-                                                    .withOpacity(0.1),
-                                                borderRadius: BorderRadius.circular(12),
-                                              ),
-                                              child: Row(
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Icon(
-                                                    Icons.thermostat,
-                                                    size: 16,
-                                                    color: _getTemperatureColor(reception.temperature!),
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Text(
-                                                    '${reception.temperature!.toStringAsFixed(1)}°C',
-                                                    style: TextStyle(
-                                                      color: _getTemperatureColor(reception.temperature!),
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                        ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'Fournisseur: $supplierName',
+                                          style: Theme.of(
+                                            context,
+                                          ).textTheme.bodyMedium,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  // Temperature badge
+                                  if (reception.temperature != null)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
                                       ),
-                                      const SizedBox(height: 12),
-                                      Row(
+                                      decoration: BoxDecoration(
+                                        color: _getTemperatureColor(
+                                          reception.temperature!,
+                                        ).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
                                         children: [
                                           Icon(
-                                            Icons.calendar_today,
+                                            Icons.thermostat,
                                             size: 16,
-                                            color: Colors.grey[600],
+                                            color: _getTemperatureColor(
+                                              reception.temperature!,
+                                            ),
                                           ),
                                           const SizedBox(width: 4),
                                           Text(
-                                            DateFormat('dd/MM/yyyy à HH:mm')
-                                                .format(reception.receivedAt),
-                                            style: Theme.of(context)
-                                                .textTheme
-                                                .bodySmall
-                                                ?.copyWith(
-                                                  color: Colors.grey[600],
-                                                ),
+                                            '${reception.temperature!.toStringAsFixed(1)}°C',
+                                            style: TextStyle(
+                                              color: _getTemperatureColor(
+                                                reception.temperature!,
+                                              ),
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
                                         ],
                                       ),
-                                      if (reception.lot != null && reception.lot!.isNotEmpty) ...[
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.inventory,
-                                              size: 16,
-                                              color: Colors.grey[600],
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Lot: ${reception.lot}',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                      if (reception.dluo != null) ...[
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.event,
-                                              size: 16,
-                                              color: Colors.grey[600],
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'DLUO: ${DateFormat('dd/MM/yyyy').format(reception.dluo!)}',
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                      if (reception.remarque != null && reception.remarque!.isNotEmpty) ...[
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          reception.remarque!,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .bodySmall
-                                              ?.copyWith(
-                                                fontStyle: FontStyle.italic,
-                                              ),
-                                        ),
-                                      ],
-                                      if (reception.photoUrl != null && reception.photoUrl!.isNotEmpty) ...[
-                                        const SizedBox(height: 12),
-                                        InkWell(
-                                          onTap: () => _showPhotoDialog(context, reception.photoUrl!),
-                                          child: Container(
-                                            height: 100,
-                                            decoration: BoxDecoration(
-                                              color: Colors.grey[200],
-                                              borderRadius: BorderRadius.circular(8),
-                                              border: Border.all(color: Colors.grey[300]!),
-                                            ),
-                                            child: ClipRRect(
-                                              borderRadius: BorderRadius.circular(8),
-                                              child: Image.network(
-                                                reception.photoUrl!,
-                                                fit: BoxFit.cover,
-                                                errorBuilder: (context, error, stackTrace) {
-                                                  return const Center(
-                                                    child: Icon(Icons.broken_image, size: 40),
-                                                  );
-                                                },
-                                                loadingBuilder: (context, child, loadingProgress) {
-                                                  if (loadingProgress == null) return child;
-                                                  return const Center(
-                                                    child: CircularProgressIndicator(strokeWidth: 2),
-                                                  );
-                                                },
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                      if (reception.employeeFirstName != null && reception.employeeLastName != null) ...[
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Icon(Icons.person, size: 16, color: Colors.grey[600]),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Effectué par: ${reception.employeeFirstName} ${reception.employeeLastName}',
-                                              style: Theme.of(context).textTheme.bodySmall,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                      // Action buttons
-                                      const SizedBox(height: 12),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.end,
-                                        children: [
-                                          IconButton(
-                                            icon: const Icon(Icons.edit, size: 20),
-                                            color: AppTheme.primaryBlue,
-                                            onPressed: () => _editReception(context, reception),
-                                            tooltip: 'Modifier',
-                                          ),
-                                          IconButton(
-                                            icon: const Icon(Icons.delete_outline, size: 20),
-                                            color: AppTheme.statusCritical,
-                                            onPressed: () => _deleteReception(context, reception),
-                                            tooltip: 'Supprimer',
-                                          ),
-                                        ],
-                                      ),
-                                    ],
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Row(
+                                children: [
+                                  Icon(
+                                    Icons.calendar_today,
+                                    size: 16,
+                                    color: Colors.grey[600],
                                   ),
-                                );
-                              },
-                            ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    DateFormat(
+                                      'dd/MM/yyyy à HH:mm',
+                                    ).format(reception.receivedAt),
+                                    style: Theme.of(context).textTheme.bodySmall
+                                        ?.copyWith(color: Colors.grey[600]),
+                                  ),
+                                ],
+                              ),
+                              if (reception.lot != null &&
+                                  reception.lot!.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.inventory,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Lot: ${reception.lot}',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              if (reception.dluo != null) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.event,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'DLUO: ${DateFormat('dd/MM/yyyy').format(reception.dluo!)}',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              if (reception.remarque != null &&
+                                  reception.remarque!.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Text(
+                                  reception.remarque!,
+                                  style: Theme.of(context).textTheme.bodySmall
+                                      ?.copyWith(fontStyle: FontStyle.italic),
+                                ),
+                              ],
+                              if (reception.photoUrl != null &&
+                                  reception.photoUrl!.isNotEmpty) ...[
+                                const SizedBox(height: 12),
+                                InkWell(
+                                  onTap: () => _showPhotoDialog(
+                                    context,
+                                    reception.photoUrl!,
+                                  ),
+                                  child: Container(
+                                    height: 100,
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey[200],
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: Colors.grey[300]!,
+                                      ),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        reception.photoUrl!,
+                                        fit: BoxFit.cover,
+                                        errorBuilder:
+                                            (context, error, stackTrace) {
+                                              return const Center(
+                                                child: Icon(
+                                                  Icons.broken_image,
+                                                  size: 40,
+                                                ),
+                                              );
+                                            },
+                                        loadingBuilder:
+                                            (context, child, loadingProgress) {
+                                              if (loadingProgress == null)
+                                                return child;
+                                              return const Center(
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      strokeWidth: 2,
+                                                    ),
+                                              );
+                                            },
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (reception.employeeFirstName != null &&
+                                  reception.employeeLastName != null) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.person,
+                                      size: 16,
+                                      color: Colors.grey[600],
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      'Effectué par: ${reception.employeeFirstName} ${reception.employeeLastName}',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                              // Action buttons
+                              const SizedBox(height: 12),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  IconButton(
+                                    icon: const Icon(Icons.edit, size: 20),
+                                    color: AppTheme.primaryBlue,
+                                    onPressed: () =>
+                                        _editReception(context, reception),
+                                    tooltip: 'Modifier',
+                                  ),
+                                  IconButton(
+                                    icon: const Icon(
+                                      Icons.delete_outline,
+                                      size: 20,
+                                    ),
+                                    color: AppTheme.statusCritical,
+                                    onPressed: () =>
+                                        _deleteReception(context, reception),
+                                    tooltip: 'Supprimer',
+                                  ),
+                                ],
+                              ),
+                            ],
                           ),
+                        );
+                      },
+                    ),
+                  ),
           ),
         ],
       ),

@@ -263,47 +263,47 @@ enum NCActionStatus {
 class NonConformity {
   final String id;
   final String organizationId;
-  
+
   // Status and identification
   final NCStatus status;
   final String? ficheNumber;
   final DateTime detectionDate;
-  
+
   // Section 1: Identification
   final String? openedByEmployeeId;
   final String? openedByRoleService;
   final NCObjectCategory objectCategory;
   final String? objectOther;
-  
+
   // Section 2: Description
   final String? productId;
   final String? productName;
   final String? step;
   final String description;
   final String? sanitaryImpact;
-  
+
   // Section 3: Immediate action
   final bool immediateActionDone;
   final String? immediateActionDetail;
   final String? immediateActionDoneBy;
   final DateTime? immediateActionDoneAt;
-  
+
   // Section 4: Evaluation RQ
   final DateTime? rqDate;
   final String? rqClassification;
   final bool rqActionCorrectiveRequired;
-  
+
   // Source tracking
   final NCSourceType? sourceType;
   final String? sourceTable;
   final String? sourceId;
   final Map<String, dynamic> sourcePayload; // JSONB snapshot
-  
+
   // Metadata
   final DateTime createdAt;
   final DateTime updatedAt;
   final String? createdBy;
-  
+
   // Related data (loaded separately)
   final List<NCCause>? causes;
   final List<NCSolution>? solutions;
@@ -356,7 +356,9 @@ class NonConformity {
       detectionDate: DateTime.parse(json['detection_date'] as String),
       openedByEmployeeId: json['opened_by_employee_id'] as String?,
       openedByRoleService: json['opened_by_role_service'] as String?,
-      objectCategory: NCObjectCategory.fromString(json['object_category'] as String?),
+      objectCategory: NCObjectCategory.fromString(
+        json['object_category'] as String?,
+      ),
       objectOther: json['object_other'] as String?,
       productId: json['product_id'] as String?,
       productName: json['product_name'] as String?,
@@ -373,7 +375,8 @@ class NonConformity {
           ? DateTime.parse(json['rq_date'] as String)
           : null,
       rqClassification: json['rq_classification'] as String?,
-      rqActionCorrectiveRequired: (json['rq_action_corrective_required'] as bool?) ?? false,
+      rqActionCorrectiveRequired:
+          (json['rq_action_corrective_required'] as bool?) ?? false,
       sourceType: json['source_type'] != null
           ? NCSourceType.fromString(json['source_type'] as String)
           : null,
@@ -472,12 +475,16 @@ class NonConformity {
       description: description ?? this.description,
       sanitaryImpact: sanitaryImpact ?? this.sanitaryImpact,
       immediateActionDone: immediateActionDone ?? this.immediateActionDone,
-      immediateActionDetail: immediateActionDetail ?? this.immediateActionDetail,
-      immediateActionDoneBy: immediateActionDoneBy ?? this.immediateActionDoneBy,
-      immediateActionDoneAt: immediateActionDoneAt ?? this.immediateActionDoneAt,
+      immediateActionDetail:
+          immediateActionDetail ?? this.immediateActionDetail,
+      immediateActionDoneBy:
+          immediateActionDoneBy ?? this.immediateActionDoneBy,
+      immediateActionDoneAt:
+          immediateActionDoneAt ?? this.immediateActionDoneAt,
       rqDate: rqDate ?? this.rqDate,
       rqClassification: rqClassification ?? this.rqClassification,
-      rqActionCorrectiveRequired: rqActionCorrectiveRequired ?? this.rqActionCorrectiveRequired,
+      rqActionCorrectiveRequired:
+          rqActionCorrectiveRequired ?? this.rqActionCorrectiveRequired,
       sourceType: sourceType ?? this.sourceType,
       sourceTable: sourceTable ?? this.sourceTable,
       sourceId: sourceId ?? this.sourceId,
@@ -745,4 +752,3 @@ class NCAttachment {
     };
   }
 }
-

@@ -5,7 +5,7 @@ import '../models/audit_log_entry.dart';
 /// Repository for audit log (central history)
 class AuditLogRepository {
   final SupabaseClient _client = Supabase.instance.client;
-  
+
   // Expose client for user access
   SupabaseClient get client => _client;
 
@@ -26,39 +26,48 @@ class AuditLogRepository {
 
       debugPrint('[AuditLogRepo] Fetching audit log entries');
       var query = _client.from('audit_log').select();
-      
+
       // Filter by organization (required)
       if (organizationId != null) {
         query = query.eq('organization_id', organizationId);
       }
-      
+
       // Filter by operation type
       if (operationType != null) {
         query = query.eq('operation_type', operationType);
       }
-      
+
       // Filter by date range
       if (startDate != null) {
         query = query.gte('created_at', startDate.toIso8601String());
       }
       if (endDate != null) {
-        final endOfDay = DateTime(endDate.year, endDate.month, endDate.day, 23, 59, 59);
+        final endOfDay = DateTime(
+          endDate.year,
+          endDate.month,
+          endDate.day,
+          23,
+          59,
+          59,
+        );
         query = query.lte('created_at', endOfDay.toIso8601String());
       }
-      
+
       // Order and limit
       var finalQuery = query.order('created_at', ascending: false);
       if (limit != null) {
         finalQuery = finalQuery.limit(limit);
       }
-      
+
       final response = await finalQuery;
-      
+
       final entries = (response as List)
           .map((json) => AuditLogEntry.fromJson(json as Map<String, dynamic>))
           .toList();
 
-      debugPrint('[AuditLogRepo] ✅ Fetched ${entries.length} audit log entries');
+      debugPrint(
+        '[AuditLogRepo] ✅ Fetched ${entries.length} audit log entries',
+      );
       return entries;
     } catch (e) {
       debugPrint('[AuditLogRepo] ❌ Error: $e');
@@ -98,7 +107,7 @@ class AuditLogRepository {
           })
           .select()
           .single();
-      
+
       return AuditLogEntry.fromJson(response);
     } catch (e) {
       debugPrint('[AuditLogRepo] ❌ Error creating audit log entry: $e');
@@ -106,4 +115,3 @@ class AuditLogRepository {
     }
   }
 }
-

@@ -63,11 +63,13 @@ class _AuthGateState extends State<AuthGate> {
           final authState = snapshot.data;
           debugPrint('[AuthGate] Auth state event: ${authState?.event}');
           debugPrint(
-              '[AuthGate] Stream session: ${authState?.session != null ? "exists" : "null"}');
+            '[AuthGate] Stream session: ${authState?.session != null ? "exists" : "null"}',
+          );
         }
 
         debugPrint(
-            '[AuthGate] Current session: ${session != null ? "exists" : "null"}');
+          '[AuthGate] Current session: ${session != null ? "exists" : "null"}',
+        );
         debugPrint('[AuthGate] Current user: ${user?.email ?? "null"}');
 
         // Check if session exists and is valid (not expired)
@@ -78,8 +80,9 @@ class _AuthGateState extends State<AuthGate> {
           if (expiresAt != null) {
             final now = DateTime.now().toUtc();
             final expiryTime = DateTime.fromMillisecondsSinceEpoch(
-                expiresAt * 1000,
-                isUtc: true);
+              expiresAt * 1000,
+              isUtc: true,
+            );
             hasValidSession = expiryTime.isAfter(now);
             debugPrint('[AuthGate] Session expires at: $expiryTime');
             debugPrint('[AuthGate] Current time: $now');
