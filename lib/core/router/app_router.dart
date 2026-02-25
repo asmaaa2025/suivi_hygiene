@@ -39,7 +39,10 @@ import '../../features/haccp/pages/nc_detail_page.dart';
 import '../../features/haccp/pages/plan_rappel_page.dart';
 import '../../features/haccp/pages/tableau_allergenes_page.dart';
 import '../../features/haccp/pages/synthese_hebdomadaire_page.dart';
-import '../../features/documents/pages/documents_page.dart';
+import '../../modules/haccp/documents/pages/documents_home_screen.dart';
+import '../../modules/haccp/documents/pages/document_detail_screen.dart';
+import '../../modules/haccp/documents/pages/document_edit_screen.dart';
+import '../../modules/haccp/documents/models.dart';
 import '../../features/products/pages/product_form_page.dart';
 import '../../features/admin/pages/rh_hub_page.dart';
 
@@ -267,11 +270,32 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: '/app/documents',
-          builder: (context, state) => const DocumentsPage(),
+          builder: (context, state) => const DocumentsHomeScreen(),
         ),
         GoRoute(
           path: '/app/documents/upload',
           redirect: (context, state) => '/app/documents',
+        ),
+        GoRoute(
+          path: '/app/documents/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return DocumentDetailScreen(documentId: id);
+          },
+        ),
+        GoRoute(
+          path: '/app/documents/:id/edit',
+          redirect: (context, state) {
+            if (state.extra == null) return '/app/documents';
+            return null;
+          },
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return DocumentEditScreen(
+              documentId: id,
+              document: state.extra! as Document,
+            );
+          },
         ),
         GoRoute(
           path: '/app/synthese-hebdomadaire',
@@ -454,11 +478,32 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: '/admin/documents',
-          builder: (context, state) => const DocumentsPage(),
+          builder: (context, state) => const DocumentsHomeScreen(),
         ),
         GoRoute(
           path: '/admin/documents/upload',
           redirect: (context, state) => '/admin/documents',
+        ),
+        GoRoute(
+          path: '/admin/documents/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return DocumentDetailScreen(documentId: id);
+          },
+        ),
+        GoRoute(
+          path: '/admin/documents/:id/edit',
+          redirect: (context, state) {
+            if (state.extra == null) return '/admin/documents';
+            return null;
+          },
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return DocumentEditScreen(
+              documentId: id,
+              document: state.extra! as Document,
+            );
+          },
         ),
         GoRoute(
           path: '/admin/synthese-hebdomadaire',

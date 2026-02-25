@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import '../services/supabase_service.dart';
 import '../services/network_service.dart';
 import '../exceptions/app_exceptions.dart';
+import '../modules/haccp/documents/models.dart';
 import 'base_repository.dart';
 
 /// Repository for documents (Storage + metadata)
@@ -54,14 +55,31 @@ class DocumentsRepository extends BaseRepository {
     required String categorie,
     required String storageUrl,
     int? taille,
+    DateTime? documentDate,
   }) async {
     return await super.create({
       'nom': nom,
       'categorie': categorie,
       'chemin': storageUrl,
       'taille': taille,
-      'date': DateTime.now().toIso8601String(),
+      'date': (documentDate ?? DateTime.now()).toIso8601String(),
     });
+  }
+
+  /// Update document metadata
+  Future<Map<String, dynamic>> updateDocument({
+    required String id,
+    String? title,
+    DocumentCategory? category,
+    DateTime? documentDate,
+    String? notes,
+  }) async {
+    final data = <String, dynamic>{};
+    if (title != null) data['titre'] = title;
+    if (category != null) data['categorie'] = category.name;
+    if (documentDate != null) data['date'] = documentDate.toIso8601String();
+    if (notes != null) data['notes'] = notes;
+    return await update(id, data);
   }
 
   /// Delete document (both DB and Storage)
