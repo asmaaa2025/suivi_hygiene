@@ -3,10 +3,9 @@
 /// Page dédiée Alertes - 4 actions principales en tuiles (user-friendly)
 
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/big_tile_button.dart';
+import '../../../shared/widgets/app_module_tile.dart';
 import '../../../shared/utils/navigation_helpers.dart';
 import '../../../services/haccp_export_service.dart';
 
@@ -110,28 +109,28 @@ class _AlertsHomeScreenState extends State<AlertsHomeScreen> {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.1,
                   children: [
-                    BigTileButton(
+                    AppModuleTile(
                       icon: Icons.notifications_active,
                       title: 'Voir les alertes',
                       subtitle: 'Alertes HACCP en cours',
                       onTap: () => context.go('$prefix/alerts/list'),
                       color: Colors.red.shade300,
                     ),
-                    BigTileButton(
+                    AppModuleTile(
                       icon: Icons.edit_note,
                       title: 'Créer une NC',
                       subtitle: 'Déclarer une non-conformité',
-                      onTap: () => context.go('$prefix/alerts/nc/wizard'),
+                      onTap: () => context.go('$prefix/alerts/nc/new'),
                       color: AppTheme.primaryBlue,
                     ),
-                    BigTileButton(
+                    AppModuleTile(
                       icon: Icons.history,
                       title: 'Historique NC',
                       subtitle: 'Consulter les fiches passées',
                       onTap: () => context.go('$prefix/alerts/nc/history'),
                       color: Colors.orange.shade300,
                     ),
-                    BigTileButton(
+                    AppModuleTile(
                       icon: Icons.warning_amber,
                       title: 'Plan de rappel',
                       subtitle: 'Gestion crise sanitaire',

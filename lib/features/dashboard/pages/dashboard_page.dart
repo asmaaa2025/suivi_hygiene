@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../shared/widgets/section_card.dart';
+import '../../../../shared/widgets/app_module_tile.dart';
 import '../../../../services/employee_session_service.dart';
 import '../../../../services/auth_service.dart';
 
@@ -91,393 +91,110 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildAdminBody(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Expanded(
-            child: _buildHubTile(
-              context,
+      child: Center(
+        child: GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16,
+          mainAxisSpacing: 16,
+          childAspectRatio: 1.4,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          children: [
+            AppModuleTile(
               icon: Icons.fact_check_outlined,
-              label: 'HACCP',
+              title: 'HACCP',
+              subtitle: 'Suivi hygiène',
               color: AppTheme.primaryBlue,
               onTap: () => context.go('/admin/haccp'),
             ),
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: _buildHubTile(
-              context,
+            AppModuleTile(
               icon: Icons.people_alt_outlined,
-              label: 'RH',
+              title: 'RH',
+              subtitle: 'Gestion du personnel',
               color: Colors.teal,
               onTap: () => context.go('/admin/rh-hub'),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHubTile(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              colors: [color, color.withOpacity(0.75)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 64, color: Colors.white),
-              const SizedBox(height: 16),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildEmployeeBody(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.all(16),
-      children: [
-        // Switch Employee Button (Prominent)
-        SectionCard(
-          onTap: () => context.go('/employee-selection'),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    AppTheme.primaryBlue,
-                    AppTheme.primaryBlue.withOpacity(0.8),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        children: [
+          // Compact "Changer d'employé" banner
+          Card(
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: InkWell(
+              onTap: () => context.go('/employee-selection'),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
                 ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(
+                child: Row(
+                  children: [
+                    Icon(
                       Icons.swap_horiz,
-                      color: Colors.white,
-                      size: 28,
+                      color: AppTheme.primaryBlue,
+                      size: 24,
                     ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Changer d\'employé',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Changer d\'employé',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryBlue,
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Sélectionner un autre compte employé',
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(color: Colors.white.withOpacity(0.9)),
-                        ),
-                      ],
+                      ),
                     ),
+                    Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+          // Module tiles
+          Expanded(
+            child: Center(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.4,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  AppModuleTile(
+                    icon: Icons.fact_check_outlined,
+                    title: 'HACCP',
+                    subtitle: 'Suivi hygiène',
+                    color: AppTheme.primaryBlue,
+                    onTap: () => context.go('/app/haccp'),
                   ),
-                  const Icon(Icons.chevron_right, color: Colors.white),
+                  AppModuleTile(
+                    icon: Icons.access_time,
+                    title: 'Pointage',
+                    subtitle: 'Entrée / Sortie',
+                    color: Colors.orange,
+                    onTap: () => context.go('/app/clock'),
+                  ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 24),
-          // Section Saisie Rapide
-          _buildSectionHeader(
-            context,
-            'Saisie rapide',
-            Icons.add_circle_outline,
-          ),
-          const SizedBox(height: 8),
-          SectionCard(
-            onTap: () {
-              final isAdminRoute = GoRouterState.of(
-                context,
-              ).matchedLocation.startsWith('/admin');
-              context.push(isAdminRoute ? '/admin/entry' : '/app/entry');
-            },
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryBlue.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    Icons.add_circle,
-                    color: AppTheme.primaryBlue,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Nouvelle saisie',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Température, réception, nettoyage, changement d\'huile',
-                        style: Theme.of(context).textTheme.bodyMedium,
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: AppTheme.textTertiary),
-              ],
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Section Consultations
-          _buildSectionHeader(context, 'Consultations', Icons.folder_outlined),
-          const SizedBox(height: 8),
-          SectionCard(
-            onTap: () => context.push('/temperatures'),
-            child: _buildMenuItem(
-              context,
-              Icons.thermostat,
-              'Températures',
-              'Consulter l\'historique des températures',
-              AppTheme.statusInfo,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SectionCard(
-            onTap: () => context.push('/receptions'),
-            child: _buildMenuItem(
-              context,
-              Icons.inventory_2,
-              'Réceptions',
-              'Consulter l\'historique des réceptions',
-              AppTheme.primaryBlue,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SectionCard(
-            onTap: () => context.push('/cleaning'),
-            child: _buildMenuItem(
-              context,
-              Icons.cleaning_services,
-              'Nettoyages',
-              'Gérer les tâches et l\'historique de nettoyage',
-              AppTheme.statusOk,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SectionCard(
-            onTap: () => context.push('/oil-changes'),
-            child: _buildMenuItem(
-              context,
-              Icons.oil_barrel,
-              'Changements d\'huile',
-              'Consulter l\'historique des changements d\'huile',
-              AppTheme.statusWarn,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SectionCard(
-            onTap: () => context.push('/products'),
-            child: _buildMenuItem(
-              context,
-              Icons.category,
-              'Produits',
-              'Gérer les produits et leurs DLC',
-              Colors.purple,
-            ),
-          ),
-          const SizedBox(height: 24),
-
-          // Section Outils
-          _buildSectionHeader(context, 'Outils', Icons.build),
-          const SizedBox(height: 8),
-          SectionCard(
-            onTap: () => context.push('/history'),
-            child: _buildMenuItem(
-              context,
-              Icons.history,
-              'Historique unifié',
-              'Voir toutes les activités en un seul endroit',
-              Colors.grey.shade700,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SectionCard(
-            onTap: () => context.push('/suppliers'),
-            child: _buildMenuItem(
-              context,
-              Icons.local_shipping,
-              'Fournisseurs',
-              'Gérer les fournisseurs et leurs produits',
-              AppTheme.primaryBlue,
-            ),
-          ),
-          const SizedBox(height: 8),
-          SectionCard(
-            onTap: () => context.push('/labels'),
-            child: _buildMenuItem(
-              context,
-              Icons.label,
-              'Étiquettes',
-              'Gérer et imprimer les étiquettes',
-              Colors.orange,
-            ),
-          ),
-          // Pointage pour tous les utilisateurs
-          const SizedBox(height: 8),
-          SectionCard(
-            onTap: () {
-              if (_isAdmin) {
-                context.go('/admin/clock');
-              } else {
-                context.go('/app/clock');
-              }
-            },
-            child: _buildMenuItem(
-              context,
-              Icons.access_time,
-              'Pointage',
-              'Pointer l\'entrée et la sortie',
-              Colors.orange,
-            ),
-          ),
-          // Admin-only tools
-          if (_isAdmin) ...[
-            const SizedBox(height: 8),
-            SectionCard(
-              onTap: () => context.go('/admin/employees'),
-              child: _buildMenuItem(
-                context,
-                Icons.people_outline,
-                'Employés',
-                'Gérer les employés et leurs rôles',
-                AppTheme.primaryBlue,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SectionCard(
-              onTap: () => context.go('/admin/rh'),
-              child: _buildMenuItem(
-                context,
-                Icons.people,
-                'RH',
-                'Gérer le registre du personnel',
-                AppTheme.primaryBlue,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SectionCard(
-              onTap: () => context.go('/admin/clock-history'),
-              child: _buildMenuItem(
-                context,
-                Icons.history_outlined,
-                'Historique de pointage',
-                'Consulter l\'historique des pointages',
-                Colors.purple,
-              ),
-            ),
-          ],
         ],
-    );
-  }
-
-  Widget _buildSectionHeader(
-    BuildContext context,
-    String title,
-    IconData icon,
-  ) {
-    return Row(
-      children: [
-        Icon(icon, color: AppTheme.primaryBlue, size: 20),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: AppTheme.primaryBlue,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMenuItem(
-    BuildContext context,
-    IconData icon,
-    String title,
-    String subtitle,
-    Color color,
-  ) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: Icon(icon, color: color, size: 24),
-        ),
-        const SizedBox(width: 16),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: 4),
-              Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
-            ],
-          ),
-        ),
-        Icon(Icons.chevron_right, color: AppTheme.textTertiary),
-      ],
+      ),
     );
   }
 }

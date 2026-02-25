@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../shared/widgets/big_tile_button.dart';
+import '../../../shared/widgets/app_module_tile.dart';
 import '../../../shared/utils/navigation_helpers.dart';
 
 /// RH Hub - 2 tiles for Personnel and Clock History
@@ -43,28 +43,28 @@ class RhHubPage extends StatelessWidget {
                   mainAxisSpacing: 16,
                   childAspectRatio: 1.4,
                   children: [
-                    BigTileButton(
+                    AppModuleTile(
                       icon: Icons.access_time,
                       title: 'Pointage',
                       subtitle: 'Pointer entrée / sortie',
                       onTap: () => context.go('/admin/clock'),
                       color: Colors.green,
                     ),
-                    BigTileButton(
+                    AppModuleTile(
                       icon: Icons.history,
                       title: 'Historique Pointage',
                       subtitle: 'Historique des pointages',
                       onTap: () => context.go('/admin/clock-history'),
                       color: Colors.orange,
                     ),
-                    BigTileButton(
+                    AppModuleTile(
                       icon: Icons.people,
                       title: 'Relevé employés',
                       subtitle: 'Registre du personnel',
                       onTap: () => context.go('/admin/rh'),
                       color: AppTheme.primaryBlue,
                     ),
-                    BigTileButton(
+                    AppModuleTile(
                       icon: Icons.tablet_android,
                       title: 'Comptes tablette',
                       subtitle: 'Comptes utilisateurs de l\'app',
