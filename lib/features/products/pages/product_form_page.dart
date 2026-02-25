@@ -220,6 +220,10 @@ class _ProductFormPageState extends State<ProductFormPage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditMode ? 'Modifier produit' : 'Nouveau produit'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/products'),
+        ),
       ),
       body: _isLoading && _isEditMode
           ? const Center(child: CircularProgressIndicator())

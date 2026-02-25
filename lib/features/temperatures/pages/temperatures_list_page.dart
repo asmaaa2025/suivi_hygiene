@@ -10,6 +10,7 @@ import '../../../../data/models/appareil.dart';
 import '../../../../data/services/storage_service.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/utils/navigation_helpers.dart';
 import 'appareils_management_page.dart';
 
 /// Temperatures list page
@@ -83,7 +84,7 @@ class _TemperaturesListPageState extends State<TemperaturesListPage> {
         title: const Text('Températures'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('$routePrefix/home'),
+          onPressed: () => NavigationHelpers.goHaccpHub(context),
         ),
         actions: [
           IconButton(

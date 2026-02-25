@@ -84,12 +84,90 @@ class _DashboardPageState extends State<DashboardPage> {
           ),
         ],
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
+      body: _isAdmin ? _buildAdminBody(context) : _buildEmployeeBody(context),
+    );
+  }
+
+  Widget _buildAdminBody(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Switch Employee Button (Prominent)
-          SectionCard(
-            onTap: () => context.go('/employee-selection'),
+          Expanded(
+            child: _buildHubTile(
+              context,
+              icon: Icons.fact_check_outlined,
+              label: 'HACCP',
+              color: AppTheme.primaryBlue,
+              onTap: () => context.go('/admin/haccp'),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: _buildHubTile(
+              context,
+              icon: Icons.people_alt_outlined,
+              label: 'RH',
+              color: Colors.teal,
+              onTap: () => context.go('/admin/rh-hub'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHubTile(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              colors: [color, color.withOpacity(0.75)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 64, color: Colors.white),
+              const SizedBox(height: 16),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmployeeBody(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.all(16),
+      children: [
+        // Switch Employee Button (Prominent)
+        SectionCard(
+          onTap: () => context.go('/employee-selection'),
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -347,7 +425,6 @@ class _DashboardPageState extends State<DashboardPage> {
             ),
           ],
         ],
-      ),
     );
   }
 

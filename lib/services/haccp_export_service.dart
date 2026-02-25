@@ -217,13 +217,12 @@ class HaccpExportService {
         allRows.add([
           '=== CHANGEMENTS D\'HUILE (${oilChanges.length} enregistrement(s)) ===',
         ]);
-        allRows.add(['Date', 'Machine', 'Quantité (L)', 'Employé', 'Remarque']);
+        allRows.add(['Date', 'Machine', 'Employé', 'Remarque']);
         for (final o in oilChanges) {
           final emp = _formatEmployee(o.employeeFirstName, o.employeeLastName);
           allRows.add([
             _df.format(o.changedAt),
             o.friteuseNom ?? o.friteuseId,
-            o.quantite.toStringAsFixed(1),
             emp,
             o.remarque ?? '',
           ]);
@@ -563,13 +562,12 @@ class HaccpExportService {
         );
         sections.add(
           _pdfTable(
-            headers: ['Date', 'Machine', 'Quantité (L)', 'Employé', 'Remarque'],
+            headers: ['Date', 'Machine', 'Employé', 'Remarque'],
             rows: oilChanges
                 .map(
-                  (o) => [
+                  (o) => <String>[
                     _df.format(o.changedAt),
                     o.friteuseNom ?? o.friteuseId,
-                    o.quantite.toStringAsFixed(1),
                     _formatEmployee(o.employeeFirstName, o.employeeLastName),
                     o.remarque ?? '-',
                   ],

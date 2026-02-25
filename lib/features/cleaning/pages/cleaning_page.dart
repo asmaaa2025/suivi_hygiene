@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../shared/utils/navigation_helpers.dart';
 import 'cleaning_todo_page.dart';
 import 'cleaning_history_page.dart';
 import 'taches_management_page.dart';
@@ -30,9 +31,19 @@ class _CleaningPageState extends State<CleaningPage>
 
   @override
   Widget build(BuildContext context) {
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
+    final routePrefix = isAdminRoute ? '/admin' : '/app';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Nettoyage'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => NavigationHelpers.goHaccpHub(context),
+          tooltip: 'Retour',
+        ),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -44,7 +55,7 @@ class _CleaningPageState extends State<CleaningPage>
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => context.push('/app/cleaning/taches/new'),
+            onPressed: () => context.push('$routePrefix/cleaning/taches/new'),
             tooltip: 'Créer une tâche',
           ),
         ],

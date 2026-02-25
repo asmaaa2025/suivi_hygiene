@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:uuid/uuid.dart';
@@ -446,6 +447,11 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
+    final routePrefix = isAdminRoute ? '/admin' : '/app';
+
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
@@ -455,6 +461,10 @@ class _DocumentsPageState extends State<DocumentsPage> {
         ),
         backgroundColor: Colors.blue.shade600,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('$routePrefix/haccp'),
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _isOnline ? _showAddMenu : null,

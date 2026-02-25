@@ -560,6 +560,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
     final isAdminRoute = GoRouterState.of(
       context,
     ).matchedLocation.startsWith('/admin');
+    final routePrefix = isAdminRoute ? '/admin' : '/app';
 
     return Scaffold(
       appBar: AppBar(
@@ -568,12 +569,10 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
               ? 'Modifier la réception'
               : 'Nouvelle réception',
         ),
-        leading: isAdminRoute
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.go('/admin/home'),
-              )
-            : null,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('$routePrefix/receptions'),
+        ),
       ),
       body: _isLoadingData
           ? const Center(child: CircularProgressIndicator())

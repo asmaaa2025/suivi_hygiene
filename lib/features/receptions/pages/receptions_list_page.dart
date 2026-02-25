@@ -10,6 +10,7 @@ import '../../../../data/models/produit.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/error_state.dart';
+import '../../../../shared/utils/navigation_helpers.dart';
 import 'reception_form_page.dart';
 
 /// Receptions history page - Shows all reception records
@@ -201,13 +202,22 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
+    final routePrefix = isAdminRoute ? '/admin' : '/app';
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Historique des réceptions'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => NavigationHelpers.goHaccpHub(context),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),
-            onPressed: () => context.push('/app/receptions/new'),
+            onPressed: () => context.push('$routePrefix/receptions/new'),
             tooltip: 'Nouvelle réception',
           ),
         ],

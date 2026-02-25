@@ -552,11 +552,16 @@ class _NCDetailPageState extends State<NCDetailPage> {
       );
     }
 
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
+    final routePrefix = isAdminRoute ? '/admin' : '/app';
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('$routePrefix/alerts/nc/history'),
           tooltip: 'Retour',
         ),
         title: Text(_nc?.ficheNumber ?? 'Nouvelle NC'),

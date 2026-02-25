@@ -43,7 +43,8 @@ class NCRepository {
       // Get employee ID from session if not provided
       String? finalEmployeeId = employeeId;
       if (finalEmployeeId == null) {
-        finalEmployeeId = await _employeeSessionService.getCurrentEmployeeId();
+        await _employeeSessionService.initialize();
+        finalEmployeeId = _employeeSessionService.currentEmployee?.id;
       }
 
       // Validate employee ID - it must not be null

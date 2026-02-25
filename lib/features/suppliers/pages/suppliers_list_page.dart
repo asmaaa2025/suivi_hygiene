@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/utils/navigation_helpers.dart';
 import '../../../../data/repositories/supplier_repository.dart';
 import '../../../../data/models/supplier.dart';
 import '../../../../shared/widgets/section_card.dart';
@@ -97,6 +98,10 @@ class _SuppliersListPageState extends State<SuppliersListPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Fournisseurs'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => NavigationHelpers.goHaccpHub(context),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),

@@ -163,6 +163,10 @@ class _SupplierFormPageState extends State<SupplierFormPage> {
               ? 'Modifier le fournisseur'
               : 'Nouveau fournisseur',
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/suppliers'),
+        ),
       ),
       body: _isLoadingData
           ? const Center(child: CircularProgressIndicator())

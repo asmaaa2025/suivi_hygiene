@@ -276,6 +276,7 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
     final isAdminRoute = GoRouterState.of(
       context,
     ).matchedLocation.startsWith('/admin');
+    final routePrefix = isAdminRoute ? '/admin' : '/app';
 
     return Scaffold(
       resizeToAvoidBottomInset: true,
@@ -283,12 +284,10 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
         title: const Text('Suivi d\'Huile'),
         backgroundColor: Colors.amber,
         foregroundColor: Colors.white,
-        leading: isAdminRoute
-            ? IconButton(
-                icon: const Icon(Icons.arrow_back),
-                onPressed: () => context.go('/admin/home'),
-              )
-            : null,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('$routePrefix/haccp'),
+        ),
       ),
       body: SafeArea(
         child: CustomScrollView(

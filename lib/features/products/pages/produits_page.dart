@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:bekkapp/shared/utils/navigation_helpers.dart';
 import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -1090,6 +1092,10 @@ class _ProduitsPageState extends State<ProduitsPage>
         title: const Text('Gestion des Produits'),
         backgroundColor: Colors.purple.shade600,
         foregroundColor: Colors.white,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => NavigationHelpers.goHaccpHub(context),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.add),

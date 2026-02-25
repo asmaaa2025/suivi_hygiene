@@ -283,7 +283,7 @@ class _HaccpHubPageState extends State<HaccpHubPage> {
                           ModuleAction(
                             label: 'Formulaire NC',
                             icon: Icons.assignment,
-                            onTap: () => context.go('$prefix/alerts/nc/wizard'),
+                            onTap: () => context.go('$prefix/alerts/nc/new'),
                           ),
                           ModuleAction(
                             label: 'Historique NC',
@@ -316,7 +316,7 @@ class _HaccpHubPageState extends State<HaccpHubPage> {
                           ModuleAction(
                             label: 'Ajouter un document',
                             icon: Icons.upload,
-                            onTap: () => context.go('$prefix/documents/upload'),
+                            onTap: () => context.go('$prefix/documents'),
                           ),
                           ModuleAction(
                             label: 'Voir documents',

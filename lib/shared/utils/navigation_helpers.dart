@@ -23,13 +23,13 @@ class NavigationHelpers {
     final authService = AuthService();
     final userRole = await authService.getCurrentUserRole();
     if (userRole.isAdmin) {
-      context.go('/admin/haccp-hub');
+      context.go('/admin/haccp');
     } else {
-      context.go('/app/haccp-hub');
+      context.go('/app/haccp');
     }
   }
 
-  /// Navigate to RH hub (2 tiles: Personnel + Historique Pointage)
+  /// Navigate to RH hub
   static Future<void> goRhHub(BuildContext context) async {
     debugPrint('[Router] Navigating to RH Hub');
     context.go('/admin/rh-hub');
@@ -66,14 +66,6 @@ class NavigationHelpers {
     final userRole = await authService.getCurrentUserRole();
     final prefix = userRole.isAdmin ? '/admin' : '/app';
 
-    // HACCP module pages -> HACCP hub
-    if (location.contains('/temperatures') ||
-        location.contains('/receptions') ||
-        location.contains('/cleaning') ||
-        location.contains('/oil')) {
-      return '$prefix/haccp-hub';
-    }
-
     // RH pages -> RH hub
     if (location.contains('/rh') || location.contains('/clock-history')) {
       return '/admin/rh-hub';
@@ -84,17 +76,18 @@ class NavigationHelpers {
       return '$prefix/home';
     }
 
-    // Historiques HACCP (temperatures-history, etc.) -> HACCP hub
-    if (location.contains('/temperatures-history') ||
-        location.contains('/receptions-history') ||
-        location.contains('/oil-history') ||
-        location.contains('/cleaning-history')) {
-      return '$prefix/haccp-hub';
-    }
-
-    // Page Historique unifiée -> HACCP hub
-    if (location.contains('/history')) {
-      return '$prefix/haccp-hub';
+    // All HACCP sub-pages -> HACCP hub
+    if (location.contains('/temperatures') ||
+        location.contains('/receptions') ||
+        location.contains('/cleaning') ||
+        location.contains('/oil') ||
+        location.contains('/alerts') ||
+        location.contains('/plan-rappel') ||
+        location.contains('/tableau-allergenes') ||
+        location.contains('/documents') ||
+        location.contains('/synthese-hebdomadaire') ||
+        location.contains('/history')) {
+      return '$prefix/haccp';
     }
 
     // Default: go home

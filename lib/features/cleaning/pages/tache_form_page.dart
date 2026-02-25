@@ -173,9 +173,18 @@ class _TacheFormPageState extends State<TacheFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isAdminRoute = GoRouterState.of(
+      context,
+    ).matchedLocation.startsWith('/admin');
+    final routePrefix = isAdminRoute ? '/admin' : '/app';
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_isEditMode ? 'Modifier tâche' : 'Nouvelle tâche'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('$routePrefix/cleaning'),
+        ),
       ),
       body: _isLoading && _isEditMode
           ? const Center(child: CircularProgressIndicator())

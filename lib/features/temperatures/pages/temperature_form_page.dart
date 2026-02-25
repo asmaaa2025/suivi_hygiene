@@ -277,6 +277,7 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
     final isAdminRoute = GoRouterState.of(
       context,
     ).matchedLocation.startsWith('/admin');
+    final routePrefix = isAdminRoute ? '/admin' : '/app';
 
     return Scaffold(
       appBar: AppBar(
@@ -287,7 +288,7 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('$routePrefix/temperatures'),
         ),
       ),
       body: _isLoadingAppareils

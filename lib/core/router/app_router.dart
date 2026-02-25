@@ -32,6 +32,16 @@ import '../../features/clock/pages/pointage_page.dart';
 import '../../features/admin/pages/personnel_registry_page.dart';
 import '../../features/admin/pages/personnel_form_page.dart';
 import '../../features/admin/pages/admin_clock_history_page.dart';
+import '../../features/haccp/pages/haccp_hub_page.dart';
+import '../../features/haccp/pages/alerts_inbox_page.dart';
+import '../../features/haccp/pages/nc_list_page.dart';
+import '../../features/haccp/pages/nc_detail_page.dart';
+import '../../features/haccp/pages/plan_rappel_page.dart';
+import '../../features/haccp/pages/tableau_allergenes_page.dart';
+import '../../features/haccp/pages/synthese_hebdomadaire_page.dart';
+import '../../features/documents/pages/documents_page.dart';
+import '../../features/products/pages/product_form_page.dart';
+import '../../features/admin/pages/rh_hub_page.dart';
 
 /// Application router configuration with RBAC and dual shells
 final appRouter = GoRouter(
@@ -208,6 +218,76 @@ final appRouter = GoRouter(
           path: '/app/entry',
           builder: (context, state) => const EntryPage(),
         ),
+        GoRoute(
+          path: '/app/haccp',
+          builder: (context, state) => const HaccpHubPage(),
+        ),
+        GoRoute(
+          path: '/app/temperatures-history',
+          redirect: (context, state) => '/app/temperatures',
+        ),
+        GoRoute(
+          path: '/app/receptions-history',
+          redirect: (context, state) => '/app/receptions',
+        ),
+        GoRoute(
+          path: '/app/cleaning-history',
+          redirect: (context, state) => '/app/cleaning',
+        ),
+        GoRoute(
+          path: '/app/oil-history',
+          redirect: (context, state) => '/app/oil',
+        ),
+        GoRoute(
+          path: '/app/alerts/list',
+          builder: (context, state) => const AlertsInboxPage(),
+        ),
+        GoRoute(
+          path: '/app/alerts/nc/new',
+          builder: (context, state) => const NCDetailPage(),
+        ),
+        GoRoute(
+          path: '/app/alerts/nc/history',
+          builder: (context, state) => const NCListPage(),
+        ),
+        GoRoute(
+          path: '/app/alerts/nc/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return NCDetailPage(ncId: id);
+          },
+        ),
+        GoRoute(
+          path: '/app/plan-rappel',
+          builder: (context, state) => const PlanRappelPage(),
+        ),
+        GoRoute(
+          path: '/app/tableau-allergenes',
+          builder: (context, state) => const TableauAllergenesPage(),
+        ),
+        GoRoute(
+          path: '/app/documents',
+          builder: (context, state) => const DocumentsPage(),
+        ),
+        GoRoute(
+          path: '/app/documents/upload',
+          redirect: (context, state) => '/app/documents',
+        ),
+        GoRoute(
+          path: '/app/synthese-hebdomadaire',
+          builder: (context, state) => const SyntheseHebdomadairePage(),
+        ),
+        GoRoute(
+          path: '/app/products/new',
+          builder: (context, state) => const ProductFormPage(),
+        ),
+        GoRoute(
+          path: '/app/products/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return ProductFormPage(productId: id);
+          },
+        ),
       ],
     ),
 
@@ -321,6 +401,80 @@ final appRouter = GoRouter(
           path: '/admin/entry',
           builder: (context, state) => const EntryPage(),
         ),
+        GoRoute(
+          path: '/admin/haccp',
+          builder: (context, state) => const HaccpHubPage(),
+        ),
+        GoRoute(
+          path: '/admin/rh-hub',
+          builder: (context, state) => const RhHubPage(),
+        ),
+        GoRoute(
+          path: '/admin/temperatures-history',
+          redirect: (context, state) => '/admin/temperatures',
+        ),
+        GoRoute(
+          path: '/admin/receptions-history',
+          redirect: (context, state) => '/admin/receptions',
+        ),
+        GoRoute(
+          path: '/admin/cleaning-history',
+          redirect: (context, state) => '/admin/cleaning',
+        ),
+        GoRoute(
+          path: '/admin/oil-history',
+          redirect: (context, state) => '/admin/oil',
+        ),
+        GoRoute(
+          path: '/admin/alerts/list',
+          builder: (context, state) => const AlertsInboxPage(),
+        ),
+        GoRoute(
+          path: '/admin/alerts/nc/new',
+          builder: (context, state) => const NCDetailPage(),
+        ),
+        GoRoute(
+          path: '/admin/alerts/nc/history',
+          builder: (context, state) => const NCListPage(),
+        ),
+        GoRoute(
+          path: '/admin/alerts/nc/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return NCDetailPage(ncId: id);
+          },
+        ),
+        GoRoute(
+          path: '/admin/plan-rappel',
+          builder: (context, state) => const PlanRappelPage(),
+        ),
+        GoRoute(
+          path: '/admin/tableau-allergenes',
+          builder: (context, state) => const TableauAllergenesPage(),
+        ),
+        GoRoute(
+          path: '/admin/documents',
+          builder: (context, state) => const DocumentsPage(),
+        ),
+        GoRoute(
+          path: '/admin/documents/upload',
+          redirect: (context, state) => '/admin/documents',
+        ),
+        GoRoute(
+          path: '/admin/synthese-hebdomadaire',
+          builder: (context, state) => const SyntheseHebdomadairePage(),
+        ),
+        GoRoute(
+          path: '/admin/products/new',
+          builder: (context, state) => const ProductFormPage(),
+        ),
+        GoRoute(
+          path: '/admin/products/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return ProductFormPage(productId: id);
+          },
+        ),
       ],
     ),
 
@@ -363,6 +517,17 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/products',
       builder: (context, state) => const ProductsListPage(),
+    ),
+    GoRoute(
+      path: '/products/new',
+      builder: (context, state) => const ProductFormPage(),
+    ),
+    GoRoute(
+      path: '/products/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return ProductFormPage(productId: id);
+      },
     ),
     GoRoute(
       path: '/settings',
