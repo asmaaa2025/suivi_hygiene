@@ -38,9 +38,9 @@ class RhHubPage extends StatelessWidget {
               const SizedBox(height: 16),
               Expanded(
                 child: GridView.count(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
+                  crossAxisCount: 4,
+                  crossAxisSpacing: 10,
+                  mainAxisSpacing: 10,
                   childAspectRatio: 1.4,
                   children: [
                     AppModuleTile(
@@ -52,7 +52,7 @@ class RhHubPage extends StatelessWidget {
                     ),
                     AppModuleTile(
                       icon: Icons.history,
-                      title: 'Historique Pointage',
+                      title: 'Historique',
                       subtitle: 'Historique des pointages',
                       onTap: () => context.go('/admin/clock-history'),
                       color: Colors.orange,

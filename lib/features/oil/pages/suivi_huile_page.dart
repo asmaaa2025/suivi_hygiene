@@ -10,8 +10,7 @@ import '../../../../services/cache_service.dart';
 import '../../../../services/employee_session_service.dart';
 import '../../../../exceptions/app_exceptions.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../shared/widgets/section_card.dart';
-import '../../../../shared/widgets/empty_state.dart';
+import '../../../../shared/widgets/app_module_tile.dart';
 import '../../../../data/models/oil_change.dart';
 
 class SuiviHuilePage extends StatefulWidget {
@@ -34,8 +33,8 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
   final _remarqueController = TextEditingController();
 
   DateTime _selectedDate = DateTime.now();
-  List<Map<String, dynamic>> _changements = [];
   List<Map<String, dynamic>> _fryers = [];
+  final Map<String, DateTime> _lastChangesByFryer = {};
   bool _isOnline = true;
   bool _isLoading = false;
 
@@ -82,63 +81,211 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
   Future<void> _loadChangements() async {
     setState(() => _isLoading = true);
     try {
-      // Try cache first
-      final cached = CacheService().get('oil_changes_all');
-      if (cached != null) {
-        setState(() {
-          _changements = List<Map<String, dynamic>>.from(cached);
-        });
+      // Load all oil changes once and compute the last change per fryer
+      final allChangesData = await _oilChangeRepo.getAll();
+
+      final Map<String, DateTime> lastByFryer = {};
+      for (final data in allChangesData) {
+        final fryerId = data['friteuse_id']?.toString();
+        if (fryerId == null || fryerId.isEmpty) continue;
+
+        DateTime? changedAt;
+        if (data['changed_at'] != null) {
+          changedAt = DateTime.tryParse(data['changed_at'].toString());
+        }
+        changedAt ??= (data['created_at'] != null
+            ? DateTime.tryParse(data['created_at'].toString())
+            : null);
+        if (changedAt == null) continue;
+
+        final existing = lastByFryer[fryerId];
+        if (existing == null || changedAt.isAfter(existing)) {
+          lastByFryer[fryerId] = changedAt;
+        }
       }
 
-      // Load from Supabase
-      final changements = await _oilChangeRepo.getAll();
       if (mounted) {
         setState(() {
-          _changements = changements.map((c) {
-            final dateStr = c['date'] as String?;
-            final friteuseId = c['friteuse_id'] as String?;
-            if (friteuseId == null) {
-              return {
-                ...c,
-                'date': dateStr != null
-                    ? DateTime.parse(dateStr)
-                    : DateTime.now(),
-                'machine': 'Machine inconnue',
-              };
-            }
-            final fryer = _fryers.firstWhere(
-              (f) => f['id'] == friteuseId,
-              orElse: () => <String, dynamic>{},
-            );
-            final machineName = fryer.isNotEmpty
-                ? (fryer['nom'] as String? ?? 'Machine inconnue')
-                : 'Machine inconnue (ID: $friteuseId)';
-            return {
-              ...c,
-              'date': dateStr != null
-                  ? DateTime.parse(dateStr)
-                  : DateTime.now(),
-              'machine': machineName,
-            };
-          }).toList();
+          _lastChangesByFryer
+            ..clear()
+            ..addAll(lastByFryer);
         });
       }
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Erreur: ${e is AppException ? e.message : e.toString()}',
-            ),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+      debugPrint('[SuiviHuile] Error loading last changes: $e');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
     }
+  }
+
+  Future<void> _showCreateFriteuseDialog() async {
+    final nameController = TextEditingController();
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Nouvelle friteuse'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Nom de la friteuse',
+            border: OutlineInputBorder(),
+            prefixIcon: Icon(Icons.local_fire_department),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              if (name.isEmpty) return;
+              try {
+                final user = _oilChangeRepo.client.auth.currentUser;
+                if (user == null) {
+                  throw Exception('Utilisateur non authentifié');
+                }
+                await _oilChangeRepo.client.from('friteuses').insert({
+                  'nom': name,
+                  'owner_id': user.id,
+                });
+                await _loadFryers();
+                await _loadChangements();
+                if (mounted) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Friteuse ajoutée'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erreur: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Créer'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showManageFriteuseDialog(Map<String, dynamic> fryer) async {
+    final nameController = TextEditingController(
+      text: fryer['nom'] as String? ?? '',
+    );
+    final fryerId = fryer['id']?.toString();
+    if (fryerId == null || fryerId.isEmpty) return;
+
+    await showDialog<void>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Gérer la friteuse'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Nom de la friteuse',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text('Annuler'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newName = nameController.text.trim();
+              if (newName.isEmpty) return;
+              try {
+                await _oilChangeRepo.client
+                    .from('friteuses')
+                    .update({'nom': newName}).eq('id', fryerId);
+                await _loadFryers();
+                await _loadChangements();
+                if (mounted) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Friteuse renommée'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erreur: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Enregistrer'),
+          ),
+          TextButton(
+            onPressed: () async {
+              final confirm = await showDialog<bool>(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text('Supprimer la friteuse'),
+                  content: const Text(
+                    'Êtes-vous sûr de vouloir supprimer cette friteuse ?',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: const Text('Annuler'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: const Text(
+                        'Supprimer',
+                        style: TextStyle(color: Colors.red),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+              if (confirm != true) return;
+
+              try {
+                await _oilChangeRepo.client
+                    .from('friteuses')
+                    .delete()
+                    .eq('id', fryerId);
+                await _loadFryers();
+                await _loadChangements();
+                if (mounted) {
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Friteuse supprimée'),
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Erreur: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text(
+              'Supprimer',
+              style: TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _selectDate(BuildContext context) async {
@@ -156,8 +303,6 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
   }
 
   Future<void> _saveChangement() async {
-    if (!_formKey.currentState!.validate()) return;
-
     if (!_isOnline) {
       ScaffoldMessenger.of(
         context,
@@ -271,6 +416,140 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
     }
   }
 
+  void _openOilChangeSheet(String machineName) {
+    _machineController.text = machineName;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              left: 16,
+              right: 16,
+              top: 16,
+              bottom: MediaQuery.of(context).viewInsets.bottom + 16,
+            ),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Changement d\'huile',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    machineName,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _typeHuileController,
+                    decoration: const InputDecoration(
+                      labelText: 'Type d\'huile',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.opacity),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Veuillez entrer le type d\'huile';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _quantiteController,
+                    keyboardType:
+                        const TextInputType.numberWithOptions(decimal: true),
+                    decoration: const InputDecoration(
+                      labelText: 'Quantité (en litres)',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.straighten),
+                    ),
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Veuillez entrer la quantité';
+                      }
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _remarqueController,
+                    decoration: const InputDecoration(
+                      labelText: 'Remarque (optionnel)',
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.note),
+                    ),
+                    maxLines: 2,
+                  ),
+                  const SizedBox(height: 16),
+                  InkWell(
+                    onTap: () => _selectDate(context),
+                    child: InputDecorator(
+                      decoration: const InputDecoration(
+                        labelText: 'Date',
+                        border: OutlineInputBorder(),
+                        prefixIcon: Icon(Icons.calendar_today),
+                      ),
+                      child: Text(
+                        DateFormat('dd/MM/yyyy').format(_selectedDate),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: () async {
+                        if (!_formKey.currentState!.validate()) {
+                          return;
+                        }
+                        await _saveChangement();
+                        if (mounted) {
+                          Navigator.of(context).pop();
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.amber,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Enregistrer le changement'),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isAdminRoute = GoRouterState.of(
@@ -292,366 +571,162 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
-            // Formulaire
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.only(
-                  left: 16.0,
-                  right: 16.0,
-                  top: 16.0,
-                  bottom: MediaQuery.of(context).viewInsets.bottom + 16.0,
-                ),
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Form(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'Nouveau changement d\'huile',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _machineController,
-                            decoration: const InputDecoration(
-                              labelText: 'Machine',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.build),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Veuillez entrer le nom de la machine';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _typeHuileController,
-                            decoration: const InputDecoration(
-                              labelText: 'Type d\'huile',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.opacity),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Veuillez entrer le type d\'huile';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _quantiteController,
-                            decoration: const InputDecoration(
-                              labelText: 'Quantité',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.straighten),
-                            ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Veuillez entrer la quantité';
-                              }
-                              return null;
-                            },
-                          ),
-                          const SizedBox(height: 16),
-                          TextFormField(
-                            controller: _remarqueController,
-                            decoration: const InputDecoration(
-                              labelText: 'Remarque (optionnel)',
-                              border: OutlineInputBorder(),
-                              prefixIcon: Icon(Icons.note),
-                            ),
-                            maxLines: 2,
-                          ),
-                          const SizedBox(height: 16),
-                          InkWell(
-                            onTap: () => _selectDate(context),
-                            child: InputDecorator(
-                              decoration: const InputDecoration(
-                                labelText: 'Date',
-                                border: OutlineInputBorder(),
-                                prefixIcon: Icon(Icons.calendar_today),
-                              ),
-                              child: Text(
-                                DateFormat('dd/MM/yyyy').format(_selectedDate),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          SizedBox(
-                            width: double.infinity,
-                            child: ElevatedButton(
-                              onPressed: _saveChangement,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.amber,
-                                foregroundColor: Colors.white,
-                              ),
-                              child: const Text('Enregistrer'),
-                            ),
-                          ),
-                        ],
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Suivi d\'huile par friteuse',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Touchez une friteuse pour enregistrer un changement d\'huile.',
+                      style: Theme.of(context).textTheme.bodySmall,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (_fryers.isNotEmpty)
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 4,
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                    childAspectRatio: 1.4,
                   ),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(child: const SizedBox(height: 16)),
-            // Titre de l'historique
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: const Text(
-                  'Historique des changements',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ),
-            ),
-            SliverToBoxAdapter(child: const SizedBox(height: 8)),
-            // Liste des changements
-            _changements.isEmpty
-                ? SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: const Padding(
-                      padding: EdgeInsets.all(32.0),
-                      child: EmptyState(
-                        title: 'Aucun changement enregistré',
-                        message:
-                            'Vous n\'avez pas encore enregistré de changement d\'huile',
-                        icon: Icons.oil_barrel,
-                      ),
-                    ),
-                  )
-                : SliverPadding(
-                    padding: const EdgeInsets.all(16),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate((context, index) {
-                        final changement = _changements[index];
-                        final oilChange = OilChange.fromJson(changement);
-                        final date = changement['date'] is DateTime
-                            ? changement['date'] as DateTime
-                            : DateTime.parse(changement['date'] as String);
-                        final quantite = changement['quantite'];
-                        final remarque = changement['remarque'] as String?;
-                        final machineName =
-                            changement['machine'] as String? ??
-                            'Machine inconnue';
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      // Last tile: add new friteuse
+                      if (index == _fryers.length) {
+                        return AppModuleTile(
+                          icon: Icons.add,
+                          title: 'Ajouter une friteuse',
+                          subtitle: 'Créer une nouvelle friteuse',
+                          color: AppTheme.statusWarn,
+                          onTap: _showCreateFriteuseDialog,
+                        );
+                      }
 
-                        return SectionCard(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          machineName,
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .titleMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.calendar_today,
-                                              size: 16,
-                                              color: Colors.grey[600],
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              DateFormat(
-                                                'dd/MM/yyyy à HH:mm',
-                                              ).format(date),
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall
-                                                  ?.copyWith(
-                                                    color: Colors.grey[600],
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Quantité badge
-                                  if (quantite != null)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 12,
-                                        vertical: 8,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.amber.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(
-                                          color: Colors.amber,
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.opacity,
-                                            size: 20,
-                                            color: Colors.amber[700],
-                                          ),
-                                          const SizedBox(width: 4),
-                                          Text(
-                                            '$quantite L',
-                                            style: TextStyle(
-                                              color: Colors.amber[700],
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              if (remarque != null && remarque.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Row(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Icon(
-                                        Icons.note,
-                                        size: 16,
-                                        color: Colors.grey[600],
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          remarque,
-                                          style: Theme.of(
-                                            context,
-                                          ).textTheme.bodyMedium,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                              if (oilChange.photoUrl != null &&
-                                  oilChange.photoUrl!.isNotEmpty) ...[
-                                const SizedBox(height: 8),
-                                InkWell(
-                                  onTap: () => _showPhotoDialog(
-                                    context,
-                                    oilChange.photoUrl!,
-                                  ),
-                                  child: Container(
-                                    height: 100,
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[200],
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                        color: Colors.grey[300]!,
-                                      ),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(8),
-                                      child: Image.network(
-                                        oilChange.photoUrl!,
-                                        fit: BoxFit.cover,
-                                        errorBuilder:
-                                            (context, error, stackTrace) {
-                                              return const Center(
-                                                child: Icon(
-                                                  Icons.broken_image,
-                                                  size: 40,
-                                                ),
-                                              );
-                                            },
-                                        loadingBuilder:
-                                            (context, child, loadingProgress) {
-                                              if (loadingProgress == null)
-                                                return child;
-                                              return const Center(
-                                                child:
-                                                    CircularProgressIndicator(),
-                                              );
-                                            },
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              if (oilChange.employeeFirstName != null &&
-                                  oilChange.employeeLastName != null) ...[
-                                const SizedBox(height: 8),
+                      final fryer = _fryers[index];
+                      final machineName =
+                          (fryer['nom'] as String?) ?? 'Friteuse ${index + 1}';
+                      final fryerId = fryer['id']?.toString();
+                      final lastChange = fryerId != null
+                          ? _lastChangesByFryer[fryerId]
+                          : null;
+                      final subtitle = lastChange != null
+                          ? 'Dernier changement : ${DateFormat('dd/MM/yyyy').format(lastChange)}'
+                          : 'Dernier changement : -';
+
+                      return Card(
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => _openOilChangeSheet(machineName),
+                          child: Padding(
+                            padding: const EdgeInsets.all(8),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                // Ligne du haut : icône + bouton 3 points alignés
                                 Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(
-                                      Icons.person,
-                                      size: 16,
-                                      color: Colors.grey[600],
+                                    Container(
+                                      padding: const EdgeInsets.all(6),
+                                      decoration: BoxDecoration(
+                                        color: AppTheme.statusWarn
+                                            .withOpacity(0.15),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.oil_barrel,
+                                        size: 24,
+                                        color: AppTheme.statusWarn,
+                                      ),
                                     ),
-                                    const SizedBox(width: 4),
-                                    Text(
-                                      'Effectué par: ${oilChange.employeeFirstName} ${oilChange.employeeLastName}',
-                                      style: Theme.of(
-                                        context,
-                                      ).textTheme.bodySmall,
+                                    IconButton(
+                                      icon: const Icon(
+                                        Icons.more_vert,
+                                        size: 18,
+                                      ),
+                                      padding: EdgeInsets.zero,
+                                      constraints: const BoxConstraints(
+                                        minWidth: 28,
+                                        minHeight: 28,
+                                      ),
+                                      onPressed: () =>
+                                          _showManageFriteuseDialog(fryer),
+                                      tooltip: 'Gérer la friteuse',
                                     ),
                                   ],
                                 ),
+                                const SizedBox(height: 6),
+                                // Nom centré
+                                Text(
+                                  machineName,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                        color: Colors.black87,
+                                      ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                                const SizedBox(height: 4),
+                                // Sous-titre centré
+                                Text(
+                                  subtitle,
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(
+                                        color: Colors.grey[600],
+                                        fontSize: 11,
+                                      ),
+                                  textAlign: TextAlign.center,
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ],
-                              // Action buttons
-                              const SizedBox(height: 12),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  IconButton(
-                                    icon: const Icon(Icons.edit, size: 20),
-                                    color: AppTheme.primaryBlue,
-                                    onPressed: () =>
-                                        _editOilChange(context, oilChange),
-                                    tooltip: 'Modifier',
-                                  ),
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.delete_outline,
-                                      size: 20,
-                                    ),
-                                    color: AppTheme.statusCritical,
-                                    onPressed: () =>
-                                        _deleteOilChange(context, oilChange),
-                                    tooltip: 'Supprimer',
-                                  ),
-                                ],
-                              ),
-                            ],
+                            ),
                           ),
-                        );
-                      }, childCount: _changements.length),
-                    ),
+                        ),
+                      );
+                    },
+                    childCount: _fryers.length + 1,
                   ),
+                ),
+              ),
+            if (_fryers.isEmpty)
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Text(
+                    'Aucune friteuse trouvée pour le moment.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
+              ),
           ],
         ),
       ),

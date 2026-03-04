@@ -18,7 +18,6 @@ void main() {
         frequencyDays: 180,
         graceDays: 15,
         active: true,
-        createdAt: DateTime.now(),
       );
       events = [];
     });
@@ -145,7 +144,6 @@ void main() {
         frequencyDays: 180,
         graceDays: 15,
         active: true,
-        createdAt: DateTime.now(),
       );
       final req2 = ComplianceRequirement(
         id: 'req-2',
@@ -155,7 +153,6 @@ void main() {
         frequencyDays: 180,
         graceDays: 15,
         active: true,
-        createdAt: DateTime.now(),
       );
 
       final requirements = [req1, req2];
@@ -203,7 +200,6 @@ void main() {
         frequencyDays: 180,
         graceDays: 15,
         active: false, // Inactive
-        createdAt: DateTime.now(),
       );
 
       final checkEvents = ComplianceService.buildDailyCheckEvents([

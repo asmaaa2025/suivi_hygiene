@@ -110,6 +110,27 @@ class ComplianceRepository {
     }
   }
 
+  /// Get compliance events linked to a specific document
+  Future<List<ComplianceEvent>> getEventsForDocument(String documentId) async {
+    try {
+      await _network.hasConnection();
+
+      final response = await _client
+          .from('compliance_events')
+          .select()
+          .eq('document_id', documentId)
+          .order('event_date', ascending: false);
+
+      return (response as List)
+          .map((json) => ComplianceEvent.fromJson(json as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      debugPrint('[ComplianceRepo] Error fetching events for document: $e');
+      if (e is NetworkException) rethrow;
+      throw SupabaseException('Failed to fetch compliance events for document: $e');
+    }
+  }
+
   /// Create a compliance event
   Future<ComplianceEvent> createEvent({
     required String organizationId,

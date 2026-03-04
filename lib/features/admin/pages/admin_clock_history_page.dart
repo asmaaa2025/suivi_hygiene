@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/clock_session.dart';
 import '../../../data/models/employee.dart';
@@ -116,7 +117,14 @@ class _AdminClockHistoryPageState extends State<AdminClockHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Historique de Pointage')),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go('/admin/rh-hub'),
+          tooltip: 'Retour RH',
+        ),
+        title: const Text('Historique de Pointage'),
+      ),
       body: Column(
         children: [
           // Filters

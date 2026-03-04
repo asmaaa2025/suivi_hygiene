@@ -4,6 +4,7 @@ class OilChange {
   final String friteuseId;
   final String? friteuseNom;
   final DateTime changedAt;
+  final double? quantite;
   final String? remarque;
   final String? photoUrl;
   final DateTime createdAt;
@@ -16,6 +17,7 @@ class OilChange {
     required this.friteuseId,
     this.friteuseNom,
     required this.changedAt,
+    this.quantite,
     this.remarque,
     this.photoUrl,
     required this.createdAt,
@@ -25,6 +27,12 @@ class OilChange {
   });
 
   factory OilChange.fromJson(Map<String, dynamic> json) {
+    double? _parseQuantite(dynamic value) {
+      if (value == null) return null;
+      if (value is num) return value.toDouble();
+      return double.tryParse(value.toString());
+    }
+
     return OilChange(
       id: json['id']?.toString() ?? '',
       friteuseId: json['friteuse_id']?.toString() ?? '',
@@ -35,6 +43,7 @@ class OilChange {
                 ? (DateTime.tryParse(json['created_at'].toString()) ??
                       DateTime.now())
                 : DateTime.now()),
+      quantite: _parseQuantite(json['quantite']),
       remarque: json['remarque'] as String?,
       photoUrl: json['photo_url'] as String?,
       createdAt: json['created_at'] != null
@@ -51,10 +60,13 @@ class OilChange {
       'id': id,
       'friteuse_id': friteuseId,
       'changed_at': changedAt.toIso8601String(),
+      'quantite': quantite,
       'remarque': remarque,
       'photo_url': photoUrl,
       'created_at': createdAt.toIso8601String(),
       'created_by': createdBy,
+      'employee_first_name': employeeFirstName,
+      'employee_last_name': employeeLastName,
     };
   }
 }

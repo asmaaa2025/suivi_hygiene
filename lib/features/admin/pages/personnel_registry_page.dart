@@ -119,7 +119,7 @@ class _PersonnelRegistryPageState extends State<PersonnelRegistryPage> {
         title: const Text('Registre du Personnel'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/admin/home'),
+          onPressed: () => context.go('/admin/rh-hub'),
         ),
         actions: [
           IconButton(

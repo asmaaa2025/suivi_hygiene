@@ -135,14 +135,16 @@ class _ParametresPageState extends State<ParametresPage> {
 
   Future<void> _logout() async {
     try {
-      // Clear cache
+      // Use AuthService to fully clear session (Supabase + employé + rôles)
+      final authService = AuthService();
+      await authService.logout();
+
+      // Clear application cache
       await CacheService().clear();
 
-      // Sign out from Supabase
-      await Supabase.instance.client.auth.signOut();
-
-      // AuthGate will automatically redirect to login
+      // Naviguer explicitement vers la page de login
       if (mounted) {
+        context.go('/login');
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Déconnexion réussie')));

@@ -14,6 +14,7 @@ import '../../features/receptions/pages/receptions_list_page.dart';
 import '../../features/receptions/pages/reception_form_page.dart';
 import '../../features/oil/pages/oil_changes_list_page.dart';
 import '../../features/oil/pages/suivi_huile_page.dart';
+import '../../features/oil/pages/oil_changes_history_page.dart';
 import '../../features/history/pages/history_page.dart';
 import '../../features/labels/pages/labels_page.dart';
 import '../../features/products/pages/products_list_page.dart';
@@ -218,6 +219,10 @@ final appRouter = GoRouter(
           builder: (context, state) => const SuiviHuilePage(),
         ),
         GoRoute(
+          path: '/app/oil-history',
+          builder: (context, state) => const OilChangesHistoryPage(),
+        ),
+        GoRoute(
           path: '/app/entry',
           builder: (context, state) => const EntryPage(),
         ),
@@ -239,7 +244,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: '/app/oil-history',
-          redirect: (context, state) => '/app/oil',
+          redirect: (context, state) => '/app/oil-history',
         ),
         GoRoute(
           path: '/app/alerts/list',
@@ -422,6 +427,10 @@ final appRouter = GoRouter(
           builder: (context, state) => const SuiviHuilePage(),
         ),
         GoRoute(
+          path: '/admin/oil-history',
+          builder: (context, state) => const OilChangesHistoryPage(),
+        ),
+        GoRoute(
           path: '/admin/entry',
           builder: (context, state) => const EntryPage(),
         ),
@@ -447,7 +456,7 @@ final appRouter = GoRouter(
         ),
         GoRoute(
           path: '/admin/oil-history',
-          redirect: (context, state) => '/admin/oil',
+          redirect: (context, state) => '/admin/oil-history',
         ),
         GoRoute(
           path: '/admin/alerts/list',

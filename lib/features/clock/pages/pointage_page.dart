@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../data/models/clock_session.dart';
 import '../../../data/models/employee.dart';
@@ -397,8 +398,20 @@ class _PointagePageState extends State<PointagePage> {
 
   @override
   Widget build(BuildContext context) {
+    final location = GoRouterState.of(context).matchedLocation;
+    final isAdminRoute = location.startsWith('/admin');
+
     return Scaffold(
-      appBar: AppBar(title: const Text('Pointage')),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.go(
+            isAdminRoute ? '/admin/rh-hub' : '/app/home',
+          ),
+          tooltip: isAdminRoute ? 'Retour RH' : 'Retour',
+        ),
+        title: const Text('Pointage'),
+      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(

@@ -91,31 +91,76 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget _buildAdminBody(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(24),
-      child: Center(
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 16,
-          mainAxisSpacing: 16,
-          childAspectRatio: 1.4,
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          children: [
-            AppModuleTile(
-              icon: Icons.fact_check_outlined,
-              title: 'HACCP',
-              subtitle: 'Suivi hygiène',
-              color: AppTheme.primaryBlue,
-              onTap: () => context.go('/admin/haccp'),
+      child: Column(
+        children: [
+          // Bandeau "Changer d'employé" aussi pour les admins
+          Card(
+            elevation: 1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
-            AppModuleTile(
-              icon: Icons.people_alt_outlined,
-              title: 'RH',
-              subtitle: 'Gestion du personnel',
-              color: Colors.teal,
-              onTap: () => context.go('/admin/rh-hub'),
+            child: InkWell(
+              onTap: () => context.go('/employee-selection'),
+              borderRadius: BorderRadius.circular(12),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.swap_horiz,
+                      color: AppTheme.primaryBlue,
+                      size: 24,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Changer d\'employé',
+                        style:
+                            Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.primaryBlue,
+                        ),
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: AppTheme.textTertiary),
+                  ],
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 24),
+          Expanded(
+            child: Center(
+              child: GridView.count(
+                crossAxisCount: 2,
+                crossAxisSpacing: 16,
+                mainAxisSpacing: 16,
+                childAspectRatio: 1.4,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  AppModuleTile(
+                    icon: Icons.fact_check_outlined,
+                    title: 'HACCP',
+                    subtitle: 'Suivi hygiène',
+                    color: AppTheme.primaryBlue,
+                    onTap: () => context.go('/admin/haccp'),
+                  ),
+                  AppModuleTile(
+                    icon: Icons.people_alt_outlined,
+                    title: 'RH',
+                    subtitle: 'Gestion du personnel',
+                    color: Colors.teal,
+                    onTap: () => context.go('/admin/rh-hub'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
