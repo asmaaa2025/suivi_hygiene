@@ -339,7 +339,7 @@ class _EmployeeSelectionPageState extends State<EmployeeSelectionPage> {
               content: Text(
                 'Vous avez une session de pointage ouverte. Vous pouvez pointer la sortie depuis la page Pointage.',
               ),
-              backgroundColor: Colors.blue,
+              backgroundColor: Colors.green,
             ),
           );
         }

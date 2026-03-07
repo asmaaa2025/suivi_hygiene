@@ -35,6 +35,9 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
   bool _isLoading = true;
   bool _isOnline = true;
   String? _organizationId;
+  /// Current folder (null = root). Navigation stack for back.
+  String? _currentFolderId;
+  final List<String> _folderStack = [];
 
   @override
   void initState() {
@@ -69,11 +72,17 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
 
   Future<void> _loadDocuments() async {
     try {
-      final raw = await _documentsRepo.getAll();
+      final raw = await _documentsRepo.getByFolderId(_currentFolderId);
       if (mounted) {
         setState(() {
           _documents = raw.map((json) => Document.fromJson(json)).toList();
-          _documents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+          _documents.sort((a, b) {
+            // Folders first, then by name
+            if (a.category.isFolder != b.category.isFolder) {
+              return a.category.isFolder ? -1 : 1;
+            }
+            return a.nom.toLowerCase().compareTo(b.nom.toLowerCase());
+          });
           _isLoading = false;
         });
       }
@@ -89,6 +98,25 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
         );
       }
     }
+  }
+
+  void _goBack() {
+    if (_folderStack.isEmpty) return;
+    setState(() {
+      _folderStack.removeLast();
+      _currentFolderId = _folderStack.isEmpty ? null : _folderStack.last;
+      _isLoading = true;
+    });
+    _loadDocuments();
+  }
+
+  void _enterFolder(String folderId) {
+    setState(() {
+      _folderStack.add(folderId);
+      _currentFolderId = folderId;
+      _isLoading = true;
+    });
+    _loadDocuments();
   }
 
   Future<void> _loadComplianceStatuses() async {
@@ -189,6 +217,7 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
           storageUrl: storageUrl,
           taille: await pickedFile.length(),
           documentDate: documentDate,
+          dossierId: _currentFolderId,
         );
 
         // Create compliance event if it's a compliance category
@@ -265,6 +294,7 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
             storageUrl: storageUrl,
             taille: await imageFile.length(),
             documentDate: documentDate,
+            dossierId: _currentFolderId,
           );
 
           // Create compliance event if it's a compliance category
@@ -302,6 +332,64 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
     }
   }
 
+  Future<void> _createFolder() async {
+    final nameController = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Nouveau dossier'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Nom du dossier',
+            border: OutlineInputBorder(),
+            hintText: 'Ex: Contrôles 2026',
+          ),
+          autofocus: true,
+          onSubmitted: (value) => Navigator.pop(ctx, value.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, nameController.text.trim()),
+            child: const Text('Créer'),
+          ),
+        ],
+      ),
+    );
+    if (name == null || name.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _documentsRepo.createDocument(
+        nom: name,
+        categorie: 'dossier',
+        storageUrl: '',
+        dossierId: _currentFolderId,
+      );
+      await _refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Dossier "$name" créé')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   void _showAddMenu({String? preselectedCategory}) {
     showModalBottomSheet(
       context: context,
@@ -318,6 +406,14 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
                   ),
                 ),
               ),
+            ListTile(
+              leading: const Icon(Icons.folder),
+              title: const Text('Nouveau dossier'),
+              onTap: () {
+                Navigator.pop(ctx);
+                _createFolder();
+              },
+            ),
             ListTile(
               leading: const Icon(Icons.upload_file),
               title: const Text('Ajouter un fichier'),
@@ -354,12 +450,143 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
     );
   }
 
+  Future<void> _renameDocument(Document doc) async {
+    final nameController = TextEditingController(text: doc.nom);
+    final newName = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(doc.category.isFolder ? 'Renommer le dossier' : 'Renommer le document'),
+        content: TextField(
+          controller: nameController,
+          decoration: const InputDecoration(
+            labelText: 'Nom',
+            border: OutlineInputBorder(),
+          ),
+          autofocus: true,
+          onSubmitted: (v) => Navigator.pop(ctx, v.trim()),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, nameController.text.trim()),
+            child: const Text('Enregistrer'),
+          ),
+        ],
+      ),
+    );
+    if (newName == null || newName.isEmpty) return;
+
+    setState(() => _isLoading = true);
+    try {
+      await _documentsRepo.updateDocument(id: doc.id, nom: newName);
+      await _refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nom mis à jour')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _moveDocument(Document doc) async {
+    List<Document> folders;
+    try {
+      final raw = await _documentsRepo.getAllFolders();
+      folders = raw.map((json) => Document.fromJson(json)).toList();
+      // Exclude self and direct children when moving a folder (no cycle)
+      if (doc.category.isFolder) {
+        folders.removeWhere((f) => f.id == doc.id || f.folderId == doc.id);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Erreur: ${e is AppException ? e.message : e.toString()}')),
+        );
+      }
+      return;
+    }
+
+    final selected = await showDialog<String?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Déplacer vers'),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.folder_open),
+                title: const Text('Racine'),
+                onTap: () => Navigator.pop(ctx, ''),
+              ),
+              ...folders.map((f) => ListTile(
+                leading: Icon(Icons.folder, color: Colors.amber.shade700),
+                title: Text(f.nom),
+                onTap: () => Navigator.pop(ctx, f.id),
+              )),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Annuler'),
+          ),
+        ],
+      ),
+    );
+    if (selected == null) return;
+
+    setState(() => _isLoading = true);
+    try {
+      if (selected.isEmpty) {
+        await _documentsRepo.updateDocument(id: doc.id, clearDossierId: true);
+      } else {
+        await _documentsRepo.updateDocument(id: doc.id, dossierId: selected);
+      }
+      await _refresh();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Élément déplacé')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Erreur: ${e is AppException ? e.message : e.toString()}',
+            ),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _deleteDocument(Document doc) async {
+    final isFolder = doc.category.isFolder;
     final confirm = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Confirmation'),
-        content: const Text('Supprimer ce document ?'),
+        content: Text(isFolder
+            ? 'Supprimer ce dossier ? Son contenu sera déplacé ici.'
+            : 'Supprimer ce document ?'),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
@@ -376,11 +603,24 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
 
     setState(() => _isLoading = true);
     try {
-      await _documentsRepo.deleteDocument(doc.id, doc.storageUrl);
+      if (isFolder) {
+        final parentId = _folderStack.length >= 2
+            ? _folderStack[_folderStack.length - 2]
+            : null;
+        await _documentsRepo.deleteFolder(doc.id, parentId);
+        if (mounted && doc.id == _currentFolderId) {
+          setState(() {
+            _folderStack.removeLast();
+            _currentFolderId = _folderStack.isEmpty ? null : _folderStack.last;
+          });
+        }
+      } else {
+        await _documentsRepo.deleteDocument(doc.id, doc.storageUrl);
+      }
       await _refresh();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Document supprimé')),
+          SnackBar(content: Text(isFolder ? 'Dossier supprimé' : 'Document supprimé')),
         );
       }
     } catch (e) {
@@ -406,12 +646,20 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Documents HACCP'),
+        title: Text(_currentFolderId == null
+            ? 'Documents HACCP'
+            : 'Dossier'),
         backgroundColor: Colors.purple.shade300,
         foregroundColor: Colors.white,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('$routePrefix/haccp'),
+          onPressed: () {
+            if (_folderStack.isNotEmpty) {
+              _goBack();
+            } else {
+              context.go('$routePrefix/haccp');
+            }
+          },
           tooltip: 'Retour',
         ),
       ),
@@ -428,19 +676,21 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
             : ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // Compliance status panel (3 cards)
-                  if (_complianceStatuses.isNotEmpty)
+                  // Compliance status panel (only at root)
+                  if (_currentFolderId == null && _complianceStatuses.isNotEmpty)
                     ComplianceStatusPanel(
                       statuses: _complianceStatuses,
                       onUpload: _onComplianceUpload,
                     ),
 
-                  if (_complianceStatuses.isNotEmpty)
+                  if (_currentFolderId == null && _complianceStatuses.isNotEmpty)
                     const SizedBox(height: 24),
 
                   // Documents list header
                   Text(
-                    'Documents (${_documents.length})',
+                    _currentFolderId == null
+                        ? 'Documents (${_documents.length})'
+                        : 'Contenu (${_documents.length})',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -502,12 +752,17 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
           width: 44,
           height: 44,
           decoration: BoxDecoration(
-            color: _getFileColor(doc.nom).withOpacity(0.1),
+            color: (doc.category.isFolder
+                    ? Colors.amber
+                    : _getFileColor(doc.nom))
+                .withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(
-            _getFileIcon(doc.nom),
-            color: _getFileColor(doc.nom),
+            doc.category.isFolder ? doc.category.icon : _getFileIcon(doc.nom),
+            color: doc.category.isFolder
+                ? Colors.amber.shade700
+                : _getFileColor(doc.nom),
             size: 22,
           ),
         ),
@@ -521,12 +776,37 @@ class _DocumentsHomeScreenState extends State<DocumentsHomeScreen> {
           '${doc.category.displayName} • ${_formatDate(doc.createdAt)}',
           style: TextStyle(fontSize: 11, color: Colors.grey[600]),
         ),
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline, size: 20),
-          onPressed: () => _deleteDocument(doc),
-          color: Colors.red.shade300,
+        trailing: PopupMenuButton<String>(
+          icon: const Icon(Icons.more_vert),
+          onSelected: (value) {
+            switch (value) {
+              case 'rename':
+                _renameDocument(doc);
+                break;
+              case 'move':
+                _moveDocument(doc);
+                break;
+              case 'delete':
+                _deleteDocument(doc);
+                break;
+            }
+          },
+          itemBuilder: (ctx) => [
+            const PopupMenuItem(value: 'rename', child: Text('Renommer')),
+            const PopupMenuItem(value: 'move', child: Text('Déplacer')),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Text('Supprimer', style: TextStyle(color: Colors.red)),
+            ),
+          ],
         ),
-        onTap: () => context.push('$routePrefix/documents/${doc.id}'),
+        onTap: () {
+          if (doc.category.isFolder) {
+            _enterFolder(doc.id);
+          } else {
+            context.push('$routePrefix/documents/${doc.id}');
+          }
+        },
       ),
     );
   }

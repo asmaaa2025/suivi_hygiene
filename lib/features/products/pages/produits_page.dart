@@ -1299,14 +1299,46 @@ class _ProduitsPageState extends State<ProduitsPage>
                   ),
                   const SizedBox(height: 16),
 
-                  // Sélecteur de type de produit
-                  Text(
-                    'Type de produit *',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.purple.shade700,
+                  // Sélecteur de type de produit (déroulant)
+                  DropdownButtonFormField<TypeProduit>(
+                    value: localSelectedType,
+                    decoration: InputDecoration(
+                      labelText: 'Type de produit *',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
                     ),
+                    isExpanded: true,
+                    menuMaxHeight: 320,
+                    items: TypeProduit.values.map((type) {
+                      return DropdownMenuItem<TypeProduit>(
+                        value: type,
+                        child: Text(
+                          type == TypeProduit.recu
+                              ? 'Produit reçu'
+                              : type == TypeProduit.fini
+                              ? 'Produit fini'
+                              : type == TypeProduit.prepare
+                              ? 'Produit préparé'
+                              : type == TypeProduit.ouverture
+                              ? 'Ouverture'
+                              : 'Décongélation',
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (type) {
+                      if (type == null) return;
+                      setDialogState(() {
+                        localSelectedType = type;
+                        _dlcJoursController.text =
+                            type.dlcParDefaut.toString();
+                        if (type != TypeProduit.recu) {
+                          localSelectedSupplierId = null;
+                        }
+                      });
+                    },
                   ),
                   SizedBox(height: 8),
                   Text(
@@ -1320,141 +1352,6 @@ class _ProduitsPageState extends State<ProduitsPage>
                         ? 'Produit ouvert (bouteille de lait, conserve, etc.)'
                         : 'Produit décongelé pour utilisation',
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
-                  ),
-                  SizedBox(height: 16),
-                  GridView.count(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 2.5,
-                    children: TypeProduit.values.map((type) {
-                      final isSelected = localSelectedType == type;
-                      final color = type == TypeProduit.recu
-                          ? Colors.purple
-                          : type == TypeProduit.fini
-                          ? Colors.green
-                          : type == TypeProduit.prepare
-                          ? Colors.orange
-                          : type == TypeProduit.ouverture
-                          ? Colors.red
-                          : Colors.blue;
-
-                      return InkWell(
-                        onTap: () {
-                          setDialogState(() {
-                            localSelectedType = type;
-                            // Remplir automatiquement la DLC selon le type
-                            _dlcJoursController.text = type.dlcParDefaut
-                                .toString();
-                            // Clear supplier if not "reçu"
-                            if (type != TypeProduit.recu) {
-                              localSelectedSupplierId = null;
-                            }
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        splashColor: color.shade200.withOpacity(0.3),
-                        highlightColor: color.shade100.withOpacity(0.2),
-                        child: AnimatedContainer(
-                          duration: Duration(milliseconds: 200),
-                          decoration: BoxDecoration(
-                            color: isSelected ? color.shade100 : Colors.white,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected
-                                  ? color.shade600
-                                  : Colors.grey.shade300,
-                              width: isSelected ? 3 : 2,
-                            ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: color.shade200.withOpacity(0.5),
-                                      blurRadius: 8,
-                                      offset: Offset(0, 4),
-                                    ),
-                                  ]
-                                : [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
-                                      blurRadius: 4,
-                                      offset: Offset(0, 2),
-                                    ),
-                                  ],
-                          ),
-                          child: Padding(
-                            padding: EdgeInsets.all(16),
-                            child: Row(
-                              children: [
-                                Container(
-                                  padding: EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: isSelected
-                                        ? color.shade200
-                                        : color.shade50,
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  child: Icon(
-                                    type == TypeProduit.recu
-                                        ? Icons.local_shipping
-                                        : type == TypeProduit.fini
-                                        ? Icons.shopping_cart
-                                        : type == TypeProduit.prepare
-                                        ? Icons.build
-                                        : type == TypeProduit.ouverture
-                                        ? Icons.open_in_new
-                                        : Icons.ac_unit,
-                                    color: color.shade700,
-                                    size: 24,
-                                  ),
-                                ),
-                                SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        type == TypeProduit.recu
-                                            ? 'Produit reçu'
-                                            : type == TypeProduit.fini
-                                            ? 'Produit fini'
-                                            : type == TypeProduit.prepare
-                                            ? 'Produit préparé'
-                                            : type == TypeProduit.ouverture
-                                            ? 'Ouverture'
-                                            : 'Décongélation',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: isSelected
-                                              ? color.shade800
-                                              : Colors.grey.shade800,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(
-                                        type.dlcDescription,
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: isSelected
-                                              ? color.shade600
-                                              : Colors.grey.shade600,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    }).toList(),
                   ),
                   // Fournisseur selection (only for "reçu" products)
                   if (localSelectedType == TypeProduit.recu) ...[

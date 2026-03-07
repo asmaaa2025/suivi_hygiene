@@ -1,0 +1,8 @@
+{
+  "version": "1.0.3",
+  "build": 3,
+  "apk_url": "https://github.com/asmaaa2025/suivi_hygiene/releases/download/v1.0.3/bekkapp_1.0.3.apk",
+  "mandatory": false,
+  "changelog": "Corrections et améliorations.",
+  "sha256": ""
+}

@@ -407,6 +407,8 @@ class _DocumentDetailScreenState extends State<DocumentDetailScreen> {
         return Colors.orange;
       case DocumentCategory.complianceAudit:
         return Colors.green;
+      case DocumentCategory.dossier:
+        return Colors.amber;
       case DocumentCategory.other:
         return Colors.grey;
     }

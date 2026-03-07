@@ -397,6 +397,9 @@ class _SuiviHuilePageState extends State<SuiviHuilePage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Changement d\'huile enregistré')),
         );
+        Navigator.of(context).pop();
+        final prefix = GoRouterState.of(context).matchedLocation.startsWith('/admin') ? '/admin' : '/app';
+        context.go('$prefix/oil-history');
       }
     } catch (e) {
       if (mounted) {

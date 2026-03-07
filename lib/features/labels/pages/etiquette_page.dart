@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 import '../../../../repositories/products_repository.dart';
 import '../../../../repositories/labels_repository.dart';
@@ -10,6 +11,7 @@ import '../../../../services/network_service.dart';
 import '../../../../services/cache_service.dart';
 import '../../../../exceptions/app_exceptions.dart';
 import '../../../../utils/text_input_formatters.dart';
+import '../../../../shared/utils/navigation_helpers.dart';
 import 'package:intl/intl.dart';
 
 class EtiquettePage extends StatefulWidget {
@@ -60,8 +62,8 @@ class _EtiquettePageState extends State<EtiquettePage> {
   bool _dlcJourMeme = false;
   bool _utiliseDluo = false;
   bool _isSurgel = false;
-  bool _logoAvailable = false;
-  bool _showLogo = true;
+  /// Logo archivé : plus d'affichage ni d'option dans l'UI.
+  bool _showLogo = false;
   final TypeProduit _selectedTypeProduit = TypeProduit.fini;
 
   @override
@@ -70,7 +72,6 @@ class _EtiquettePageState extends State<EtiquettePage> {
     _checkNetwork();
     _initializeData();
     initBluetooth();
-    checkLogoAvailability();
     _networkService.connectivityStream.listen((_) => _checkNetwork());
   }
 
@@ -174,13 +175,6 @@ class _EtiquettePageState extends State<EtiquettePage> {
     }
   }
 
-  Future<void> checkLogoAvailability() async {
-    final hasLogo = await _logoService.hasLogo();
-    setState(() {
-      _logoAvailable = hasLogo;
-    });
-  }
-
   Future<String> generateZplEtiquette({
     required Produit produit,
     required String lot,
@@ -194,223 +188,58 @@ class _EtiquettePageState extends State<EtiquettePage> {
     String? fabricant,
   }) async {
     final df = DateFormat('dd/MM/yyyy');
-    final logoCommand = showLogo ? await _logoService.getLogoCommand() : '';
-
-    final ingredients = _textSanitizer.sanitizeForZpl(
-      produit.ingredients ?? '',
-    );
-    final quantite = _textSanitizer.sanitizeForZpl(produit.quantite ?? '');
-    final origineViande = _textSanitizer.sanitizeForZpl(
-      produit.origineViande ?? '',
-    );
+    final title = _textSanitizer.sanitizeForZpl(produit.nom).toUpperCase();
+    final typeProduitText = _getTypeProduitText(produit.typeProduit);
     final allergenes = _textSanitizer.sanitizeForZpl(produit.allergenes ?? '');
 
-    final title = _textSanitizer.sanitizeForZpl(produit.nom).toUpperCase();
-    final titleLength = title.length;
-
-    int titleFontSize;
-    if (titleLength <= 20) {
-      titleFontSize = 35;
-    } else if (titleLength <= 30) {
-      titleFontSize = 30;
-    } else if (titleLength <= 40) {
-      titleFontSize = 26;
-    } else {
-      titleFontSize = 22;
-    }
-
-    final typeProduitText = _getTypeProduitText(produit.typeProduit);
-    final typeProduitX = (600 - (typeProduitText.length * 8)) ~/ 2;
-    final typeProduitXPosition = typeProduitX > 20 ? typeProduitX : 20;
-
-    int currentPos = 85;
-    int fieldCount = 0;
-    final List<String> contentLines = [];
-
-    // Calculer d'abord le nombre de champs pour estimer la hauteur
-    void countFields() {
-      if (ingredients.trim().isNotEmpty) {
-        // Compter les ingrédients selon leur longueur
-        if (ingredients.length > 75) {
-          fieldCount += 2; // Deux lignes pour les ingrédients longs
-        } else {
-          fieldCount += 1; // Une ligne pour les ingrédients courts
-        }
-      }
-      if (quantite.trim().isNotEmpty) fieldCount++;
-      fieldCount++; // Conservation (toujours présent)
-      fieldCount++; // Date fabrication (toujours présent)
-      fieldCount++; // DLC (toujours présent)
-      if (isSurgel) {
-        fieldCount++; // Mode d'emploi surgelé (2 lignes)
-      } else {
-        fieldCount++; // Mode d'emploi frais
-      }
-      if (produit.typeProduit == TypeProduit.fini) {
-        if (fabricant != null && fabricant.trim().isNotEmpty) {
-          fieldCount += 1; // Fabricant
-        }
-        fieldCount += 2; // Adresse, SIRET
-      }
-      fieldCount++; // Lot (toujours présent)
-      if (origineViande.trim().isNotEmpty) fieldCount++;
-      if (allergenes.trim().isNotEmpty) fieldCount++;
-    }
-
-    countFields();
-
-    // Hauteur dynamique de l'étiquette
-    final estimatedHeight = 300 + (fieldCount * 20);
-
-    // Taille de police adaptative selon la hauteur
-    int baseFontSize;
-    if (estimatedHeight <= 400) {
-      baseFontSize = 20;
-    } else if (estimatedHeight <= 500) {
-      baseFontSize = 18;
-    } else if (estimatedHeight <= 600) {
-      baseFontSize = 16;
-    } else {
-      baseFontSize = 14;
-    }
-
-    // Calculer l'espacement adaptatif selon la taille de police
-    int getSpacing() {
-      if (estimatedHeight <= 400) {
-        return 150; // Police 20
-      } else if (estimatedHeight <= 500) {
-        return 140; // Police 18
-      } else if (estimatedHeight <= 600) {
-        return 130; // Police 16
-      } else {
-        return 120; // Police 14
-      }
-    }
-
-    int getDateSpacing() {
-      // Plus d'espace pour les dates avec des labels longs
-      if (estimatedHeight <= 400) {
-        return 170; // Police 20
-      } else if (estimatedHeight <= 500) {
-        return 160; // Police 18
-      } else if (estimatedHeight <= 600) {
-        return 150; // Police 16
-      } else {
-        return 140; // Police 14
-      }
-    }
-
-    void addField(String label, String value) {
-      if (value.trim().isEmpty) return;
-      contentLines.add('^FO20,$currentPos^FD$label:^FS');
-      contentLines.add('^FO${getSpacing()},$currentPos^FD$value^FS');
-      currentPos += 20;
-    }
-
-    void addIngredients(String ingredients) {
-      if (ingredients.trim().isEmpty) return;
-
-      contentLines.add('^FO20,$currentPos^FDIngredients:^FS');
-
-      // Si les ingrédients sont trop longs, les diviser sur plusieurs lignes
-      if (ingredients.length > 75) {
-        // Diviser par virgules et espaces
-        final parts = ingredients.split(RegExp(r',\s*'));
-
-        if (parts.length <= 2) {
-          // Si seulement 2 parties, diviser au milieu du texte
-          final midPoint = (ingredients.length / 2).round();
-          final firstLine = ingredients.substring(0, midPoint);
-          final secondLine = ingredients.substring(midPoint);
-
-          contentLines.add('^FO${getSpacing()},$currentPos^FD$firstLine^FS');
-          currentPos += 20;
-          contentLines.add('^FO${getSpacing()},$currentPos^FD$secondLine^FS');
-          currentPos += 20;
-          fieldCount += 2;
-        } else {
-          // Si plusieurs parties, essayer de les répartir équitablement
-          final midPoint = (parts.length / 2).ceil();
-          final firstLine = parts.take(midPoint).join(', ');
-          final secondLine = parts.skip(midPoint).join(', ');
-
-          contentLines.add('^FO${getSpacing()},$currentPos^FD$firstLine^FS');
-          currentPos += 20;
-          contentLines.add('^FO${getSpacing()},$currentPos^FD$secondLine^FS');
-          currentPos += 20;
-          fieldCount += 2;
-        }
-      } else {
-        contentLines.add('^FO${getSpacing()},$currentPos^FD$ingredients^FS');
-        currentPos += 20;
-        fieldCount += 1;
-      }
-    }
-
-    addIngredients(ingredients);
-    addField("Qte", quantite);
-    addField(
-      "Conservation",
-      _getConservationText(produit.typeProduit, isSurgel),
-    );
-
-    // Utiliser un espacement spécial pour la date
-    contentLines.add(
-      '^FO20,$currentPos^FD${_getDateLabel(produit.typeProduit)}:^FS',
-    );
-    contentLines.add(
-      '^FO${getDateSpacing()},$currentPos^FD${df.format(fabrication)}^FS',
-    );
-    currentPos += 20;
-
-    addField("DLC", df.format(dlc));
-
-    if (isSurgel) {
-      fieldCount++;
-      contentLines.add('^FO20,$currentPos^FDMode d\'emploi:^FS');
-      contentLines.add(
-        '^FO150,$currentPos^FDA decongeler et conserver a +4 degres^FS',
-      );
-      currentPos += 20;
-      contentLines.add('^FO150,$currentPos^FDa consommer sous 3 jours^FS');
-      currentPos += 20;
-    } else {
-      addField("Mode d'emploi", "Conserver a +4 degres");
-    }
-
-    if (produit.typeProduit == TypeProduit.fini) {
-      if (fabricant != null && fabricant.trim().isNotEmpty) {
-        addField("Fabricant", fabricant);
-      }
-      addField("Adresse", "7 rue Henri Pescarolo");
-      addField("SIRET", "93279581800016");
-    }
-
-    addField("Lot", _textSanitizer.sanitizeForZpl(lot));
-
-    // Ajouter un espace avant l'origine viande et les allergènes
-    currentPos += 10;
-
-    addField("Origine viande", origineViande);
-    addField("Allergenes", allergenes);
-
-    // Réécriture des lignes avec taille de police
-    final formattedContent = contentLines
-        .map((line) {
-          return line.contains('^FD') ? '^CF0,$baseFontSize\n$line' : line;
-        })
-        .join('\n');
+    // Centrage manuel (police 0 : ~0.5 * taille en dots par caractère)
+    const int labelWidth = 600;
+    final int titleWidthDots = (title.length * 48 * 0.5).round();
+    final int typeWidthDots = (typeProduitText.length * 24 * 0.5).round();
+    final int titleX = ((labelWidth - titleWidthDots) ~/ 2).clamp(0, labelWidth);
+    final int typeX = ((labelWidth - typeWidthDots) ~/ 2).clamp(0, labelWidth);
 
     return '''
 ^XA
+^CI28
 ^PW600
-^LL$estimatedHeight
-$logoCommand
-^CF0,$titleFontSize
-^FO${(600 - (title.length * titleFontSize * 0.5).round()) ~/ 2},20^FD$title^FS
-^CF0,18
-^FO$typeProduitXPosition,55^FD$typeProduitText^FS
-$formattedContent
+^LL800
+
+^CF0,48
+^FO$titleX,40^FD$title^FS
+
+^CF0,24
+^FO$typeX,100^FD$typeProduitText^FS
+
+^FO40,140^GB520,2,2^FS
+
+^CF0,24
+^FO40,170^FD${_getDateLabel(produit.typeProduit)}^FS
+^CF0,28
+^FO40,200^FD${df.format(fabrication)}^FS
+
+^CF0,24
+^FO40,250^FDDLC^FS
+^CF0,28
+^FO40,280^FD${df.format(dlc)}^FS
+
+^CF0,24
+^FO40,330^FDConservation^FS
+^CF0,28
+^FO40,360^FD${_getConservationText(produit.typeProduit, isSurgel)}^FS
+
+^FO40,410^GB520,2,2^FS
+
+^CF0,24
+^FO40,440^FDMode^FS
+^CF0,26
+^FO40,470^FD${isSurgel ? "Decongeler puis conserver a +4C" : "Conserver a +4C"}^FS
+
+^CF0,24
+^FO40,520^FDAllergenes^FS
+^CF0,26
+^FO40,550^FD$allergenes^FS
+
 ^XZ
 ''';
   }
@@ -518,89 +347,12 @@ $formattedContent
       return;
     }
 
-    // Demander le nom du fabricant pour les produits finis
-    String? fabricant;
-    if (produit.typeProduit == TypeProduit.fini) {
-      final fabricantController = TextEditingController(text: "KDOUKH DELICE");
-      final fabricantResult = await showDialog<String>(
-        context: context,
-        barrierDismissible: false,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: Text(
-              'Nom du fabricant',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.purple.shade700,
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Voulez-vous utiliser "KDOUKH DELICE" ou changer le nom du fabricant ?',
-                  style: TextStyle(fontSize: 16),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: fabricantController,
-                  decoration: InputDecoration(
-                    labelText: 'Nom du fabricant',
-                    border: OutlineInputBorder(),
-                    hintText: 'KDOUKH DELICE',
-                  ),
-                  inputFormatters: [ZplSafeTextInputFormatter()],
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, "KDOUKH DELICE"),
-                child: Text(
-                  'Utiliser KDOUKH DELICE',
-                  style: TextStyle(
-                    color: Colors.green.shade700,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text('Annuler'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  final nom = fabricantController.text.trim();
-                  if (nom.isNotEmpty) {
-                    Navigator.pop(context, nom);
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Le nom du fabricant ne peut pas être vide',
-                        ),
-                        backgroundColor: Colors.red,
-                      ),
-                    );
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.purple.shade600,
-                  foregroundColor: Colors.white,
-                ),
-                child: Text('Confirmer'),
-              ),
-            ],
-          );
-        },
-      );
-
-      if (fabricantResult == null) {
-        return; // L'utilisateur a annulé
-      }
-      fabricant = fabricantResult;
-    }
+    // Fabricant optionnel (saisi dans le formulaire pour produit fini)
+    final fabricant = produit.typeProduit == TypeProduit.fini
+        ? _fabricantController.text.trim().isNotEmpty
+            ? _fabricantController.text.trim()
+            : null
+        : null;
 
     setState(() => isPrinting = true);
 
@@ -635,9 +387,7 @@ $formattedContent
         isSurgel: _isSurgel,
         dateSurgelation: _selectedDateSurgelation,
         showLogo: _showLogo,
-        fabricant:
-            fabricant ??
-            "KDOUKH DELICE", // Utiliser le nom choisi ou par défaut
+        fabricant: fabricant,
       );
 
       // Imprimer avec le service robuste
@@ -720,7 +470,6 @@ $formattedContent
     _dlcJourMeme = false;
     _utiliseDluo = false;
     _isSurgel = false;
-    _showLogo = true;
     selectedProduit = null;
     setState(() {
       showPreparationForm = false;
@@ -1463,6 +1212,10 @@ $formattedContent
     return Scaffold(
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => NavigationHelpers.goHaccpHub(context),
+        ),
         title: Text('Impression Étiquettes Zebra'),
         backgroundColor: Colors.purple.shade600,
         foregroundColor: Colors.white,
@@ -1671,79 +1424,6 @@ $formattedContent
                     if (showPreparationForm) ...[
                       const SizedBox(height: 16),
 
-                      // Indicateur de logo
-                      Card(
-                        color: _logoAvailable
-                            ? Colors.green.shade50
-                            : Colors.orange.shade50,
-                        child: Padding(
-                          padding: const EdgeInsets.all(12),
-                          child: Row(
-                            children: [
-                              Icon(
-                                _logoAvailable
-                                    ? Icons.image
-                                    : Icons.image_not_supported,
-                                color: _logoAvailable
-                                    ? Colors.green
-                                    : Colors.orange,
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Logo',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: _logoAvailable
-                                            ? Colors.green.shade700
-                                            : Colors.orange.shade700,
-                                      ),
-                                    ),
-                                    Text(
-                                      _logoAvailable
-                                          ? 'Logo intégré - sera inclus dans l\'étiquette'
-                                          : 'Logo non disponible',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: _logoAvailable
-                                            ? Colors.green.shade600
-                                            : Colors.orange.shade600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              if (_logoAvailable) ...[
-                                const SizedBox(width: 8),
-                                Switch(
-                                  value: _showLogo,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _showLogo = value;
-                                    });
-                                  },
-                                  activeColor: Colors.green,
-                                ),
-                                Text(
-                                  _showLogo ? 'Oui' : 'Non',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.bold,
-                                    color: _showLogo
-                                        ? Colors.green.shade700
-                                        : Colors.grey.shade600,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
                       Row(
                         children: [
                           Expanded(
@@ -1905,6 +1585,25 @@ $formattedContent
                           inputFormatters: [ZplSafeTextInputFormatter()],
                         ),
                       ),
+                      if (selectedProduit?.typeProduit == TypeProduit.fini) ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 80,
+                          child: TextFormField(
+                            controller: _fabricantController,
+                            decoration: const InputDecoration(
+                              labelText: 'Fabricant (optionnel)',
+                              border: OutlineInputBorder(),
+                              prefixIcon: Icon(Icons.business, size: 28),
+                              contentPadding: EdgeInsets.symmetric(
+                                vertical: 25,
+                                horizontal: 20,
+                              ),
+                            ),
+                            inputFormatters: [ZplSafeTextInputFormatter()],
+                          ),
+                        ),
+                      ],
                       const SizedBox(height: 16),
 
                       Row(

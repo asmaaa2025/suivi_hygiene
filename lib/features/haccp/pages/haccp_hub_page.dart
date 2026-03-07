@@ -115,6 +115,11 @@ class _HaccpHubPageState extends State<HaccpHubPage> {
                                 context.go('$prefix/temperatures-history'),
                           ),
                           ModuleAction(
+                            label: 'Frigos et plaques',
+                            icon: Icons.kitchen,
+                            onTap: () => context.go('/appareils'),
+                          ),
+                          ModuleAction(
                             label: 'Exporter',
                             icon: Icons.download,
                             onTap: () => _exportModule(context, [

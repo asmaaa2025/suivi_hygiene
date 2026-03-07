@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/app_module_tile.dart';
 import '../../../../services/employee_session_service.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../services/update_service.dart';
 
 /// Dashboard page - Main entry point after login
 class DashboardPage extends StatefulWidget {
@@ -24,6 +25,13 @@ class _DashboardPageState extends State<DashboardPage> {
     super.initState();
     _loadGreeting();
     _checkAdminStatus();
+
+    // Check for app updates once the first frame is rendered
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        UpdateService.showUpdateDialogIfNeeded(context);
+      }
+    });
   }
 
   void _loadGreeting() {

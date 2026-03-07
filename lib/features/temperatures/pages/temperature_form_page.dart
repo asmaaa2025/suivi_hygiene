@@ -12,6 +12,7 @@ import '../../../../data/models/appareil.dart';
 import '../../../../data/models/temperature.dart';
 import '../../../../data/services/storage_service.dart';
 import '../../../../shared/widgets/section_card.dart';
+import '../../../../shared/utils/navigation_helpers.dart';
 
 /// Form page for temperature entry
 class TemperatureFormPage extends StatefulWidget {
@@ -251,7 +252,8 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
             backgroundColor: Colors.green,
           ),
         );
-        context.pop();
+        final prefix = GoRouterState.of(context).matchedLocation.startsWith('/admin') ? '/admin' : '/app';
+        context.go('$prefix/temperatures-history');
       }
     } catch (e) {
       if (mounted) {
@@ -288,7 +290,7 @@ class _TemperatureFormPageState extends State<TemperatureFormPage> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('$routePrefix/temperatures'),
+          onPressed: () => NavigationHelpers.goHaccpHub(context),
         ),
       ),
       body: _isLoadingAppareils

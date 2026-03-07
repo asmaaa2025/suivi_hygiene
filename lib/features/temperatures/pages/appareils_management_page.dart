@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:go_router/go_router.dart';
+import '../../../../shared/utils/navigation_helpers.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../shared/widgets/section_card.dart';
@@ -348,6 +350,11 @@ class _AppareilsManagementPageState extends State<AppareilsManagementPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => NavigationHelpers.goHaccpHub(context),
+          tooltip: 'Retour',
+        ),
         title: const Text('Gestion des appareils'),
         actions: [
           IconButton(

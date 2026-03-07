@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:blue_thermal_printer/blue_thermal_printer.dart';
 
@@ -154,7 +157,8 @@ class BluetoothService {
         }
         return false;
       }
-      await bluetooth.write(data);
+      final bytes = Uint8List.fromList(utf8.encode(data));
+      await bluetooth.writeBytes(bytes);
       debugPrint('Données imprimées avec succès');
       if (context != null) {
         _showSuccessMessage(context, 'Impression réussie');
@@ -167,6 +171,24 @@ class BluetoothService {
         _showErrorMessage(context, 'Erreur d\'impression: $e');
       }
       return false;
+    }
+  }
+
+  /// Envoie une chaîne par blocs en UTF-8 (writeBytes attend un Uint8List, pas une String).
+  static const int _writeChunkSize = 256;
+
+  Future<void> _writeInChunks(String data) async {
+    final bytes = Uint8List.fromList(utf8.encode(data));
+
+    for (var i = 0; i < bytes.length; i += _writeChunkSize) {
+      final end = (i + _writeChunkSize).clamp(0, bytes.length);
+      final chunk = bytes.sublist(i, end);
+
+      await bluetooth.writeBytes(chunk);
+
+      if (end < bytes.length) {
+        await Future.delayed(const Duration(milliseconds: 120));
+      }
     }
   }
 
@@ -183,8 +205,10 @@ class BluetoothService {
         }
         return false;
       }
+      debugPrint('ZPL SIZE: ${label.length}');
+      final fullLabel = '$label\r\n';
       for (int i = 0; i < count; i++) {
-        await bluetooth.write('$label\n');
+        await _writeInChunks(fullLabel);
         await Future.delayed(const Duration(milliseconds: 500));
       }
       if (context != null) {

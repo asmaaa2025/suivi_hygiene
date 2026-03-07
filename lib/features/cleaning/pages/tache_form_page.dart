@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../data/repositories/tache_nettoyage_repository.dart';
+import '../../../../shared/utils/navigation_helpers.dart';
 
 /// Form page for creating/editing a cleaning task
 class TacheFormPage extends StatefulWidget {
@@ -150,13 +151,14 @@ class _TacheFormPageState extends State<TacheFormPage> {
       }
 
       if (mounted) {
-        context.pop(true);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(_isEditMode ? 'Tâche modifiée' : 'Tâche créée'),
             backgroundColor: AppTheme.statusOk,
           ),
         );
+        final prefix = GoRouterState.of(context).matchedLocation.startsWith('/admin') ? '/admin' : '/app';
+        context.go('$prefix/cleaning-history');
       }
     } catch (e) {
       if (mounted) {
@@ -183,7 +185,7 @@ class _TacheFormPageState extends State<TacheFormPage> {
         title: Text(_isEditMode ? 'Modifier tâche' : 'Nouvelle tâche'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('$routePrefix/cleaning'),
+          onPressed: () => NavigationHelpers.goHaccpHub(context),
         ),
       ),
       body: _isLoading && _isEditMode

@@ -179,6 +179,144 @@ flutter build apk --release
 flutter build ios --release
 ```
 
+---
+
+## 📦 Procédure de mise à jour de l’application (OTA)
+
+Fiche de procédure pour les mises à jour OTA de **BekkApp / Suivi Hygiène**. Chaque release doit suivre les mêmes étapes pour éviter les erreurs (404, mauvaise version, APK introuvable, etc.).
+
+### 1️⃣ Vérifier que le repo GitHub est public
+
+**GitHub → Repository → Settings → General**
+
+Vérifier : **Repository visibility = Public**
+
+Sinon les APK dans **GitHub Releases** ne seront pas téléchargeables et tu obtiendras une **Erreur 404**.
+
+---
+
+### 2️⃣ Mettre à jour la version dans Flutter
+
+Dans **`pubspec.yaml`** :
+
+```yaml
+version: 1.0.4+2
+```
+
+Règle : **version utilisateur + build number** (ex. `1.0.3+1`, `1.0.4+2`, `1.0.5+3`).
+
+---
+
+### 3️⃣ Builder la nouvelle version APK
+
+```bash
+flutter clean
+flutter pub get
+flutter build apk --release
+```
+
+APK généré dans : **`build/app/outputs/flutter-apk/app-release.apk`**
+
+---
+
+### 4️⃣ Renommer l’APK
+
+Renommer **`app-release.apk`** en **`bekkapp_vX.X.X.apk`** (ex. `bekkapp_v1.0.4.apk`).
+
+---
+
+### 5️⃣ Créer une Release GitHub
+
+**GitHub → Repo → Releases → Create new release**
+
+- **Tag** : `v1.0.4`
+- **Titre** : `Version 1.0.4`
+- **Assets** : uploader **`bekkapp_v1.0.4.apk`**
+
+---
+
+### 6️⃣ Copier l’URL de téléchargement
+
+Format :
+
+```
+https://github.com/asmaaa2025/suivi_hygiene/releases/download/v1.0.4/bekkapp_v1.0.4.apk
+```
+
+Tester dans le navigateur : le téléchargement doit démarrer.
+
+---
+
+### 7️⃣ Mettre à jour `version.json`
+
+Dans **Supabase → Storage → Bucket `apk`**, télécharger **`version.json`** et le modifier :
+
+```json
+{
+  "version": "1.0.4",
+  "build": 2,
+  "apk_url": "https://github.com/asmaaa2025/suivi_hygiene/releases/download/v1.0.4/bekkapp_v1.0.4.apk",
+  "mandatory": false,
+  "changelog": "Corrections et améliorations de stabilité"
+}
+```
+
+---
+
+### 8️⃣ Réupload du `version.json`
+
+Supprimer l’ancien **`version.json`** dans Supabase Storage, puis uploader le nouveau dans **Supabase → Storage → apk**.
+
+---
+
+### 9️⃣ Tester la mise à jour
+
+Sur la tablette : **Paramètres → Vérifier les mises à jour**. Résultat attendu : **Nouvelle version disponible** → Téléchargement APK → Installation.
+
+---
+
+### 🔟 Vérifier que la mise à jour fonctionne
+
+Après installation : **Paramètres → À propos** et vérifier la version affichée (ex. **Version 1.0.4**).
+
+---
+
+### 🧠 Bonnes pratiques
+
+Conserver les anciennes APK (`bekkapp_v1.0.1.apk`, `bekkapp_v1.0.2.apk`, etc.) pour un **rollback rapide** en cas de bug.
+
+---
+
+### ⚠️ Erreurs courantes
+
+| Problème | Cause |
+|----------|--------|
+| **404 download** | Repo GitHub privé ou mauvais nom de fichier |
+| **APK non téléchargé** | `apk_url` incorrect dans `version.json` |
+| **Update non détectée** | Version dans `pubspec.yaml` égale ou supérieure à celle dans `version.json` (il faut que la version serveur soit **plus élevée**) |
+
+---
+
+### 📊 Architecture du système de mise à jour
+
+```
+Flutter App
+     │
+     │ check version.json
+     ▼
+Supabase Storage (apk/version.json)
+     │
+     ▼
+GitHub Release APK
+     │
+     ▼
+Download → Install
+```
+
+Avec ce système tu peux gérer **des dizaines de tablettes clients** sans passer par le Play Store.
+
+---
+
 ## Configuration
 
 ### Environment Variables

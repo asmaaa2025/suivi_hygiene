@@ -6,6 +6,7 @@ enum DocumentCategory {
   microBio,
   pestControl,
   complianceAudit,
+  dossier,
   other;
 
   String get displayName {
@@ -16,6 +17,8 @@ enum DocumentCategory {
         return 'Dératisation / Anti-nuisibles';
       case DocumentCategory.complianceAudit:
         return 'Audits de Conformité';
+      case DocumentCategory.dossier:
+        return 'Dossier';
       case DocumentCategory.other:
         return 'Autre';
     }
@@ -23,6 +26,8 @@ enum DocumentCategory {
 
   bool get isComplianceCategory =>
       this == microBio || this == pestControl || this == complianceAudit;
+
+  bool get isFolder => this == dossier;
 
   IconData get icon {
     switch (this) {
@@ -32,6 +37,8 @@ enum DocumentCategory {
         return Icons.pest_control;
       case DocumentCategory.complianceAudit:
         return Icons.verified;
+      case DocumentCategory.dossier:
+        return Icons.folder;
       case DocumentCategory.other:
         return Icons.insert_drive_file;
     }
@@ -48,6 +55,9 @@ enum DocumentCategory {
       case 'complianceaudit':
       case 'compliance_audit':
         return DocumentCategory.complianceAudit;
+      case 'dossier':
+      case 'folder':
+        return DocumentCategory.dossier;
       default:
         return DocumentCategory.other;
     }
@@ -63,6 +73,7 @@ class Document {
   final String? storageUrl;
   final int? taille;
   final String? notes;
+  final String? folderId;
   final DateTime createdAt;
   final DateTime? updatedAt;
 
@@ -75,6 +86,7 @@ class Document {
     this.storageUrl,
     this.taille,
     this.notes,
+    this.folderId,
     required this.createdAt,
     this.updatedAt,
   });
@@ -93,6 +105,7 @@ class Document {
       storageUrl: json['chemin'] as String? ?? json['fichier_url'] as String?,
       taille: json['taille'] as int?,
       notes: json['notes'] as String?,
+      folderId: json['dossier_id'] as String?,
       createdAt: DateTime.tryParse(
             json['created_at'] as String? ?? '',
           ) ??
@@ -113,6 +126,7 @@ class Document {
       'chemin': storageUrl,
       'taille': taille,
       'notes': notes,
+      'dossier_id': folderId,
     };
   }
 }

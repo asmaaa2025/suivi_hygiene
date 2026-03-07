@@ -17,6 +17,7 @@ import '../../../../data/models/reception.dart';
 import '../../../../data/models/produit.dart';
 import '../../../../data/models/non_conformity.dart';
 import '../../../../shared/widgets/section_card.dart';
+import '../../../../shared/utils/navigation_helpers.dart';
 
 /// Enhanced reception form with fixed 10:00 time, non-conformity check
 class ReceptionFormPage extends StatefulWidget {
@@ -541,7 +542,8 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
             ),
           ),
         );
-        context.pop();
+        final prefix = GoRouterState.of(context).matchedLocation.startsWith('/admin') ? '/admin' : '/app';
+        context.go('$prefix/receptions-history');
       }
     } catch (e) {
       if (mounted) {
@@ -571,7 +573,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('$routePrefix/receptions'),
+          onPressed: () => NavigationHelpers.goHaccpHub(context),
         ),
       ),
       body: _isLoadingData
@@ -616,108 +618,6 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                           ),
                         ],
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Conformity checklist
-                  SectionCard(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(Icons.checklist, color: AppTheme.statusOk),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Checklist de conformité',
-                              style: Theme.of(context).textTheme.titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        CheckboxListTile(
-                          title: const Text('Température conforme'),
-                          subtitle: const Text(
-                            'Température entre -18°C et +7°C',
-                          ),
-                          value: _temperatureChecked,
-                          onChanged: (value) {
-                            setState(() {
-                              _temperatureChecked = value ?? false;
-                              _updateConformityStatus();
-                            });
-                          },
-                          controlAffinity: ListTileControlAffinity.leading,
-                        ),
-                        CheckboxListTile(
-                          title: const Text('Emballage conforme'),
-                          subtitle: const Text(
-                            'Emballage intact, non ouvert, non mouillé',
-                          ),
-                          value: _packagingChecked,
-                          onChanged: (value) {
-                            setState(() {
-                              _packagingChecked = value ?? false;
-                              _updateConformityStatus();
-                            });
-                          },
-                          controlAffinity: ListTileControlAffinity.leading,
-                        ),
-                        CheckboxListTile(
-                          title: const Text('Étiquette présente'),
-                          subtitle: const Text('Étiquette lisible et complète'),
-                          value: _labelChecked,
-                          onChanged: (value) {
-                            setState(() {
-                              _labelChecked = value ?? false;
-                              _updateConformityStatus();
-                            });
-                          },
-                          controlAffinity: ListTileControlAffinity.leading,
-                        ),
-                        CheckboxListTile(
-                          title: const Text('DLUO vérifiée'),
-                          subtitle: const Text(
-                            'Date limite d\'utilisation optimale vérifiée',
-                          ),
-                          value: _dluoChecked,
-                          onChanged: (value) {
-                            setState(() {
-                              _dluoChecked = value ?? false;
-                              _updateConformityStatus();
-                            });
-                          },
-                          controlAffinity: ListTileControlAffinity.leading,
-                        ),
-                        const SizedBox(height: 8),
-                        if (_allConformityChecked)
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AppTheme.statusOk.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppTheme.statusOk),
-                            ),
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.check_circle,
-                                  color: AppTheme.statusOk,
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Tous les critères de conformité sont validés',
-                                  style: TextStyle(
-                                    color: AppTheme.statusOk,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                      ],
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -1131,6 +1031,108 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                     ),
                     const SizedBox(height: 24),
                   ],
+
+                  // Checklist finale de conformité (en fin de formulaire)
+                  SectionCard(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Icon(Icons.checklist, color: AppTheme.statusOk),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Checklist finale de conformité',
+                              style: Theme.of(context).textTheme.titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        CheckboxListTile(
+                          title: const Text('Température conforme'),
+                          subtitle: const Text(
+                            'Température entre -18°C et +7°C',
+                          ),
+                          value: _temperatureChecked,
+                          onChanged: (value) {
+                            setState(() {
+                              _temperatureChecked = value ?? false;
+                              _updateConformityStatus();
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                        ),
+                        CheckboxListTile(
+                          title: const Text('Emballage conforme'),
+                          subtitle: const Text(
+                            'Emballage intact, non ouvert, non mouillé',
+                          ),
+                          value: _packagingChecked,
+                          onChanged: (value) {
+                            setState(() {
+                              _packagingChecked = value ?? false;
+                              _updateConformityStatus();
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                        ),
+                        CheckboxListTile(
+                          title: const Text('Étiquette présente'),
+                          subtitle: const Text('Étiquette lisible et complète'),
+                          value: _labelChecked,
+                          onChanged: (value) {
+                            setState(() {
+                              _labelChecked = value ?? false;
+                              _updateConformityStatus();
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                        ),
+                        CheckboxListTile(
+                          title: const Text('DLUO vérifiée'),
+                          subtitle: const Text(
+                            'Date limite d\'utilisation optimale vérifiée',
+                          ),
+                          value: _dluoChecked,
+                          onChanged: (value) {
+                            setState(() {
+                              _dluoChecked = value ?? false;
+                              _updateConformityStatus();
+                            });
+                          },
+                          controlAffinity: ListTileControlAffinity.leading,
+                        ),
+                        const SizedBox(height: 8),
+                        if (_allConformityChecked)
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppTheme.statusOk.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppTheme.statusOk),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.check_circle,
+                                  color: AppTheme.statusOk,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Tous les critères de conformité sont validés',
+                                  style: TextStyle(
+                                    color: AppTheme.statusOk,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 24),
 
                   // Submit button
                   ElevatedButton(

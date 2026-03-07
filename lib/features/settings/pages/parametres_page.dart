@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../services/cache_service.dart';
 import '../../../../services/employee_session_service.dart';
 import '../../../../services/auth_service.dart';
+import '../../../../services/update_service.dart';
 
 class ParametresPage extends StatefulWidget {
   const ParametresPage({super.key});
@@ -225,6 +227,16 @@ class _ParametresPageState extends State<ParametresPage> {
                   ),
                   const SizedBox(height: 16),
                   ListTile(
+                    leading: const Icon(Icons.system_update, color: Colors.teal),
+                    title: const Text('Vérifier les mises à jour'),
+                    subtitle: const Text(
+                      'Vérifier si une nouvelle version de l\'app est disponible',
+                    ),
+                    onTap: () async {
+                      await UpdateService.checkForUpdatesWithFeedback(context);
+                    },
+                  ),
+                  ListTile(
                     leading: const Icon(Icons.sync, color: Colors.green),
                     title: const Text('Synchroniser maintenant'),
                     onTap: () async {
@@ -259,13 +271,15 @@ class _ParametresPageState extends State<ParametresPage> {
                   ListTile(
                     leading: const Icon(Icons.info, color: Colors.orange),
                     title: const Text('À propos'),
-                    onTap: () {
+                    onTap: () async {
+                      final info = await PackageInfo.fromPlatform();
+                      if (!context.mounted) return;
                       showDialog(
                         context: context,
                         builder: (context) => AlertDialog(
                           title: const Text('À propos'),
-                          content: const Text(
-                            'Suivi d\'Hygiène v1.0.0\n\n'
+                          content: Text(
+                            'Suivi d\'Hygiène ${info.version}+${info.buildNumber}\n\n'
                             'Application de suivi des températures et de l\'hygiène pour la restauration.\n\n'
                             'Développé avec Flutter et Supabase.\n\n'
                             '© 2024 Tous droits réservés.',

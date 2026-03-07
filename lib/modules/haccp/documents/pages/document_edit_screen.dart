@@ -29,6 +29,7 @@ class _DocumentEditScreenState extends State<DocumentEditScreen> {
   final _formKey = GlobalKey<FormState>();
 
   late DocumentCategory _category;
+  late TextEditingController _nomController;
   late TextEditingController _titleController;
   DateTime? _documentDate;
   late TextEditingController _notesController;
@@ -39,6 +40,7 @@ class _DocumentEditScreenState extends State<DocumentEditScreen> {
   void initState() {
     super.initState();
     _category = widget.document.category;
+    _nomController = TextEditingController(text: widget.document.nom);
     _titleController = TextEditingController(
       text: widget.document.title ?? widget.document.nom,
     );
@@ -48,6 +50,7 @@ class _DocumentEditScreenState extends State<DocumentEditScreen> {
 
   @override
   void dispose() {
+    _nomController.dispose();
     _titleController.dispose();
     _notesController.dispose();
     super.dispose();
@@ -90,8 +93,10 @@ class _DocumentEditScreenState extends State<DocumentEditScreen> {
         throw NetworkException('Network required');
       }
 
+      final nomTrim = _nomController.text.trim();
       await _documentsRepo.updateDocument(
         id: widget.documentId,
+        nom: nomTrim.isEmpty ? null : nomTrim,
         title: _titleController.text.trim().isEmpty
             ? null
             : _titleController.text.trim(),
@@ -143,25 +148,19 @@ class _DocumentEditScreenState extends State<DocumentEditScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // File info (read-only)
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
+              // Nom (éditable pour renommer)
+              TextFormField(
+                controller: _nomController,
+                decoration: InputDecoration(
+                  labelText: widget.document.category.isFolder ? 'Nom du dossier' : 'Nom du fichier',
+                  border: const OutlineInputBorder(),
+                  prefixIcon: Icon(
+                    widget.document.category.isFolder ? Icons.folder : Icons.insert_drive_file,
+                    size: 22,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.insert_drive_file, size: 40),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        widget.document.nom,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ),
-                  ],
-                ),
+                validator: (v) =>
+                    (v == null || v.trim().isEmpty) ? 'Le nom est requis' : null,
               ),
 
               const SizedBox(height: 24),
