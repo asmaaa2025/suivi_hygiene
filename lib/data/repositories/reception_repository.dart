@@ -87,10 +87,13 @@ class ReceptionRepository {
   /// Employee name is automatically retrieved from current session
   Future<Reception> create({
     required String produitId,
+    /// Stored in receptions.produit / article so history stays readable if the product is removed later.
+    String? produitNomSnapshot,
     required String supplierId,
     String? lot,
     DateTime? dluo,
     required double temperature,
+    String statut = 'Conforme',
     String? remarque,
     String? photoUrl,
     String? nonConformityId,
@@ -139,10 +142,9 @@ class ReceptionRepository {
         }
       }
 
-      final response = await _client
-          .from('receptions')
-          .insert({
+      final insertRow = <String, dynamic>{
             'produit_id': produitId,
+            'supplier_id': supplierId,
             'fournisseur':
                 supplierName, // Store supplier name as TEXT (schema column)
             'lot': lot,
@@ -150,6 +152,8 @@ class ReceptionRepository {
             'temperature': temperature,
             'remarque': remarque,
             'photo_url': photoUrl,
+            'statut': statut,
+            'conforme': statut == 'Conforme' ? 1 : 0,
             'received_at': receptionDateTime.toIso8601String(),
             'reception_time':
                 '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}:00',
@@ -160,7 +164,16 @@ class ReceptionRepository {
             'employee_last_name':
                 employeeLastName, // Automatically retrieved from session
             'owner_id': user.id,
-          })
+          };
+      final snap = produitNomSnapshot?.trim();
+      if (snap != null && snap.isNotEmpty) {
+        insertRow['produit'] = snap;
+        insertRow['article'] = snap;
+      }
+
+      final response = await _client
+          .from('receptions')
+          .insert(insertRow)
           .select()
           .single();
 
@@ -177,6 +190,8 @@ class ReceptionRepository {
     String? lot,
     DateTime? dluo,
     double? temperature,
+    String? statut,
+    int? conforme,
     String? remarque,
     String? photoUrl,
   }) async {
@@ -185,6 +200,8 @@ class ReceptionRepository {
       if (lot != null) updates['lot'] = lot;
       if (dluo != null) updates['dluo'] = dluo.toIso8601String();
       if (temperature != null) updates['temperature'] = temperature;
+      if (statut != null) updates['statut'] = statut;
+      if (conforme != null) updates['conforme'] = conforme;
       if (remarque != null) updates['remarque'] = remarque;
       if (photoUrl != null) updates['photo_url'] = photoUrl;
 

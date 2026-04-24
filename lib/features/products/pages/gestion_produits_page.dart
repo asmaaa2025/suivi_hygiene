@@ -388,33 +388,38 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  if (_nomController.text.trim().isNotEmpty) {
-                    final dlcJours =
-                        int.tryParse(_dlcJoursController.text.trim()) ?? 0;
-                    final dlcSurgelation =
-                        int.tryParse(_dlcSurgelationController.text.trim()) ??
-                        0;
-                    Navigator.pop(context, {
-                      'nom': _nomController.text.trim(),
-                      'typeProduit': localSelectedType,
-                      'dlcJours': dlcJours,
-                      'dlcSurgelationJours': dlcSurgelation,
-                      'ingredients':
-                          _ingredientsController.text.trim().isNotEmpty
-                          ? _ingredientsController.text.trim()
-                          : null,
-                      'quantite': _quantiteController.text.trim().isNotEmpty
-                          ? _quantiteController.text.trim()
-                          : null,
-                      'origineViande':
-                          _origineViandeController.text.trim().isNotEmpty
-                          ? _origineViandeController.text.trim()
-                          : null,
-                      'allergenes': _allergenesController.text.trim().isNotEmpty
-                          ? _allergenesController.text.trim()
-                          : null,
-                    });
+                  if (_nomController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Le nom du produit est obligatoire'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    return;
                   }
+                  final dlcJours =
+                      int.tryParse(_dlcJoursController.text.trim()) ?? 0;
+                  final dlcSurgelation =
+                      int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
+                  Navigator.pop(context, {
+                    'nom': _nomController.text.trim(),
+                    'typeProduit': localSelectedType,
+                    'dlcJours': dlcJours,
+                    'dlcSurgelationJours': dlcSurgelation,
+                    'ingredients': _ingredientsController.text.trim().isNotEmpty
+                        ? _ingredientsController.text.trim()
+                        : null,
+                    'quantite': _quantiteController.text.trim().isNotEmpty
+                        ? _quantiteController.text.trim()
+                        : null,
+                    'origineViande':
+                        _origineViandeController.text.trim().isNotEmpty
+                        ? _origineViandeController.text.trim()
+                        : null,
+                    'allergenes': _allergenesController.text.trim().isNotEmpty
+                        ? _allergenesController.text.trim()
+                        : null,
+                  });
                 },
                 child: Text('Ajouter'),
               ),
@@ -871,33 +876,38 @@ class _GestionProduitsPageState extends State<GestionProduitsPage> {
               ),
               ElevatedButton(
                 onPressed: () {
-                  if (_nomController.text.trim().isNotEmpty) {
-                    final dlcJours =
-                        int.tryParse(_dlcJoursController.text.trim()) ?? 0;
-                    final dlcSurgelation =
-                        int.tryParse(_dlcSurgelationController.text.trim()) ??
-                        0;
-                    Navigator.pop(context, {
-                      'nom': _nomController.text.trim(),
-                      'typeProduit': localSelectedType,
-                      'dlcJours': dlcJours,
-                      'dlcSurgelationJours': dlcSurgelation,
-                      'ingredients':
-                          _ingredientsController.text.trim().isNotEmpty
-                          ? _ingredientsController.text.trim()
-                          : null,
-                      'quantite': _quantiteController.text.trim().isNotEmpty
-                          ? _quantiteController.text.trim()
-                          : null,
-                      'origineViande':
-                          _origineViandeController.text.trim().isNotEmpty
-                          ? _origineViandeController.text.trim()
-                          : null,
-                      'allergenes': _allergenesController.text.trim().isNotEmpty
-                          ? _allergenesController.text.trim()
-                          : null,
-                    });
+                  if (_nomController.text.trim().isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Le nom du produit est obligatoire'),
+                        backgroundColor: Colors.orange,
+                      ),
+                    );
+                    return;
                   }
+                  final dlcJours =
+                      int.tryParse(_dlcJoursController.text.trim()) ?? 0;
+                  final dlcSurgelation =
+                      int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
+                  Navigator.pop(context, {
+                    'nom': _nomController.text.trim(),
+                    'typeProduit': localSelectedType,
+                    'dlcJours': dlcJours,
+                    'dlcSurgelationJours': dlcSurgelation,
+                    'ingredients': _ingredientsController.text.trim().isNotEmpty
+                        ? _ingredientsController.text.trim()
+                        : null,
+                    'quantite': _quantiteController.text.trim().isNotEmpty
+                        ? _quantiteController.text.trim()
+                        : null,
+                    'origineViande':
+                        _origineViandeController.text.trim().isNotEmpty
+                        ? _origineViandeController.text.trim()
+                        : null,
+                    'allergenes': _allergenesController.text.trim().isNotEmpty
+                        ? _allergenesController.text.trim()
+                        : null,
+                  });
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue.shade600,

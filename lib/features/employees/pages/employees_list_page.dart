@@ -102,8 +102,8 @@ class _EmployeesListPageState extends State<EmployeesListPage> {
         title: const Text('Employés'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/admin/home'),
-          tooltip: 'Retour au menu principal',
+          onPressed: () => context.go('/admin/rh-hub'),
+          tooltip: 'Retour au menu RH',
         ),
         actions: [
           IconButton(

@@ -48,6 +48,8 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
   List<Produit> _products = [];
   String? _selectedSupplierId;
   String? _selectedProductId;
+  /// Filled when loading an existing réception whose product was deleted from the catalogue.
+  String _archivedProduitLabel = '';
   DateTime? _selectedDluo;
   TimeOfDay _receptionTime = const TimeOfDay(
     hour: 10,
@@ -90,12 +92,20 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
       if (reception != null && mounted) {
         setState(() {
           _selectedProductId = reception.produitId;
+          _archivedProduitLabel = reception.archivedProductNameLabel;
           _selectedSupplierId = reception.supplierId;
           _lotController.text = reception.lot ?? '';
           _selectedDluo = reception.dluo;
           _temperatureController.text = reception.temperature?.toString() ?? '';
           _remarqueController.text = reception.remarque ?? '';
           _receptionTime = TimeOfDay.fromDateTime(reception.receivedAt);
+          // Rebuild final conformity checklist state from stored data
+          final isConforme = reception.conforme == 1;
+          _temperatureChecked = isConforme;
+          _packagingChecked = isConforme;
+          _labelChecked = isConforme;
+          _dluoChecked = isConforme;
+          _allConformityChecked = isConforme;
           // Note: photo cannot be loaded from URL, user would need to re-upload
         });
       }
@@ -302,10 +312,13 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
         setState(() {
           // Update products list to show only supplier's "reçu" products
           _products = recuProducts;
-          _selectedProductId = null; // Reset selection
+          final previousId = _selectedProductId;
+          _selectedProductId = null;
 
-          // If only one product, auto-select it
-          if (recuProducts.length == 1) {
+          if (previousId != null &&
+              recuProducts.any((p) => p.id == previousId)) {
+            _selectedProductId = previousId;
+          } else if (recuProducts.length == 1) {
             _selectedProductId = recuProducts.first.id;
             _prefillProductFields(recuProducts.first, supplierId);
           }
@@ -369,8 +382,45 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
     }
   }
 
+  String _auditProductDescription() {
+    if (_selectedProductId != null) {
+      for (final p in _products) {
+        if (p.id == _selectedProductId) return p.nom;
+      }
+      final arch = _archivedProduitLabel.trim();
+      if (arch.isNotEmpty) return arch;
+    } else {
+      final arch = _archivedProduitLabel.trim();
+      if (arch.isNotEmpty) return arch;
+    }
+    return 'produit inconnu';
+  }
+
+  List<DropdownMenuItem<String>> _buildProductDropdownItems() {
+    final items = _products
+        .map(
+          (product) => DropdownMenuItem(
+            value: product.id,
+            child: Text(product.nom),
+          ),
+        )
+        .toList();
+    final sid = _selectedProductId;
+    if (sid != null && !items.any((e) => e.value == sid)) {
+      final label = _archivedProduitLabel.trim().isNotEmpty
+          ? '${_archivedProduitLabel.trim()} (retiré du catalogue)'
+          : 'Produit retiré du catalogue';
+      items.insert(
+        0,
+        DropdownMenuItem(value: sid, child: Text(label)),
+      );
+    }
+    return items;
+  }
+
   void _checkNonConformity() {
-    final temp = double.tryParse(_temperatureController.text);
+    final raw = _temperatureController.text.replaceAll(',', '.');
+    final temp = double.tryParse(raw);
     final hasRefusal =
         (temp != null && (temp > 7 || temp < -18)) || // Temperature criteria
         _packagingOpened ||
@@ -394,35 +444,59 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
       return;
     }
     if (_selectedProductId == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Veuillez sélectionner un produit')),
-      );
-      return;
+      final editingWithArchivedProduct = widget.receptionId != null &&
+          _archivedProduitLabel.trim().isNotEmpty;
+      if (!editingWithArchivedProduct) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Veuillez sélectionner un produit')),
+        );
+        return;
+      }
     }
 
     // Check if all conformity items are checked
+    String statut = 'Conforme';
     if (!_allConformityChecked) {
-      final confirmed = await showDialog<bool>(
+      final decision = await showDialog<String>(
         context: context,
         builder: (context) => AlertDialog(
           title: const Text('Checklist incomplète'),
           content: const Text(
-            'Tous les critères de conformité ne sont pas validés. '
-            'Voulez-vous continuer quand même ?',
+            'Tous les critères de conformité ne sont pas validés.\n\n'
+            'Souhaitez-vous refuser la réception ou l\'accepter avec réserve ?',
           ),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false),
+              onPressed: () => Navigator.of(context).pop(null),
               child: const Text('Annuler'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Continuer'),
+              onPressed: () => Navigator.of(context).pop('refuse'),
+              child: const Text('Refuser la réception'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop('reserve'),
+              child: const Text('Accepter avec réserve'),
             ),
           ],
         ),
       );
-      if (confirmed != true) return;
+      if (decision == null) return;
+      if (decision == 'refuse') {
+        statut = 'Refusée';
+      } else {
+        statut = 'Acceptée avec réserve';
+      }
+    }
+
+    // Parse temperature safely (supporting comma decimals)
+    final tempRaw = _temperatureController.text.replaceAll(',', '.').trim();
+    final temperature = double.tryParse(tempRaw);
+    if (temperature == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Température invalide')),
+      );
+      return;
     }
 
     setState(() {
@@ -430,7 +504,6 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
     });
 
     try {
-      final temperature = double.parse(_temperatureController.text);
 
       // TODO: Upload photo to Supabase Storage if _photoPath is not null
       String? photoUrl;
@@ -451,6 +524,8 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
           lot: _lotController.text.isEmpty ? null : _lotController.text,
           dluo: _selectedDluo,
           temperature: temperature,
+          statut: statut,
+          conforme: _allConformityChecked ? 1 : 0,
           remarque: _remarqueController.text.isEmpty
               ? null
               : _remarqueController.text,
@@ -461,12 +536,17 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
         await _employeeSessionService.initialize();
         final currentEmployee = _employeeSessionService.currentEmployee;
 
+        final productNom = _products
+            .firstWhere((p) => p.id == _selectedProductId)
+            .nom;
         reception = await _receptionRepo.create(
           produitId: _selectedProductId!,
+          produitNomSnapshot: productNom,
           supplierId: _selectedSupplierId!,
           lot: _lotController.text.isEmpty ? null : _lotController.text,
           dluo: _selectedDluo,
           temperature: temperature,
+          statut: statut,
           remarque: _remarqueController.text.isEmpty
               ? null
               : _remarqueController.text,
@@ -515,8 +595,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
           operationType: 'reception',
           operationId: reception.id,
           action: widget.receptionId != null ? 'update' : 'create',
-          description:
-              'Réception de ${_products.firstWhere((p) => p.id == _selectedProductId).nom}',
+          description: 'Réception de ${_auditProductDescription()}',
           metadata: {
             'supplier_id': _selectedSupplierId,
             'product_id': _selectedProductId,
@@ -719,6 +798,20 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                     ),
                   const SizedBox(height: 16),
 
+                  if (widget.receptionId != null &&
+                      _selectedProductId == null &&
+                      _archivedProduitLabel.trim().isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        'Produit archivé : ${_archivedProduitLabel.trim()} '
+                        '(retiré du catalogue — vous pouvez en choisir un autre ci-dessous)',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context).colorScheme.secondary,
+                            ),
+                      ),
+                    ),
+
                   // Product selection
                   DropdownButtonFormField<String>(
                     value: _selectedProductId,
@@ -727,12 +820,7 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.shopping_basket),
                     ),
-                    items: _products.map((product) {
-                      return DropdownMenuItem(
-                        value: product.id,
-                        child: Text(product.nom),
-                      );
-                    }).toList(),
+                    items: _buildProductDropdownItems(),
                     onChanged: (value) {
                       setState(() {
                         _selectedProductId = value;
@@ -740,14 +828,22 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
 
                       // Pre-fill fields when product is selected
                       if (value != null && _selectedSupplierId != null) {
-                        final product = _products.firstWhere(
-                          (p) => p.id == value,
-                        );
-                        _prefillProductFields(product, _selectedSupplierId!);
+                        final idx =
+                            _products.indexWhere((p) => p.id == value);
+                        if (idx >= 0) {
+                          _prefillProductFields(
+                            _products[idx],
+                            _selectedSupplierId!,
+                          );
+                        }
                       }
                     },
                     validator: (value) {
                       if (value == null) {
+                        if (widget.receptionId != null &&
+                            _archivedProduitLabel.trim().isNotEmpty) {
+                          return null;
+                        }
                         return 'Veuillez sélectionner un produit';
                       }
                       return null;
@@ -799,7 +895,8 @@ class _ReceptionFormPageState extends State<ReceptionFormPage> {
                       if (value == null || value.isEmpty) {
                         return 'Veuillez saisir une température';
                       }
-                      final temp = double.tryParse(value);
+                      final temp =
+                          double.tryParse(value.replaceAll(',', '.'));
                       if (temp == null) {
                         return 'Veuillez saisir un nombre valide';
                       }

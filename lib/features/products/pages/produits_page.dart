@@ -13,7 +13,6 @@ import '../../../../exceptions/app_exceptions.dart';
 import '../../../../models/produit.dart';
 import '../../../../widgets/quick_preparation_form.dart';
 import '../../../../utils/text_input_formatters.dart';
-import 'product_form_page.dart';
 import '../../../../data/repositories/supplier_repository.dart';
 import '../../../../data/repositories/supplier_product_repository.dart';
 import '../../../../data/models/supplier.dart';
@@ -67,6 +66,22 @@ class _ProduitsPageState extends State<ProduitsPage>
         _isOnline = isOnline;
       });
     }
+  }
+
+  Future<void> _ouvrirEditionProduit(Produit produit) async {
+    if (!mounted) return;
+    final loc = GoRouterState.of(context).matchedLocation;
+    final String path;
+    if (loc.startsWith('/admin')) {
+      path = '/admin/products/${produit.id}';
+    } else if (loc.startsWith('/app')) {
+      path = '/app/products/${produit.id}';
+    } else {
+      path = '/products/${produit.id}';
+    }
+    await context.push(path);
+    if (!mounted) return;
+    await _loadProduits(forceRefresh: true);
   }
 
   /// Retourne le texte du type de produit pour l'affichage
@@ -701,7 +716,8 @@ class _ProduitsPageState extends State<ProduitsPage>
                         filled: true,
                         fillColor: Colors.green.shade50,
                       ),
-                      validator: (val) => val == null || val.isEmpty
+                      validator: (val) =>
+                          val == null || val.trim().isEmpty
                           ? 'Champ obligatoire'
                           : null,
                     ),
@@ -1229,6 +1245,14 @@ class _ProduitsPageState extends State<ProduitsPage>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         IconButton(
+                          icon: Icon(
+                            Icons.edit,
+                            color: Colors.blue.shade600,
+                          ),
+                          onPressed: () => _ouvrirEditionProduit(produit),
+                          tooltip: 'Modifier le produit',
+                        ),
+                        IconButton(
                           icon: Icon(Icons.print, color: Colors.green.shade600),
                           onPressed: () => _imprimerEtiquette(produit),
                           tooltip: 'Imprimer étiquette',
@@ -1470,26 +1494,34 @@ class _ProduitsPageState extends State<ProduitsPage>
             ),
             ElevatedButton(
               onPressed: () {
-                if (_newProduitController.text.trim().isNotEmpty) {
-                  final dlcJours =
-                      int.tryParse(_dlcJoursController.text.trim()) ?? 0;
-                  final dlcSurgelation =
-                      int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
-                  // Validate supplier for "reçu" products
-                  if (localSelectedType == TypeProduit.recu &&
-                      localSelectedSupplierId == null) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Veuillez sélectionner un fournisseur pour un produit reçu',
-                        ),
-                        backgroundColor: Colors.orange,
+                if (_newProduitController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Le nom du produit est obligatoire'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
+                final dlcJours =
+                    int.tryParse(_dlcJoursController.text.trim()) ?? 0;
+                final dlcSurgelation =
+                    int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
+                // Validate supplier for "reçu" products
+                if (localSelectedType == TypeProduit.recu &&
+                    localSelectedSupplierId == null) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Veuillez sélectionner un fournisseur pour un produit reçu',
                       ),
-                    );
-                    return;
-                  }
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
+                }
 
-                  Navigator.pop(context, {
+                Navigator.pop(context, {
                     'nom': _newProduitController.text.trim(),
                     'typeProduit': localSelectedType,
                     'supplierId': localSelectedSupplierId,
@@ -1509,7 +1541,6 @@ class _ProduitsPageState extends State<ProduitsPage>
                         ? _allergenesController.text.trim()
                         : null,
                   });
-                }
               },
               child: Text('Ajouter'),
             ),

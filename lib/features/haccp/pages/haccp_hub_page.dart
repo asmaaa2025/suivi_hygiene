@@ -232,14 +232,16 @@ class _HaccpHubPageState extends State<HaccpHubPage> {
                           ModuleAction(
                             label: 'Exporter',
                             icon: Icons.download,
-                            onTap: () => _exportModule(context, null),
+                            onTap: () => _exportModule(context, [
+                              HaccpExportService.kProducts,
+                            ]),
                           ),
                         ],
                       ),
                       // Produits cube with context menu
                       ModuleCubeWithMenu(
                         icon: Icons.shopping_basket,
-                        title: 'Produits',
+                        title: 'Produits et étiquettes',
                         subtitle: 'Gérer les produits',
                         color: Colors.green.shade300,
                         menuTitle: 'Produits',
@@ -258,6 +260,11 @@ class _HaccpHubPageState extends State<HaccpHubPage> {
                             label: 'Étiquettes',
                             icon: Icons.label,
                             onTap: () => context.go('/labels'),
+                          ),
+                          ModuleAction(
+                            label: 'Historique impressions',
+                            icon: Icons.history,
+                            onTap: () => context.go('/labels/history'),
                           ),
                           ModuleAction(
                             label: 'Tableau allergènes',

@@ -1,7 +1,10 @@
 /// Reception model
 class Reception {
   final String id;
-  final String produitId;
+  /// Null if the catalogue product was deleted (history kept via [produitLegacy]/[articleLegacy]).
+  final String? produitId;
+  final String? produitLegacy;
+  final String? articleLegacy;
   final String? supplierId; // Link to supplier
   final String? fournisseur; // Legacy text field
   final String? lot;
@@ -9,6 +12,8 @@ class Reception {
   final double? temperature;
   final String? remarque;
   final String? photoUrl;
+  final String? statut;
+  final int? conforme;
   final DateTime receivedAt;
   final DateTime createdAt;
   final String? createdBy;
@@ -19,7 +24,9 @@ class Reception {
 
   Reception({
     required this.id,
-    required this.produitId,
+    this.produitId,
+    this.produitLegacy,
+    this.articleLegacy,
     this.supplierId,
     this.fournisseur,
     this.lot,
@@ -27,6 +34,8 @@ class Reception {
     this.temperature,
     this.remarque,
     this.photoUrl,
+    this.statut,
+    this.conforme,
     required this.receivedAt,
     required this.createdAt,
     this.createdBy,
@@ -36,10 +45,32 @@ class Reception {
     this.employeeLastName,
   });
 
+  /// Name kept in DB when the product row is removed or for legacy rows.
+  String get archivedProductNameLabel {
+    final p = produitLegacy?.trim();
+    if (p != null && p.isNotEmpty) return p;
+    final a = articleLegacy?.trim();
+    if (a != null && a.isNotEmpty) return a;
+    return '';
+  }
+
+  /// Prefer live catalogue name, then archived text from receptions.produit/article.
+  String displayProductName(String? catalogueProductNom) {
+    final live = catalogueProductNom?.trim();
+    if (live != null && live.isNotEmpty) return live;
+    final arch = archivedProductNameLabel;
+    if (arch.isNotEmpty) return arch;
+    return 'Produit inconnu';
+  }
+
   factory Reception.fromJson(Map<String, dynamic> json) {
+    final rawPid = json['produit_id']?.toString();
+    final pid = (rawPid != null && rawPid.isNotEmpty) ? rawPid : null;
     return Reception(
       id: json['id']?.toString() ?? '',
-      produitId: json['produit_id']?.toString() ?? '',
+      produitId: pid,
+      produitLegacy: json['produit'] as String?,
+      articleLegacy: json['article'] as String?,
       supplierId:
           json['supplier_id'] as String? ?? json['fournisseur_id'] as String?,
       fournisseur: json['fournisseur'] as String?,
@@ -52,6 +83,8 @@ class Reception {
           : null,
       remarque: json['remarque'] as String?,
       photoUrl: json['photo_url'] as String?,
+      statut: json['statut'] as String?,
+      conforme: (json['conforme'] as num?)?.toInt(),
       receivedAt: json['received_at'] != null
           ? (DateTime.tryParse(json['received_at'].toString()) ??
                 DateTime.now())
@@ -73,7 +106,7 @@ class Reception {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'produit_id': produitId,
+      if (produitId != null) 'produit_id': produitId,
       'supplier_id': supplierId,
       'fournisseur': fournisseur,
       'lot': lot,
@@ -81,6 +114,8 @@ class Reception {
       'temperature': temperature,
       'remarque': remarque,
       'photo_url': photoUrl,
+      'statut': statut,
+      'conforme': conforme,
       'received_at': receivedAt.toIso8601String(),
       'created_at': createdAt.toIso8601String(),
       'created_by': createdBy,

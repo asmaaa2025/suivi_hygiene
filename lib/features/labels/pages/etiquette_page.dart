@@ -15,7 +15,9 @@ import '../../../../shared/utils/navigation_helpers.dart';
 import 'package:intl/intl.dart';
 
 class EtiquettePage extends StatefulWidget {
-  const EtiquettePage({super.key});
+  const EtiquettePage({super.key, this.showAppBar = true});
+
+  final bool showAppBar;
 
   @override
   State<EtiquettePage> createState() => _EtiquettePageState();
@@ -165,14 +167,33 @@ class _EtiquettePageState extends State<EtiquettePage> {
   Future<void> initBluetooth() async {
     try {
       final devicesList = await _bluetoothService.scanDevices();
+      if (!mounted) return;
       setState(() {
         devices = devicesList;
       });
+      if (devicesList.isEmpty) {
+        _showBluetoothMessage(
+          'Aucune imprimante Bluetooth détectée. Vérifiez que l’imprimante est allumée et appairée.',
+          isError: true,
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Erreur Bluetooth: $e')));
+      if (!mounted) return;
+      _showBluetoothMessage(
+        'Erreur Bluetooth lors de la recherche des imprimantes.',
+        isError: true,
+      );
     }
+  }
+
+  void _showBluetoothMessage(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.red : Colors.green,
+      ),
+    );
   }
 
   Future<String> generateZplEtiquette({
@@ -734,31 +755,38 @@ class _EtiquettePageState extends State<EtiquettePage> {
             ),
             ElevatedButton(
               onPressed: () {
-                if (_newProduitController.text.trim().isNotEmpty) {
-                  final dlcJours =
-                      int.tryParse(_dlcJoursController.text.trim()) ?? 0;
-                  final dlcSurgelation =
-                      int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
-                  Navigator.pop(context, {
-                    'nom': _newProduitController.text.trim(),
-                    'typeProduit': localSelectedType,
-                    'dlcJours': dlcJours,
-                    'dlcSurgelationJours': dlcSurgelation,
-                    'ingredients': _ingredientsController.text.trim().isNotEmpty
-                        ? _ingredientsController.text.trim()
-                        : null,
-                    'quantite': _quantiteController.text.trim().isNotEmpty
-                        ? _quantiteController.text.trim()
-                        : null,
-                    'origineViande':
-                        _origineViandeController.text.trim().isNotEmpty
-                        ? _origineViandeController.text.trim()
-                        : null,
-                    'allergenes': _allergenesController.text.trim().isNotEmpty
-                        ? _allergenesController.text.trim()
-                        : null,
-                  });
+                if (_newProduitController.text.trim().isEmpty) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Le nom du produit est obligatoire'),
+                      backgroundColor: Colors.orange,
+                    ),
+                  );
+                  return;
                 }
+                final dlcJours =
+                    int.tryParse(_dlcJoursController.text.trim()) ?? 0;
+                final dlcSurgelation =
+                    int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
+                Navigator.pop(context, {
+                  'nom': _newProduitController.text.trim(),
+                  'typeProduit': localSelectedType,
+                  'dlcJours': dlcJours,
+                  'dlcSurgelationJours': dlcSurgelation,
+                  'ingredients': _ingredientsController.text.trim().isNotEmpty
+                      ? _ingredientsController.text.trim()
+                      : null,
+                  'quantite': _quantiteController.text.trim().isNotEmpty
+                      ? _quantiteController.text.trim()
+                      : null,
+                  'origineViande':
+                      _origineViandeController.text.trim().isNotEmpty
+                      ? _origineViandeController.text.trim()
+                      : null,
+                  'allergenes': _allergenesController.text.trim().isNotEmpty
+                      ? _allergenesController.text.trim()
+                      : null,
+                });
               },
               child: Text('Ajouter'),
             ),
@@ -1095,30 +1123,37 @@ class _EtiquettePageState extends State<EtiquettePage> {
           ),
           ElevatedButton(
             onPressed: () {
-              if (_newProduitController.text.trim().isNotEmpty) {
-                final dlcJours =
-                    int.tryParse(_dlcJoursController.text.trim()) ?? 0;
-                final dlcSurgelation =
-                    int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
-                Navigator.pop(context, {
-                  'nom': _newProduitController.text.trim(),
-                  'dlcJours': dlcJours,
-                  'dlcSurgelationJours': dlcSurgelation,
-                  'ingredients': _ingredientsController.text.trim().isNotEmpty
-                      ? _ingredientsController.text.trim()
-                      : null,
-                  'quantite': _quantiteController.text.trim().isNotEmpty
-                      ? _quantiteController.text.trim()
-                      : null,
-                  'origineViande':
-                      _origineViandeController.text.trim().isNotEmpty
-                      ? _origineViandeController.text.trim()
-                      : null,
-                  'allergenes': _allergenesController.text.trim().isNotEmpty
-                      ? _allergenesController.text.trim()
-                      : null,
-                });
+              if (_newProduitController.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Le nom du produit est obligatoire'),
+                    backgroundColor: Colors.orange,
+                  ),
+                );
+                return;
               }
+              final dlcJours =
+                  int.tryParse(_dlcJoursController.text.trim()) ?? 0;
+              final dlcSurgelation =
+                  int.tryParse(_dlcSurgelationController.text.trim()) ?? 0;
+              Navigator.pop(context, {
+                'nom': _newProduitController.text.trim(),
+                'dlcJours': dlcJours,
+                'dlcSurgelationJours': dlcSurgelation,
+                'ingredients': _ingredientsController.text.trim().isNotEmpty
+                    ? _ingredientsController.text.trim()
+                    : null,
+                'quantite': _quantiteController.text.trim().isNotEmpty
+                    ? _quantiteController.text.trim()
+                    : null,
+                'origineViande':
+                    _origineViandeController.text.trim().isNotEmpty
+                    ? _origineViandeController.text.trim()
+                    : null,
+                'allergenes': _allergenesController.text.trim().isNotEmpty
+                    ? _allergenesController.text.trim()
+                    : null,
+              });
             },
             child: Text('Modifier'),
           ),
@@ -1211,15 +1246,17 @@ class _EtiquettePageState extends State<EtiquettePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => NavigationHelpers.goHaccpHub(context),
-        ),
-        title: Text('Impression Étiquettes Zebra'),
-        backgroundColor: Colors.purple.shade600,
-        foregroundColor: Colors.white,
-      ),
+      appBar: widget.showAppBar
+          ? AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => NavigationHelpers.goHaccpHub(context),
+              ),
+              title: Text('Impression Étiquettes Zebra'),
+              backgroundColor: Colors.purple.shade600,
+              foregroundColor: Colors.white,
+            )
+          : null,
       body: SingleChildScrollView(
         padding: EdgeInsets.only(
           left: 16,
@@ -1267,18 +1304,42 @@ class _EtiquettePageState extends State<EtiquettePage> {
                         );
                       }).toList(),
                       onChanged: (device) async {
+                        if (device == null) {
+                          _showBluetoothMessage(
+                            'Veuillez sélectionner une imprimante.',
+                            isError: true,
+                          );
+                          return;
+                        }
                         setState(() {
                           selectedDevice = device;
                         });
-
-                        if (device != null) {
+                        try {
                           final success = await _bluetoothService
-                              .connectToDevice(device, context: context);
+                              .connectToDevice(device);
+                          if (!mounted) return;
                           if (success) {
+                            _showBluetoothMessage(
+                              'Imprimante connectée: ${device.name ?? 'Appareil Bluetooth'}',
+                            );
+                          } else {
                             setState(() {
-                              selectedDevice = device;
+                              selectedDevice = null;
                             });
+                            _showBluetoothMessage(
+                              'Impossible de se connecter à cette imprimante.',
+                              isError: true,
+                            );
                           }
+                        } catch (_) {
+                          if (!mounted) return;
+                          setState(() {
+                            selectedDevice = null;
+                          });
+                          _showBluetoothMessage(
+                            'Erreur de connexion à l’imprimante. Réessayez.',
+                            isError: true,
+                          );
                         }
                       },
                     ),

@@ -17,6 +17,7 @@ import '../../features/oil/pages/suivi_huile_page.dart';
 import '../../features/oil/pages/oil_changes_history_page.dart';
 import '../../features/history/pages/history_page.dart';
 import '../../features/labels/pages/labels_page.dart';
+import '../../features/labels/pages/label_history_page.dart';
 import '../../features/products/pages/products_list_page.dart';
 import '../../features/settings/pages/settings_page.dart';
 import '../../features/suppliers/pages/suppliers_list_page.dart';
@@ -568,6 +569,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(path: '/history', redirect: (context, state) => '/app/history'),
     GoRoute(path: '/labels', builder: (context, state) => const LabelsPage()),
+    GoRoute(
+      path: '/labels/history',
+      builder: (context, state) => const LabelHistoryPage(),
+    ),
     GoRoute(
       path: '/products',
       builder: (context, state) => const ProductsListPage(),

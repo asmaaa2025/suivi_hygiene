@@ -324,8 +324,11 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
                       itemCount: _receptions.length,
                       itemBuilder: (context, index) {
                         final reception = _receptions[index];
-                        final produit = _produits[reception.produitId];
-                        final productName = produit?.nom ?? 'Produit inconnu';
+                        final produit = reception.produitId != null
+                            ? _produits[reception.produitId!]
+                            : null;
+                        final productName =
+                            reception.displayProductName(produit?.nom);
                         final supplierName =
                             reception.fournisseur ?? 'Fournisseur inconnu';
 
@@ -415,6 +418,34 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
                                   ),
                                 ],
                               ),
+                              if (reception.statut != null &&
+                                  reception.statut!.trim().isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(
+                                      Icons.flag,
+                                      size: 16,
+                                      color: _getStatusColor(
+                                        reception.statut!,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      reception.statut!,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodySmall
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: _getStatusColor(
+                                              reception.statut!,
+                                            ),
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ],
                               if (reception.lot != null &&
                                   reception.lot!.isNotEmpty) ...[
                                 const SizedBox(height: 8),
@@ -572,5 +603,16 @@ class _ReceptionsListPageState extends State<ReceptionsListPage> {
       return AppTheme.statusCritical; // Non-conforme
     }
     return AppTheme.statusOk; // Conforme
+  }
+
+  Color _getStatusColor(String statut) {
+    final normalized = statut.toLowerCase();
+    if (normalized.contains('refus')) {
+      return AppTheme.statusCritical;
+    }
+    if (normalized.contains('réserve') || normalized.contains('reserve')) {
+      return Colors.orange;
+    }
+    return AppTheme.statusOk;
   }
 }

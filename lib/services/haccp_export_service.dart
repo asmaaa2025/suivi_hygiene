@@ -18,6 +18,8 @@ import '../data/repositories/appareil_repository.dart';
 import '../data/repositories/nc_repository.dart';
 import '../data/repositories/rappel_repository.dart';
 import '../repositories/oil_change_repository.dart';
+import '../repositories/products_repository.dart';
+import '../repositories/labels_repository.dart';
 import '../data/models/temperature.dart';
 import '../data/models/reception.dart';
 import '../data/models/nettoyage.dart';
@@ -35,6 +37,8 @@ class HaccpExportService {
   final _ncRepo = NCRepository();
   final _rappelRepo = RappelRepository();
   final _oilChangeRepo = OilChangeRepository();
+  final _productsRepo = ProductsRepository();
+  final _labelsRepo = LabelsRepository();
 
   static const String _dateFormat = 'dd/MM/yyyy HH:mm';
   final _df = DateFormat(_dateFormat);
@@ -46,6 +50,8 @@ class HaccpExportService {
   static const String kOil = 'oil';
   static const String kNc = 'nc';
   static const String kRappels = 'rappels';
+  static const String kProducts = 'products';
+  static const String kLabelPrints = 'label_prints';
 
   /// Exporte les données HACCP en CSV
   /// [modules] si fourni, n'exporte que ces modules (sinon tout)
@@ -123,6 +129,7 @@ class HaccpExportService {
         ]);
         allRows.add([
           'Date',
+          'Produit',
           'Fournisseur',
           'Lot',
           'Température (°C)',
@@ -134,6 +141,7 @@ class HaccpExportService {
           final emp = _formatEmployee(r.employeeFirstName, r.employeeLastName);
           allRows.add([
             _df.format(r.receivedAt),
+            r.displayProductName(null),
             r.fournisseur ?? '',
             r.lot ?? '',
             r.temperature?.toStringAsFixed(1) ?? '',
@@ -331,6 +339,104 @@ class HaccpExportService {
       }
     }
 
+    final includeProducts = includeAll || modules!.contains(kProducts);
+    final includeLabelPrints =
+        includeAll || modules!.contains(kLabelPrints) || includeProducts;
+
+    if (includeProducts) {
+      try {
+        final produits = await _productsRepo.getAll();
+        allRows.add(['=== PRODUITS (${produits.length} enregistrement(s)) ===']);
+        allRows.add([
+          'Nom',
+          'Type',
+          'DLC (jours)',
+          'DLC surgélation (jours)',
+          'Ingrédients',
+          'Quantité',
+          'Origine viande',
+          'Allergènes',
+        ]);
+        for (final p in produits) {
+          allRows.add([
+            p['nom'] ?? '',
+            p['type_produit'] ?? '',
+            p['dlc_jours']?.toString() ?? '',
+            p['dlc_surgelation_jours']?.toString() ?? '',
+            p['ingredients'] ?? '',
+            p['quantite'] ?? '',
+            p['origine_viande'] ?? '',
+            p['allergenes'] ?? '',
+          ]);
+        }
+        allRows.add([]);
+      } catch (e) {
+        debugPrint('[HaccpExport] Produits error: $e');
+        allRows.add(['Erreur produits: $e']);
+        allRows.add([]);
+      }
+    }
+
+    if (includeLabelPrints) {
+      try {
+        final prints = await _labelsRepo.getAll();
+        final filteredPrints = prints.where((row) {
+          final raw = row['printed_at'];
+          if (raw == null) return true;
+          final dt = DateTime.tryParse(raw.toString());
+          if (dt == null) return true;
+          if (startDate != null && dt.isBefore(startDate)) return false;
+          if (endDate != null) {
+            final end = DateTime(
+              endDate.year,
+              endDate.month,
+              endDate.day,
+              23,
+              59,
+              59,
+            );
+            if (dt.isAfter(end)) return false;
+          }
+          return true;
+        }).toList();
+
+        allRows.add([
+          '=== HISTORIQUE IMPRESSIONS ÉTIQUETTES (${filteredPrints.length} enregistrement(s)) ===',
+        ]);
+        allRows.add([
+          'Date impression',
+          'Produit',
+          'Lot',
+          'Poids',
+          'Préparateur',
+          'DLC',
+          'DLUO',
+          'Statut',
+          'Erreur',
+        ]);
+        for (final row in filteredPrints) {
+          allRows.add([
+            row['printed_at'] != null
+                ? _df.format(DateTime.parse(row['printed_at'].toString()))
+                : '',
+            row['product_name'] ?? row['produit_nom'] ?? '',
+            row['lot'] ?? '',
+            row['weight'] ?? row['poids'] ?? '',
+            row['prepared_by'] ?? row['preparateur'] ?? '',
+            row['dlc'] ?? '',
+            row['dluo'] ?? '',
+            row['status'] ?? '',
+            row['error_message'] ?? '',
+          ]);
+        }
+        allRows.add([]);
+      } catch (e) {
+        debugPrint('[HaccpExport] Label prints error: $e');
+        allRows.add(['Erreur historique impressions étiquettes: $e']);
+        allRows.add([]);
+      }
+    }
+
     // Écrire le fichier
     final csv = const ListToCsvConverter(fieldDelimiter: ';').convert(allRows);
     final appDir = await getApplicationDocumentsDirectory();
@@ -472,11 +578,20 @@ class HaccpExportService {
         sections.add(_pdfSectionTitle('Réceptions (${receptions.length})'));
         sections.add(
           _pdfTable(
-            headers: ['Date', 'Fournisseur', 'Lot', '°C', 'Employé', 'NC'],
+            headers: [
+              'Date',
+              'Produit',
+              'Fournisseur',
+              'Lot',
+              '°C',
+              'Employé',
+              'NC',
+            ],
             rows: receptions
                 .map(
                   (r) => [
                     _df.format(r.receivedAt),
+                    r.displayProductName(null),
                     r.fournisseur ?? '-',
                     r.lot ?? '-',
                     r.temperature?.toStringAsFixed(1) ?? '-',
@@ -674,6 +789,99 @@ class HaccpExportService {
         sections.add(
           pw.Text(
             'Erreur rappels: $e',
+            style: const pw.TextStyle(color: PdfColors.red),
+          ),
+        );
+      }
+    }
+
+    final includeProducts = includeAll || modules!.contains(kProducts);
+    final includeLabelPrints =
+        includeAll || modules!.contains(kLabelPrints) || includeProducts;
+
+    if (includeProducts) {
+      try {
+        final produits = await _productsRepo.getAll();
+        sections.add(_pdfSectionTitle('Produits (${produits.length})'));
+        sections.add(
+          _pdfTable(
+            headers: ['Nom', 'Type', 'DLC j', 'DLC surgel', 'Quantité'],
+            rows: produits
+                .map(
+                  (p) => [
+                    (p['nom'] ?? '').toString(),
+                    (p['type_produit'] ?? '').toString(),
+                    (p['dlc_jours'] ?? '').toString(),
+                    (p['dlc_surgelation_jours'] ?? '').toString(),
+                    (p['quantite'] ?? '-').toString(),
+                  ],
+                )
+                .toList(),
+          ),
+        );
+        sections.add(pw.SizedBox(height: 12));
+      } catch (e) {
+        sections.add(
+          pw.Text(
+            'Erreur produits: $e',
+            style: const pw.TextStyle(color: PdfColors.red),
+          ),
+        );
+        sections.add(pw.SizedBox(height: 8));
+      }
+    }
+
+    if (includeLabelPrints) {
+      try {
+        final prints = await _labelsRepo.getAll();
+        final filtered = prints.where((row) {
+          final raw = row['printed_at'];
+          if (raw == null) return true;
+          final dt = DateTime.tryParse(raw.toString());
+          if (dt == null) return true;
+          if (startDate != null && dt.isBefore(startDate)) return false;
+          if (endDate != null) {
+            final end = DateTime(
+              endDate.year,
+              endDate.month,
+              endDate.day,
+              23,
+              59,
+              59,
+            );
+            if (dt.isAfter(end)) return false;
+          }
+          return true;
+        }).toList();
+        sections.add(
+          _pdfSectionTitle('Historique impressions étiquettes (${filtered.length})'),
+        );
+        sections.add(
+          _pdfTable(
+            headers: ['Date', 'Produit', 'Lot', 'Poids', 'Statut', 'Erreur'],
+            rows: filtered
+                .map(
+                  (row) => [
+                    row['printed_at'] != null
+                        ? _df.format(
+                            DateTime.parse(row['printed_at'].toString()),
+                          )
+                        : '-',
+                    (row['product_name'] ?? row['produit_nom'] ?? '-').toString(),
+                    (row['lot'] ?? '-').toString(),
+                    (row['weight'] ?? row['poids'] ?? '-').toString(),
+                    (row['status'] ?? '-').toString(),
+                    (row['error_message'] ?? '-').toString(),
+                  ],
+                )
+                .toList(),
+          ),
+        );
+        sections.add(pw.SizedBox(height: 12));
+      } catch (e) {
+        sections.add(
+          pw.Text(
+            'Erreur historique impressions étiquettes: $e',
             style: const pw.TextStyle(color: PdfColors.red),
           ),
         );

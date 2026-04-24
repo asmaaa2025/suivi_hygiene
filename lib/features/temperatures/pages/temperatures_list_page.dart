@@ -11,7 +11,6 @@ import '../../../../data/services/storage_service.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/utils/navigation_helpers.dart';
-import 'appareils_management_page.dart';
 
 /// Temperatures list page
 class TemperaturesListPage extends StatefulWidget {
@@ -74,11 +73,6 @@ class _TemperaturesListPageState extends State<TemperaturesListPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isAdminRoute = GoRouterState.of(
-      context,
-    ).matchedLocation.startsWith('/admin');
-    final routePrefix = isAdminRoute ? '/admin' : '/app';
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Températures'),
@@ -86,18 +80,6 @@ class _TemperaturesListPageState extends State<TemperaturesListPage> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () => NavigationHelpers.goHaccpHub(context),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () => context.push('$routePrefix/temperatures/new'),
-            tooltip: 'Nouveau relevé',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            onPressed: () => context.push('/appareils'),
-            tooltip: 'Gérer les appareils',
-          ),
-        ],
       ),
       body: Column(
         children: [

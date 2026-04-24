@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'package:intl/intl.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/utils/navigation_helpers.dart';
 import '../../../../shared/widgets/section_card.dart';
 import '../../../../shared/widgets/empty_state.dart';
 import '../../../../shared/widgets/error_state.dart';
@@ -12,7 +12,9 @@ import '../../../../repositories/labels_repository.dart';
 
 /// Page showing label print history
 class LabelHistoryPage extends StatefulWidget {
-  const LabelHistoryPage({super.key});
+  const LabelHistoryPage({super.key, this.showAppBar = true});
+
+  final bool showAppBar;
 
   @override
   State<LabelHistoryPage> createState() => _LabelHistoryPageState();
@@ -137,16 +139,22 @@ class _LabelHistoryPageState extends State<LabelHistoryPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Historique impressions'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _loadHistory,
-            tooltip: 'Actualiser',
-          ),
-        ],
-      ),
+      appBar: widget.showAppBar
+          ? AppBar(
+              leading: IconButton(
+                icon: const Icon(Icons.arrow_back),
+                onPressed: () => NavigationHelpers.goHaccpHub(context),
+              ),
+              title: const Text('Historique impressions'),
+              actions: [
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  onPressed: _loadHistory,
+                  tooltip: 'Actualiser',
+                ),
+              ],
+            )
+          : null,
       body: _isLoading
           ? const LoadingSkeleton()
           : _error != null

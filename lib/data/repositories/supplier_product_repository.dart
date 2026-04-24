@@ -65,6 +65,22 @@ class SupplierProductRepository {
     }
   }
 
+  /// Supplier linked to this product (e.g. for editing a « reçu » product).
+  Future<String?> getSupplierIdForProduct(String productId) async {
+    try {
+      final row = await _client
+          .from('supplier_products')
+          .select('supplier_id')
+          .eq('product_id', productId)
+          .limit(1)
+          .maybeSingle();
+      return row?['supplier_id'] as String?;
+    } catch (e) {
+      debugPrint('[SupplierProductRepo] getSupplierIdForProduct: $e');
+      return null;
+    }
+  }
+
   /// Get supplier-product relationship details (default lot, DLUO days)
   Future<Map<String, dynamic>?> getSupplierProductDetails({
     required String supplierId,

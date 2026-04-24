@@ -5,9 +5,10 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../repositories/products_repository.dart';
 import '../../../../data/repositories/supplier_repository.dart';
 import '../../../../data/repositories/supplier_product_repository.dart';
-import '../../../../data/repositories/organization_repository.dart';
 import '../../../../data/models/supplier.dart';
 import '../../../../models/produit.dart';
+import '../../../../utils/text_input_formatters.dart';
+import '../../../../shared/utils/navigation_helpers.dart';
 
 /// Form page for creating/editing a product
 class ProductFormPage extends StatefulWidget {
@@ -22,7 +23,11 @@ class ProductFormPage extends StatefulWidget {
 class _ProductFormPageState extends State<ProductFormPage> {
   final _formKey = GlobalKey<FormState>();
   final _nomController = TextEditingController();
-  final _categorieController = TextEditingController();
+  final _dlcJoursController = TextEditingController();
+  final _dlcSurgelationController = TextEditingController();
+  final _ingredientsController = TextEditingController();
+  final _quantiteController = TextEditingController();
+  final _origineViandeController = TextEditingController();
   final _allergenesController = TextEditingController();
   final _produitRepo = ProductsRepository();
   final _supplierRepo = SupplierRepository();
@@ -47,7 +52,15 @@ class _ProductFormPageState extends State<ProductFormPage> {
     _loadSuppliers();
     if (_isEditMode) {
       _loadProduct();
+    } else {
+      _dlcJoursController.text = _selectedType.dlcParDefaut.toString();
     }
+  }
+
+  int? _parseOptionalInt(String raw) {
+    final t = raw.trim();
+    if (t.isEmpty) return null;
+    return int.tryParse(t);
   }
 
   Future<void> _loadSuppliers() async {
@@ -66,7 +79,11 @@ class _ProductFormPageState extends State<ProductFormPage> {
   @override
   void dispose() {
     _nomController.dispose();
-    _categorieController.dispose();
+    _dlcJoursController.dispose();
+    _dlcSurgelationController.dispose();
+    _ingredientsController.dispose();
+    _quantiteController.dispose();
+    _origineViandeController.dispose();
     _allergenesController.dispose();
     super.dispose();
   }
@@ -81,55 +98,74 @@ class _ProductFormPageState extends State<ProductFormPage> {
       final produitData = await _produitRepo.getById(widget.productId!);
       if (!mounted) return;
 
+      var parsedType = TypeProduit.fini;
+      final typeStr = produitData['type_produit'] as String?;
+      if (typeStr != null && typeStr.isNotEmpty) {
+        switch (typeStr.toLowerCase()) {
+          case 'reçu':
+          case 'recu':
+            parsedType = TypeProduit.recu;
+            break;
+          case 'fini':
+            parsedType = TypeProduit.fini;
+            break;
+          case 'prepare':
+          case 'préparé':
+          case 'preparé':
+          case 'transformé':
+          case 'transforme':
+            parsedType = TypeProduit.prepare;
+            break;
+          case 'ouverture':
+          case 'ouvert':
+            parsedType = TypeProduit.ouverture;
+            break;
+          case 'decongelation':
+          case 'décongelation':
+          case 'décongelé':
+          case 'decongele':
+            parsedType = TypeProduit.decongelation;
+            break;
+          default:
+            parsedType = TypeProduit.fini;
+        }
+      }
+
+      String? linkedSupplierId;
+      if (parsedType == TypeProduit.recu) {
+        linkedSupplierId = await _supplierProductRepo.getSupplierIdForProduct(
+          widget.productId!,
+        );
+      }
+      if (!mounted) return;
+
       setState(() {
         if (_nomController.text.isEmpty) {
           _nomController.text = produitData['nom'] ?? '';
         }
-        // Parse type_produit to TypeProduit enum
-        final typeStr = produitData['type_produit'] as String?;
-        if (typeStr != null && typeStr.isNotEmpty) {
-          // Map database string to TypeProduit enum
-          switch (typeStr.toLowerCase()) {
-            case 'reçu':
-            case 'recu':
-              _selectedType = TypeProduit.recu;
-              break;
-            case 'fini':
-              _selectedType = TypeProduit.fini;
-              break;
-            case 'prepare':
-            case 'préparé':
-            case 'preparé':
-            case 'transformé':
-            case 'transforme':
-              _selectedType = TypeProduit.prepare;
-              break;
-            case 'ouverture':
-            case 'ouvert':
-              _selectedType = TypeProduit.ouverture;
-              break;
-            case 'decongelation':
-            case 'décongelation':
-            case 'décongelé':
-            case 'decongele':
-              _selectedType = TypeProduit.decongelation;
-              break;
-            default:
-              _selectedType = TypeProduit.fini;
-          }
-        }
+        _selectedType = parsedType;
+        _selectedSupplierId = linkedSupplierId;
         if (_allergenesController.text.isEmpty) {
           _allergenesController.text = produitData['allergenes'] ?? '';
         }
+        _dlcJoursController.text = produitData['dlc_jours']?.toString() ?? '';
+        _dlcSurgelationController.text =
+            produitData['dlc_surgelation_jours']?.toString() ?? '';
+        _ingredientsController.text = produitData['ingredients'] ?? '';
+        _quantiteController.text = produitData['quantite'] ?? '';
+        _origineViandeController.text = produitData['origine_viande'] ?? '';
         _actif = produitData['actif'] ?? true;
         _isLoading = false;
       });
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
-        Navigator.pop(context);
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erreur: $e')));
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        await NavigationHelpers.goHaccpHub(context);
       }
     }
   }
@@ -137,22 +173,71 @@ class _ProductFormPageState extends State<ProductFormPage> {
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
 
+    if (_selectedType == TypeProduit.recu && _selectedSupplierId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Veuillez sélectionner un fournisseur pour un produit reçu',
+          ),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
     setState(() => _isLoading = true);
 
     try {
+      final dlcJours = _parseOptionalInt(_dlcJoursController.text);
+      final dlcSurgelation = _parseOptionalInt(_dlcSurgelationController.text);
+
       if (_isEditMode && widget.productId != null) {
         await _produitRepo.updateProduct(
           widget.productId!,
           nom: _nomController.text.trim(),
           typeProduit: _selectedType.name,
+          dlcJours: dlcJours,
+          dlcSurgelationJours: dlcSurgelation,
+          ingredients: _ingredientsController.text.trim().isEmpty
+              ? null
+              : _ingredientsController.text.trim(),
+          quantite: _quantiteController.text.trim().isEmpty
+              ? null
+              : _quantiteController.text.trim(),
+          origineViande: _origineViandeController.text.trim().isEmpty
+              ? null
+              : _origineViandeController.text.trim(),
           allergenes: _allergenesController.text.trim().isEmpty
               ? null
               : _allergenesController.text.trim(),
         );
+        if (_selectedType == TypeProduit.recu && _selectedSupplierId != null) {
+          try {
+            await _supplierProductRepo.linkProductToSupplier(
+              supplierId: _selectedSupplierId!,
+              productId: widget.productId!,
+            );
+          } catch (e) {
+            debugPrint('[ProductForm] Liaison fournisseur (édition): $e');
+          }
+        }
       } else {
         final productData = await _produitRepo.createProduct(
           nom: _nomController.text.trim(),
           typeProduit: _selectedType.name,
+          dlcJours: dlcJours,
+          dateFabrication: DateTime.now(),
+          surgelagable: false,
+          dlcSurgelationJours: dlcSurgelation,
+          ingredients: _ingredientsController.text.trim().isEmpty
+              ? null
+              : _ingredientsController.text.trim(),
+          quantite: _quantiteController.text.trim().isEmpty
+              ? null
+              : _quantiteController.text.trim(),
+          origineViande: _origineViandeController.text.trim().isEmpty
+              ? null
+              : _origineViandeController.text.trim(),
           allergenes: _allergenesController.text.trim().isEmpty
               ? null
               : _allergenesController.text.trim(),
@@ -193,14 +278,18 @@ class _ProductFormPageState extends State<ProductFormPage> {
         }
       }
 
-      if (mounted) {
-        Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(_isEditMode ? 'Produit modifié' : 'Produit créé'),
-            backgroundColor: AppTheme.statusOk,
-          ),
-        );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(_isEditMode ? 'Produit modifié' : 'Produit créé'),
+          backgroundColor: AppTheme.statusOk,
+        ),
+      );
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        // Produit enregistré : aller à la liste (pas au menu)
+        context.go('/products');
       }
     } catch (e) {
       if (mounted) {
@@ -222,7 +311,13 @@ class _ProductFormPageState extends State<ProductFormPage> {
         title: Text(_isEditMode ? 'Modifier produit' : 'Nouveau produit'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/products'),
+          onPressed: () async {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              await NavigationHelpers.goHaccpHub(context);
+            }
+          },
         ),
       ),
       body: _isLoading && _isEditMode
@@ -247,16 +342,47 @@ class _ProductFormPageState extends State<ProductFormPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Sélecteur de type de produit avec cartes
-                  Text(
-                    'Type de produit *',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.purple.shade700,
+                  // Type de produit : menu déroulant (liste scrollable, compact)
+                  DropdownButtonFormField<TypeProduit>(
+                    value: _selectedType,
+                    decoration: const InputDecoration(
+                      labelText: 'Type de produit *',
+                      prefixIcon: Icon(Icons.layers),
+                      border: OutlineInputBorder(),
                     ),
+                    isExpanded: true,
+                    menuMaxHeight: 320,
+                    items: TypeProduit.values.map((type) {
+                      final label = type == TypeProduit.recu
+                          ? 'Produit reçu'
+                          : type == TypeProduit.fini
+                          ? 'Produit fini'
+                          : type == TypeProduit.prepare
+                          ? 'Produit préparé'
+                          : type == TypeProduit.ouverture
+                          ? 'Ouverture'
+                          : 'Décongélation';
+                      return DropdownMenuItem<TypeProduit>(
+                        value: type,
+                        child: Text(
+                          label,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (type) {
+                      if (type == null) return;
+                      setState(() {
+                        _selectedType = type;
+                        _dlcJoursController.text =
+                            type.dlcParDefaut.toString();
+                        if (type != TypeProduit.recu) {
+                          _selectedSupplierId = null;
+                        }
+                      });
+                    },
                   ),
-                  SizedBox(height: 8),
+                  const SizedBox(height: 8),
                   Text(
                     _selectedType == TypeProduit.recu
                         ? 'Produit reçu d\'un fournisseur'
@@ -269,194 +395,104 @@ class _ProductFormPageState extends State<ProductFormPage> {
                         : 'Produit décongelé pour utilisation',
                     style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                   ),
-                  SizedBox(height: 16),
-                  SizedBox(
-                    height: (TypeProduit.values.length / 2).ceil() * 90.0,
-                    child: GridView.count(
-                      shrinkWrap: false,
-                      physics: NeverScrollableScrollPhysics(),
-                      crossAxisCount: 2,
-                      crossAxisSpacing: 12,
-                      mainAxisSpacing: 12,
-                      childAspectRatio: 2.5,
-                      children: TypeProduit.values.map((type) {
-                        final isSelected = _selectedType == type;
-                        final color = type == TypeProduit.recu
-                            ? Colors.purple
-                            : type == TypeProduit.fini
-                            ? Colors.green
-                            : type == TypeProduit.prepare
-                            ? Colors.orange
-                            : type == TypeProduit.ouverture
-                            ? Colors.red
-                            : Colors.blue;
-
-                        return InkWell(
-                          onTap: () {
-                            setState(() {
-                              _selectedType = type;
-                              // Clear supplier if not "reçu"
-                              if (type != TypeProduit.recu) {
-                                _selectedSupplierId = null;
-                              }
-                            });
-                          },
-                          borderRadius: BorderRadius.circular(16),
-                          splashColor: color.shade200.withOpacity(0.3),
-                          highlightColor: color.shade100.withOpacity(0.2),
-                          child: AnimatedContainer(
-                            duration: Duration(milliseconds: 200),
-                            decoration: BoxDecoration(
-                              color: isSelected ? color.shade100 : Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: isSelected
-                                    ? color.shade600
-                                    : Colors.grey.shade300,
-                                width: isSelected ? 3 : 2,
-                              ),
-                              boxShadow: isSelected
-                                  ? [
-                                      BoxShadow(
-                                        color: color.shade200.withOpacity(0.5),
-                                        blurRadius: 8,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ]
-                                  : [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 4,
-                                        offset: Offset(0, 2),
-                                      ),
-                                    ],
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.all(16),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    padding: EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: isSelected
-                                          ? color.shade200
-                                          : color.shade50,
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    child: Icon(
-                                      type == TypeProduit.recu
-                                          ? Icons.local_shipping
-                                          : type == TypeProduit.fini
-                                          ? Icons.shopping_cart
-                                          : type == TypeProduit.prepare
-                                          ? Icons.build
-                                          : type == TypeProduit.ouverture
-                                          ? Icons.open_in_new
-                                          : Icons.ac_unit,
-                                      color: color.shade700,
-                                      size: 24,
-                                    ),
-                                  ),
-                                  SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Text(
-                                          type == TypeProduit.recu
-                                              ? 'Produit reçu'
-                                              : type == TypeProduit.fini
-                                              ? 'Produit fini'
-                                              : type == TypeProduit.prepare
-                                              ? 'Produit préparé'
-                                              : type == TypeProduit.ouverture
-                                              ? 'Ouverture'
-                                              : 'Décongélation',
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                            color: isSelected
-                                                ? color.shade800
-                                                : Colors.grey.shade800,
-                                          ),
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text(
-                                          type.dlcDescription,
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: isSelected
-                                                ? color.shade600
-                                                : Colors.grey.shade600,
-                                            fontWeight: FontWeight.w500,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (isSelected)
-                                    Container(
-                                      padding: EdgeInsets.all(4),
-                                      decoration: BoxDecoration(
-                                        color: color.shade600,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Icon(
-                                        Icons.check,
-                                        color: Colors.white,
-                                        size: 16,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Text(
+                      _selectedType.dlcDescription,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade700,
+                        fontStyle: FontStyle.italic,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // Supplier selection (only for "reçu" products)
-                  if (_selectedType == TypeProduit.recu)
+                  if (_selectedType == TypeProduit.recu) ...[
                     DropdownButtonFormField<String>(
                       value: _selectedSupplierId,
                       decoration: const InputDecoration(
-                        labelText: 'Fournisseur (optionnel)',
+                        labelText: 'Fournisseur *',
                         prefixIcon: Icon(Icons.local_shipping),
                         helperText:
-                            'Sélectionnez un fournisseur ou laissez vide',
+                            'Obligatoire pour un produit issu d\'un fournisseur',
                       ),
-                      items: [
-                        const DropdownMenuItem(
-                          value: null,
-                          child: Text('Aucun'),
-                        ),
-                        ..._suppliers.map((supplier) {
-                          return DropdownMenuItem(
-                            value: supplier.id,
-                            child: Text(supplier.name),
-                          );
-                        }),
-                      ],
+                      items: _suppliers.map((supplier) {
+                        return DropdownMenuItem(
+                          value: supplier.id,
+                          child: Text(supplier.name),
+                        );
+                      }).toList(),
                       onChanged: (value) {
                         setState(() {
                           _selectedSupplierId = value;
                         });
                       },
+                      validator: (value) {
+                        if (_selectedType == TypeProduit.recu &&
+                            (value == null || value.isEmpty)) {
+                          return 'Sélectionnez un fournisseur';
+                        }
+                        return null;
+                      },
                     ),
-                  if (_selectedType == TypeProduit.recu)
                     const SizedBox(height: 16),
+                  ],
 
                   TextFormField(
-                    controller: _categorieController,
+                    controller: _dlcJoursController,
                     decoration: const InputDecoration(
-                      labelText: 'Catégorie (optionnel)',
-                      prefixIcon: Icon(Icons.category),
+                      labelText: 'DLC en jours (optionnel)',
+                      prefixIcon: Icon(Icons.calendar_today),
+                      helperText: 'Nombre de jours après fabrication',
                     ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [IntegerInputFormatter(maxValue: 365)],
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _dlcSurgelationController,
+                    decoration: const InputDecoration(
+                      labelText: 'DLC de surgélation (optionnel)',
+                      prefixIcon: Icon(Icons.ac_unit),
+                      helperText: 'Nombre de jours après surgélation',
+                    ),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [IntegerInputFormatter(maxValue: 365)],
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _ingredientsController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      labelText: 'Ingrédients (optionnel)',
+                      prefixIcon: Icon(Icons.restaurant),
+                      helperText: 'Liste des ingrédients principaux',
+                    ),
+                    inputFormatters: [
+                      DescriptionInputFormatter(maxLength: 200),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _quantiteController,
+                    decoration: const InputDecoration(
+                      labelText: 'Quantité par unité (optionnel)',
+                      prefixIcon: Icon(Icons.numbers),
+                      helperText: 'Ex: 50 pièces, 1 kg, etc.',
+                    ),
+                    inputFormatters: [ZplSafeTextInputFormatter()],
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _origineViandeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Origine viande (optionnel)',
+                      prefixIcon: Icon(Icons.flag),
+                      helperText: 'Ex: France, UE, etc.',
+                    ),
+                    inputFormatters: [ZplSafeTextInputFormatter()],
                   ),
                   const SizedBox(height: 16),
                   TextFormField(

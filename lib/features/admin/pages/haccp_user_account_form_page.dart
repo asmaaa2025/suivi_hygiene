@@ -100,7 +100,7 @@ class _HaccpUserAccountFormPageState extends State<HaccpUserAccountFormPage> {
         title: const Text('Nouveau compte HACCPilot'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.pop(),
+          onPressed: () => context.go('/admin/rh-hub'),
           tooltip: 'Retour',
         ),
         backgroundColor: AppTheme.primaryBlue,

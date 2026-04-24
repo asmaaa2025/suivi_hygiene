@@ -177,7 +177,7 @@ END $$;
 -- ============================================
 CREATE TABLE IF NOT EXISTS public.receptions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  produit_id UUID REFERENCES public.produits(id) ON DELETE CASCADE,
+  produit_id UUID REFERENCES public.produits(id) ON DELETE SET NULL,
   fournisseur TEXT, -- Supplier name (can be changed to UUID FK later)
   produit TEXT, -- Legacy column
   article TEXT, -- For compatibility
@@ -616,6 +616,21 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Before deleting a product: keep readable product name on reception rows (produit_id → SET NULL)
+CREATE OR REPLACE FUNCTION public.trg_snapshot_produit_nom_before_produit_delete()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  UPDATE public.receptions r
+  SET
+    produit = COALESCE(NULLIF(TRIM(r.produit), ''), OLD.nom),
+    article = COALESCE(NULLIF(TRIM(r.article), ''), OLD.nom)
+  WHERE r.produit_id = OLD.id;
+  RETURN OLD;
+END;
+$$;
+
 -- ============================================
 -- TRIGGERS
 -- ============================================
@@ -640,6 +655,12 @@ CREATE TRIGGER update_produits_updated_at
   BEFORE UPDATE ON public.produits
   FOR EACH ROW
   EXECUTE FUNCTION public.update_updated_at_column();
+
+DROP TRIGGER IF EXISTS snapshot_produit_nom_before_produit_delete ON public.produits;
+CREATE TRIGGER snapshot_produit_nom_before_produit_delete
+  BEFORE DELETE ON public.produits
+  FOR EACH ROW
+  EXECUTE FUNCTION public.trg_snapshot_produit_nom_before_produit_delete();
 
 CREATE TRIGGER update_documents_updated_at
   BEFORE UPDATE ON public.documents

@@ -60,9 +60,13 @@ class ProductsRepository {
     String? allergenes,
   }) async {
     try {
-      debugPrint('[ProductsRepo] Creating product: $nom');
+      final trimmedNom = nom.trim();
+      if (trimmedNom.isEmpty) {
+        throw ValidationException('Le nom du produit est obligatoire');
+      }
+      debugPrint('[ProductsRepo] Creating product: $trimmedNom');
       final record = <String, dynamic>{
-        'nom': nom,
+        'nom': trimmedNom,
         'type_produit': typeProduit,
         'dlc_jours': dlcJours,
         'dlc_surgelation_jours': dlcSurgelationJours,
@@ -87,6 +91,7 @@ class ProductsRepository {
       debugPrint('[ProductsRepo] ✅ Created product ${result['id']}');
       return result;
     } catch (e) {
+      if (e is ValidationException) rethrow;
       final errorStr = e.toString();
       if (errorStr.contains('PostgrestException') ||
           errorStr.contains('PGRST')) {
@@ -96,7 +101,6 @@ class ProductsRepository {
       debugPrint('[ProductsRepo] ❌ Error: $e');
       throw SupabaseException('Failed to create product: $e');
     }
-    return <String, dynamic>{};
   }
 
   /// Update product
@@ -122,7 +126,13 @@ class ProductsRepository {
         'date_modification': DateTime.now().toIso8601String(),
       };
 
-      if (nom != null) updates['nom'] = nom;
+      if (nom != null) {
+        final trimmedNom = nom.trim();
+        if (trimmedNom.isEmpty) {
+          throw ValidationException('Le nom du produit est obligatoire');
+        }
+        updates['nom'] = trimmedNom;
+      }
       if (typeProduit != null) updates['type_produit'] = typeProduit;
       if (dlcJours != null) updates['dlc_jours'] = dlcJours;
       if (dlcSurgelationJours != null) {
@@ -147,6 +157,7 @@ class ProductsRepository {
       debugPrint('[ProductsRepo] ✅ Updated product $id');
       return result;
     } catch (e) {
+      if (e is ValidationException) rethrow;
       final errorStr = e.toString();
       if (errorStr.contains('PostgrestException') ||
           errorStr.contains('PGRST')) {
@@ -156,7 +167,6 @@ class ProductsRepository {
       debugPrint('[ProductsRepo] ❌ Error: $e');
       throw SupabaseException('Failed to update product: $e');
     }
-    return <String, dynamic>{};
   }
 
   /// Delete product

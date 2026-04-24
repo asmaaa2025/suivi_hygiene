@@ -33,10 +33,8 @@ class TextSanitizerService {
     if (input.isEmpty) return '';
 
     // Supprimer seulement les caractères de contrôle dangereux
-    String cleaned = input.replaceAll(
-      RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'),
-      '',
-    );
+    String cleaned =
+        input.replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'), '');
 
     // Normaliser les espaces
     cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ');
@@ -49,10 +47,8 @@ class TextSanitizerService {
     if (input.isEmpty) return '';
 
     // Supprimer les caractères de contrôle dangereux
-    String cleaned = input.replaceAll(
-      RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'),
-      '',
-    );
+    String cleaned =
+        input.replaceAll(RegExp(r'[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]'), '');
 
     return cleaned;
   }
